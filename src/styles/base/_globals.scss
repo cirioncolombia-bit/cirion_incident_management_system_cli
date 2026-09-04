@@ -1,0 +1,26 @@
+html {
+  font-family: var(--cims-font-family);
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--cims-font-family);
+  font-size: var(--cims-font-size-md);
+  font-weight: var(--cims-font-weight-regular);
+  line-height: var(--cims-line-height-normal);
+
+  color: var(--cims-color-text-primary);
+  background-color: var(--cims-color-background);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--cims-color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

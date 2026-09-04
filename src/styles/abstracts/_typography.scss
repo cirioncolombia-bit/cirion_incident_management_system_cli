@@ -1,0 +1,57 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter/Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter/Inter-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter/Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter/Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  // Font family
+  --cims-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+
+  // Font weights
+  --cims-font-weight-regular: 400;
+  --cims-font-weight-medium: 500;
+  --cims-font-weight-semibold: 600;
+  --cims-font-weight-bold: 700;
+
+  // Font sizes
+  --cims-font-size-xs: 0.75rem;    // 12px
+  --cims-font-size-sm: 0.875rem;   // 14px
+  --cims-font-size-md: 1rem;       // 16px
+  --cims-font-size-lg: 1.125rem;   // 18px
+  --cims-font-size-xl: 1.25rem;    // 20px
+  --cims-font-size-2xl: 1.5rem;    // 24px
+  --cims-font-size-3xl: 2rem;      // 32px
+
+  // Line heights
+  --cims-line-height-tight: 1.25;
+  --cims-line-height-normal: 1.5;
+  --cims-line-height-relaxed: 1.625;
+}
