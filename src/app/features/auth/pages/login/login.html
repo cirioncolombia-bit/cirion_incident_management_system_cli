@@ -1,1 +1,99 @@
-<p>login works!</p>
+<main class="login">
+  <section class="login__brand" aria-label="Cirion">
+    <div class="login__brand-content">
+      <div class="login__brand-logo">
+  <img
+    src="/brand/cirion-logo.png"
+    alt="Cirion"
+  />
+
+  <span class="login__brand-separator" aria-hidden="true"></span>
+
+  <span class="login__brand-product">CIMS</span>
+</div>
+
+     <div class="login__brand-message">
+  <span class="login__brand-accent" aria-hidden="true"></span>
+
+  <h1>
+    Conectamos<br />
+    un mundo <span>más digital</span>
+  </h1>
+
+  <p>
+    Gestionamos incidentes para mantener lo que más importa:
+    tu negocio en movimiento.
+  </p>
+</div>
+    </div>
+  </section>
+
+  <section class="login__content">
+    <div class="login__container">
+
+     <header class="login__header">
+  <span class="login__eyebrow">Bienvenido a</span>
+
+  <h2>CIMS</h2>
+
+  <span class="login__header-accent" aria-hidden="true"></span>
+
+  <p>
+    Gestiona y da seguimiento a los incidentes de Cirion.
+  </p>
+</header>
+
+      <form
+  class="login__form"
+  (submit)="onSubmit($event)"
+>
+        <div class="login__field">
+          <label for="username">
+            Usuario o correo electrónico
+          </label>
+
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="Ingresa tu usuario o correo"
+          />
+        </div>
+
+        <div class="login__field">
+          <label for="password">
+            Contraseña
+          </label>
+
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Ingresa tu contraseña"
+          />
+        </div>
+
+        <div class="login__options">
+          <label>
+            <input
+              type="checkbox"
+              name="rememberMe"
+            />
+            Recordarme
+          </label>
+
+          <a href="#">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+
+        <button type="submit">
+          Iniciar sesión
+        </button>
+      </form>
+
+    </div>
+  </section>
+</main>

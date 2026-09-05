@@ -1,0 +1,170 @@
+<div class="dashboard-layout">
+  <aside
+  class="dashboard-sidebar"
+  [class.dashboard-sidebar--open]="sidebarOpen()"
+>
+    <div class="dashboard-sidebar__brand">
+      <img
+        src="/brand/cirion-logo.png"
+        alt="Cirion"
+      />
+
+      <span class="dashboard-sidebar__separator" aria-hidden="true"></span>
+
+      <span class="dashboard-sidebar__product">CIMS</span>
+    </div>
+
+    <nav
+      class="dashboard-sidebar__nav"
+      aria-label="Navegación principal"
+    >
+      <a
+        class="dashboard-sidebar__link dashboard-sidebar__link--active"
+        href="#"
+      >
+        Dashboard
+      </a>
+
+      <a class="dashboard-sidebar__link" href="#">
+        Deliveries
+      </a>
+
+      <a class="dashboard-sidebar__link" href="#">
+        Assignments
+      </a>
+
+      <a class="dashboard-sidebar__link" href="#">
+        Users
+      </a>
+    </nav>
+<div class="dashboard-sidebar__user">
+  <span class="dashboard-sidebar__avatar">
+    PG
+  </span>
+
+  <div class="dashboard-sidebar__user-info">
+    <strong>Pedro García</strong>
+    <span>Administrador</span>
+  </div>
+</div>
+
+  </aside>
+@if (sidebarOpen()) {
+  <button
+    class="dashboard-overlay"
+    type="button"
+    aria-label="Cerrar menú de navegación"
+    (click)="closeSidebar()"
+  ></button>
+}
+  <div class="dashboard-main">
+    <header class="dashboard-header">
+  <button
+    class="dashboard-header__menu"
+    type="button"
+    aria-label="Abrir menú de navegación"
+    (click)="openSidebar()"
+  >
+    ☰
+  </button>
+
+  <div class="dashboard-header__welcome">
+    <h1>Hola, Pedro 👋</h1>
+
+    <p>Bienvenido a CIMS</p>
+  </div>
+
+  <div class="dashboard-header__user">
+    <span class="dashboard-header__avatar">PG</span>
+
+    <div class="dashboard-header__user-info">
+      <strong>Pedro García</strong>
+      <span>Administrador</span>
+    </div>
+  </div>
+</header>
+
+    <main class="dashboard-content">
+     
+
+      <section
+  class="dashboard-summary"
+  aria-label="Resumen de incidentes"
+>
+  <article class="dashboard-card dashboard-card--danger">
+    <div class="dashboard-card__top">
+      <span class="dashboard-card__icon" aria-hidden="true">!</span>
+
+      <div class="dashboard-card__value">
+        <strong>24</strong>
+        <span>Incidentes abiertos</span>
+      </div>
+    </div>
+
+    <p class="dashboard-card__trend dashboard-card__trend--danger">
+      ↑ 12%
+      <span>vs. semana anterior</span>
+    </p>
+  </article>
+
+  <article class="dashboard-card dashboard-card--info">
+    <div class="dashboard-card__top">
+      <span class="dashboard-card__icon" aria-hidden="true">◷</span>
+
+      <div class="dashboard-card__value">
+        <strong>8</strong>
+        <span>En proceso</span>
+      </div>
+    </div>
+
+    <p class="dashboard-card__trend dashboard-card__trend--success">
+      ↓ 20%
+      <span>vs. semana anterior</span>
+    </p>
+  </article>
+
+  <article class="dashboard-card dashboard-card--success">
+    <div class="dashboard-card__top">
+      <span class="dashboard-card__icon" aria-hidden="true">✓</span>
+
+      <div class="dashboard-card__value">
+        <strong>112</strong>
+        <span>Resueltos</span>
+      </div>
+    </div>
+
+    <p class="dashboard-card__trend dashboard-card__trend--success">
+      ↑ 18%
+      <span>vs. semana anterior</span>
+    </p>
+  </article>
+
+  <article class="dashboard-card dashboard-card--assignment">
+    <div class="dashboard-card__top">
+      <span class="dashboard-card__icon" aria-hidden="true">●</span>
+
+      <div class="dashboard-card__value">
+        <strong>16</strong>
+        <span>Asignados a mí</span>
+      </div>
+    </div>
+
+    <p class="dashboard-card__trend">
+      0%
+      <span>vs. semana anterior</span>
+    </p>
+  </article>
+</section>
+
+
+      <section class="dashboard-placeholder">
+        <h2>Resumen operativo</h2>
+
+        <p>
+          Aquí construiremos las gráficas, incidentes recientes
+          y accesos rápidos.
+        </p>
+      </section>
+    </main>
+  </div>
+</div>

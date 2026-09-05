@@ -1,4 +1,4 @@
-@use 'breakpoints' as bp;
+@use './breakpoints' as bp;
 
 @mixin sm {
   @media (min-width: bp.$breakpoint-sm) {
