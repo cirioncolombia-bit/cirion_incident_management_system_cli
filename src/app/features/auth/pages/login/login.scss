@@ -15,12 +15,12 @@
   color: #ffffff;
 
   background-image:
-    linear-gradient(
-      180deg,
-      rgb(0 40 85 / 45%) 0%,
-      rgb(0 25 55 / 75%) 100%
-    ),
-    url('images/auth/CirionLoginBackground.png');
+linear-gradient(
+    180deg,
+    rgb(0 40 85 / 45%) 0%,
+    rgb(0 25 55 / 75%) 100%
+  ),
+  url('/cirion_incident_management_system_cli/images/auth/CirionLoginBackground.png');
 
   background-size: cover;
   background-position: center;
