@@ -1,0 +1,1 @@
+import{d as Os,f as Rs,u as Kg,v as km}from"./main-GVOBYWMX.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=Kg({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(Rs(0,`p`),km(1,`incidents works!`),Os())},encapsulation:2})};export{a as Incidents};
