@@ -1,0 +1,1 @@
+import{f as Lm,h as Rs,p as Os,u as Jg}from"./main-C6VU5HK7.js";var a=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=Jg({type:s,selectors:[[`app-users-list`]],decls:2,vars:0,template:function(e,p){e&1&&(Rs(0,`p`),Lm(1,`users-list works!`),Os())},encapsulation:2})};export{a as UsersList};

@@ -1,1 +1,0 @@
-import{d as Os,f as Rs,u as Kg,v as km}from"./main-GVOBYWMX.js";var o=class t{static ɵfac=function(e){return new(e||t)};static ɵcmp=Kg({type:t,selectors:[[`app-delivery`]],decls:2,vars:0,template:function(e,l){e&1&&(Rs(0,`p`),km(1,`delivery works!`),Os())},encapsulation:2})};export{o as Delivery};

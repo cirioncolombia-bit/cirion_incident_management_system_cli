@@ -1,1 +1,0 @@
-import{d as Os,f as Rs,u as Kg,v as km}from"./main-GVOBYWMX.js";var a=class t{static ɵfac=function(e){return new(e||t)};static ɵcmp=Kg({type:t,selectors:[[`app-profile`]],decls:2,vars:0,template:function(e,f){e&1&&(Rs(0,`p`),km(1,`profile works!`),Os())},encapsulation:2})};export{a as Profile};
