@@ -39,14 +39,14 @@ export class AuthenticatedLayout {
     this.userMenuOpen.set(false);
   }
 
+  toggleSidebarCollapsed(): void {
+    this.sidebarCollapsed.update((collapsed) => !collapsed);
+  }
+
   logout(): void {
     this.closeSidebar();
     this.closeUserMenu();
 
     void this.router.navigate(['/login']);
-  }
-
-  toggleSidebarCollapsed(): void {
-    this.sidebarCollapsed.update((collapsed) => !collapsed);
   }
 }

@@ -17,11 +17,20 @@
   display: flex;
   flex-direction: column;
 
-  padding: var(--cims-space-8) var(--cims-space-5);
+  padding:
+    var(--cims-space-8)
+    var(--cims-space-5);
+
+  overflow: hidden;
 
   color: #ffffff;
 
-  background: linear-gradient(180deg, var(--cims-color-primary-dark) 0%, #001b3d 100%);
+  background:
+    linear-gradient(
+      180deg,
+      var(--cims-color-primary-dark) 0%,
+      #001b3d 100%
+    );
 
   transform: translateX(-100%);
 
@@ -49,6 +58,8 @@
 }
 
 .app-sidebar__separator {
+  flex: 0 0 auto;
+
   width: 1px;
   height: 1.75rem;
 
@@ -56,14 +67,14 @@
 }
 
 .app-sidebar__product {
+  flex: 0 0 auto;
+
   color: rgb(255 255 255 / 88%);
 
   font-size: var(--cims-font-size-sm);
   font-weight: var(--cims-font-weight-semibold);
-}
 
-.app-sidebar__collapse {
-  display: none;
+  white-space: nowrap;
 }
 
 .app-sidebar__nav {
@@ -74,12 +85,18 @@
 }
 
 .app-sidebar__link {
+  min-width: 0;
+
   display: flex;
   align-items: center;
 
   gap: var(--cims-space-3);
 
-  padding: var(--cims-space-3) var(--cims-space-4);
+  padding:
+    var(--cims-space-3)
+    var(--cims-space-4);
+
+  overflow: hidden;
 
   color: rgb(255 255 255 / 72%);
 
@@ -127,7 +144,26 @@
 }
 
 .app-sidebar__label {
+  min-width: 0;
+
   white-space: nowrap;
+}
+
+/*
+ * El control pertenece al flujo normal del sidebar.
+ * En mobile se mantiene oculto.
+ */
+.app-sidebar__collapse-wrapper {
+  display: none;
+}
+
+.app-sidebar__collapse {
+  border: 0;
+
+  color: rgb(255 255 255 / 72%);
+  background: transparent;
+
+  cursor: pointer;
 }
 
 .app-sidebar__account {
@@ -196,7 +232,9 @@
 
   display: block;
 
-  padding: var(--cims-space-2) var(--cims-space-3);
+  padding:
+    var(--cims-space-2)
+    var(--cims-space-3);
 
   color: rgb(255 255 255 / 72%);
   background: transparent;
@@ -258,7 +296,9 @@
 
   gap: var(--cims-space-3);
 
-  padding: var(--cims-space-4) var(--cims-space-4);
+  padding:
+    var(--cims-space-4)
+    var(--cims-space-4);
 
   background: var(--cims-color-surface);
 
@@ -369,7 +409,8 @@
   transition: transform 160ms ease;
 }
 
-.app-header__user[aria-expanded='true'] .app-header__chevron {
+.app-header__user[aria-expanded='true']
+  .app-header__chevron {
   transform: rotate(180deg);
 }
 
@@ -390,7 +431,9 @@
   border: 1px solid var(--cims-color-border);
   border-radius: 0.75rem;
 
-  box-shadow: 0 0.75rem 2rem rgb(16 42 86 / 12%);
+  box-shadow:
+    0 0.75rem 2rem
+    rgb(16 42 86 / 12%);
 }
 
 .app-header__user-menu-item {
@@ -398,7 +441,9 @@
 
   display: block;
 
-  padding: var(--cims-space-3) var(--cims-space-4);
+  padding:
+    var(--cims-space-3)
+    var(--cims-space-4);
 
   color: var(--cims-color-text-primary);
   background: transparent;
@@ -436,7 +481,9 @@
 
   min-width: 0;
 
-  padding: var(--cims-space-5) var(--cims-space-4);
+  padding:
+    var(--cims-space-5)
+    var(--cims-space-4);
 }
 
 @include mixins.md {
@@ -470,58 +517,47 @@
     transform: none;
   }
 
+  /*
+   * Desktop: control dentro del sidebar,
+   * inmediatamente después de la navegación.
+   */
+  .app-sidebar__collapse-wrapper {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: var(--cims-space-4);
+  }
+
   .app-sidebar__collapse {
-    position: absolute;
-
-    top: 50%;
-    right: -1rem;
-
-    z-index: 5;
-
-    width: 2rem;
-    height: 3rem;
+    width: 2.75rem;
+    height: 2.75rem;
 
     display: grid;
     place-items: center;
 
     padding: 0;
 
-    color: rgb(255 255 255 / 80%);
+    color: rgb(255 255 255 / 72%);
+    background: transparent;
 
-    background: linear-gradient(180deg, var(--cims-color-primary-dark) 0%, #001b3d 100%);
+    border: 0;
+    border-radius: 0;
 
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-left: 0;
+    box-shadow: none;
 
-    border-radius: 0 0.625rem 0.625rem 0;
-
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     line-height: 1;
 
     cursor: pointer;
 
-    transform: translateY(-50%);
-
-    box-shadow: 0.25rem 0 0.75rem rgb(0 0 0 / 12%);
-
-    transition:
-      color 160ms ease,
-      background 160ms ease,
-      transform 160ms ease;
+    transition: none;
   }
 
   .app-sidebar__collapse:hover {
-    color: #ffffff;
+    color: rgb(255 255 255 / 72%);
+    background: transparent;
 
-    background: linear-gradient(180deg, var(--cims-color-primary-dark) 0%, #002855 100%);
-
-    transform: translateY(-50%) scale(1.03);
-  }
-
-  .app-sidebar__collapse:hover {
-    background: #1677ff;
-
-    transform: translateY(-50%) scale(1.05);
+    box-shadow: none;
   }
 
   .app-sidebar__account {
@@ -533,7 +569,9 @@
       minmax(0, 1fr)
       auto;
 
-    padding: var(--cims-space-6) var(--cims-space-8);
+    padding:
+      var(--cims-space-6)
+      var(--cims-space-8);
   }
 
   .app-header__menu {
@@ -558,30 +596,69 @@
     padding: var(--cims-space-8);
   }
 
+  /*
+   * Sidebar colapsado.
+   */
   .app-layout--sidebar-collapsed {
     .app-sidebar {
       padding-inline: 0.875rem;
     }
 
+    /*
+     * En collapsed ocultamos Cirion y la línea,
+     * pero conservamos CIMS.
+     */
     .app-sidebar__brand {
       justify-content: center;
+
+      margin-bottom: var(--cims-space-8);
     }
 
     .app-sidebar__brand img,
-    .app-sidebar__separator,
-    .app-sidebar__product,
+    .app-sidebar__separator {
+      display: none;
+    }
+
+    .app-sidebar__product {
+      display: block;
+
+      width: 100%;
+
+      font-size: var(--cims-font-size-xs);
+      text-align: center;
+    }
+
+    /*
+     * Los labels desaparecen completamente.
+     */
     .app-sidebar__label {
       display: none;
     }
 
+    /*
+     * Los iconos quedan centrados.
+     */
     .app-sidebar__link {
       justify-content: center;
+
+      gap: 0;
 
       padding-inline: 0;
     }
 
+    /*
+     * El control también queda en el flujo
+     * y centrado con los iconos.
+     */
+    .app-sidebar__collapse-wrapper {
+      justify-content: center;
+    }
+
     .app-sidebar__collapse {
-      right: -1rem;
+      width: 2.75rem;
+      height: 2.75rem;
+
+      font-size: 1.5rem;
     }
   }
 }
