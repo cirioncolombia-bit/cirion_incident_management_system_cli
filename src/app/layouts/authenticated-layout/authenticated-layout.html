@@ -1,0 +1,80 @@
+<div class="app-layout">
+    <aside class="app-sidebar" [class.app-sidebar--open]="sidebarOpen()">
+        <div class="app-sidebar__brand">
+            <img src="brand/cirion-logo.png" alt="Cirion" />
+
+            <span class="app-sidebar__separator" aria-hidden="true"></span>
+
+            <span class="app-sidebar__product">
+                CIMS
+            </span>
+        </div>
+
+        <nav class="app-sidebar__nav" aria-label="Navegación principal">
+            <a class="app-sidebar__link" routerLink="/dashboard" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
+                Dashboard
+            </a>
+
+            <a class="app-sidebar__link" routerLink="/incidents" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
+                Incidents
+            </a>
+
+            <a class="app-sidebar__link" routerLink="/assignments" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
+                Assignments
+            </a>
+
+            <a class="app-sidebar__link" routerLink="/delivery" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
+                Deliveries
+            </a>
+
+            <a class="app-sidebar__link" routerLink="/users" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
+                Users
+            </a>
+        </nav>
+
+        <a class="app-sidebar__user" routerLink="/profile" aria-label="Editar perfil de Pedro García"
+            (click)="closeSidebar()">
+            <span class="app-sidebar__avatar">
+                PG
+            </span>
+
+            <div class="app-sidebar__user-info">
+                <strong>Pedro García</strong>
+                <span>Administrador</span>
+            </div>
+        </a>
+
+
+    </aside>
+
+    @if (sidebarOpen()) {
+    <button class="app-overlay" type="button" aria-label="Cerrar menú de navegación" (click)="closeSidebar()"></button>
+    }
+
+    <div class="app-main">
+        <header class="app-header">
+            <button class="app-header__menu" type="button" aria-label="Abrir menú de navegación"
+                (click)="openSidebar()">
+                ☰
+            </button>
+
+            <div class="app-header__welcome">
+                <h1>Hola, Pedro 👋</h1>
+                <p>Bienvenido a CIMS</p>
+            </div>
+            <a class="app-header__user" routerLink="/profile" aria-label="Editar perfil de Pedro García">
+                <span class="app-header__avatar">
+                    PG
+                </span>
+
+                <div class="app-header__user-info">
+                    <strong>Pedro García</strong>
+                    <span>Administrador</span>
+                </div>
+            </a>
+        </header>
+        <main class="app-content">
+            <router-outlet />
+        </main>
+    </div>
+</div>

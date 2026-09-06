@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -6,14 +6,4 @@ import { Component, signal } from '@angular/core';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class Dashboard {
-  readonly sidebarOpen = signal(false);
-
-  openSidebar(): void {
-    this.sidebarOpen.set(true);
-  }
-
-  closeSidebar(): void {
-    this.sidebarOpen.set(false);
-  }
-}
+export class Dashboard {}
