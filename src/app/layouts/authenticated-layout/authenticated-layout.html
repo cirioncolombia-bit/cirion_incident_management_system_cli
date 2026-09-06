@@ -1,80 +1,284 @@
-<div class="app-layout">
-    <aside class="app-sidebar" [class.app-sidebar--open]="sidebarOpen()">
-        <div class="app-sidebar__brand">
-            <img src="brand/cirion-logo.png" alt="Cirion" />
+<div
+  class="app-layout"
+  [class.app-layout--sidebar-collapsed]="sidebarCollapsed()"
+>
+  <aside
+    class="app-sidebar"
+    [class.app-sidebar--open]="sidebarOpen()"
+  >
+    <div class="app-sidebar__brand">
+      <img
+        src="brand/cirion-logo.png"
+        alt="Cirion"
+      />
 
-            <span class="app-sidebar__separator" aria-hidden="true"></span>
+      <span
+        class="app-sidebar__separator"
+        aria-hidden="true"
+      ></span>
 
-            <span class="app-sidebar__product">
-                CIMS
-            </span>
+      <span class="app-sidebar__product">
+        CIMS
+      </span>
+
+      <button
+        class="app-sidebar__collapse"
+        type="button"
+        [attr.aria-label]="
+          sidebarCollapsed()
+            ? 'Expandir menú'
+            : 'Contraer menú'
+        "
+        [attr.title]="
+          sidebarCollapsed()
+            ? 'Expandir menú'
+            : 'Contraer menú'
+        "
+        (click)="toggleSidebarCollapsed()"
+      >
+        @if (sidebarCollapsed()) {
+          ›
+        } @else {
+          ‹
+        }
+      </button>
+    </div>
+
+    <nav
+      class="app-sidebar__nav"
+      aria-label="Navegación principal"
+    >
+      <a
+        class="app-sidebar__link"
+        routerLink="/dashboard"
+        routerLinkActive="app-sidebar__link--active"
+        (click)="closeSidebar()"
+        title="Dashboard"
+      >
+        <span
+          class="app-sidebar__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-5v6h-5A1.5 1.5 0 0 1 3 19.5z" />
+          </svg>
+        </span>
+
+        <span class="app-sidebar__label">
+          Dashboard
+        </span>
+      </a>
+
+      <a
+        class="app-sidebar__link"
+        routerLink="/incidents"
+        routerLinkActive="app-sidebar__link--active"
+        (click)="closeSidebar()"
+        title="Incidents"
+      >
+        <span
+          class="app-sidebar__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3 2.5 20h19z" />
+            <path d="M12 9v5" />
+            <path d="M12 17.5v.01" />
+          </svg>
+        </span>
+
+        <span class="app-sidebar__label">
+          Incidents
+        </span>
+      </a>
+
+      <a
+        class="app-sidebar__link"
+        routerLink="/assignments"
+        routerLinkActive="app-sidebar__link--active"
+        (click)="closeSidebar()"
+        title="Assignments"
+      >
+        <span
+          class="app-sidebar__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M8 6h12" />
+            <path d="M8 12h12" />
+            <path d="M8 18h12" />
+            <path d="m3 6 1 1 2-2" />
+            <path d="m3 12 1 1 2-2" />
+            <path d="m3 18 1 1 2-2" />
+          </svg>
+        </span>
+
+        <span class="app-sidebar__label">
+          Assignments
+        </span>
+      </a>
+
+      <a
+        class="app-sidebar__link"
+        routerLink="/delivery"
+        routerLinkActive="app-sidebar__link--active"
+        (click)="closeSidebar()"
+        title="Deliveries"
+      >
+        <span
+          class="app-sidebar__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M3 6h11v11H3z" />
+            <path d="M14 10h4l3 3v4h-7z" />
+            <circle cx="7" cy="18" r="2" />
+            <circle cx="18" cy="18" r="2" />
+          </svg>
+        </span>
+
+        <span class="app-sidebar__label">
+          Deliveries
+        </span>
+      </a>
+
+      <a
+        class="app-sidebar__link"
+        routerLink="/users"
+        routerLinkActive="app-sidebar__link--active"
+        (click)="closeSidebar()"
+        title="Users"
+      >
+        <span
+          class="app-sidebar__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="4" />
+            <path d="M2.5 21a6.5 6.5 0 0 1 13 0" />
+            <circle cx="17" cy="9" r="3" />
+            <path d="M16 15.5A5.5 5.5 0 0 1 21.5 21" />
+          </svg>
+        </span>
+
+        <span class="app-sidebar__label">
+          Users
+        </span>
+      </a>
+    </nav>
+
+    <div class="app-sidebar__account">
+      <div class="app-sidebar__user">
+        <span class="app-sidebar__avatar">
+          PG
+        </span>
+
+        <div class="app-sidebar__user-info">
+          <strong>Pedro García</strong>
+          <span>Administrador</span>
         </div>
+      </div>
 
-        <nav class="app-sidebar__nav" aria-label="Navegación principal">
-            <a class="app-sidebar__link" routerLink="/dashboard" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
-                Dashboard
-            </a>
-
-            <a class="app-sidebar__link" routerLink="/incidents" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
-                Incidents
-            </a>
-
-            <a class="app-sidebar__link" routerLink="/assignments" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
-                Assignments
-            </a>
-
-            <a class="app-sidebar__link" routerLink="/delivery" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
-                Deliveries
-            </a>
-
-            <a class="app-sidebar__link" routerLink="/users" routerLinkActive="app-sidebar__link--active" (click)="closeSidebar()">
-                Users
-            </a>
-        </nav>
-
-        <a class="app-sidebar__user" routerLink="/profile" aria-label="Editar perfil de Pedro García"
-            (click)="closeSidebar()">
-            <span class="app-sidebar__avatar">
-                PG
-            </span>
-
-            <div class="app-sidebar__user-info">
-                <strong>Pedro García</strong>
-                <span>Administrador</span>
-            </div>
+      <div class="app-sidebar__account-actions">
+        <a
+          class="app-sidebar__account-action"
+          routerLink="/profile"
+          (click)="closeSidebar()"
+        >
+          Mi perfil
         </a>
 
-
-    </aside>
-
-    @if (sidebarOpen()) {
-    <button class="app-overlay" type="button" aria-label="Cerrar menú de navegación" (click)="closeSidebar()"></button>
-    }
-
-    <div class="app-main">
-        <header class="app-header">
-            <button class="app-header__menu" type="button" aria-label="Abrir menú de navegación"
-                (click)="openSidebar()">
-                ☰
-            </button>
-
-            <div class="app-header__welcome">
-                <h1>Hola, Pedro 👋</h1>
-                <p>Bienvenido a CIMS</p>
-            </div>
-            <a class="app-header__user" routerLink="/profile" aria-label="Editar perfil de Pedro García">
-                <span class="app-header__avatar">
-                    PG
-                </span>
-
-                <div class="app-header__user-info">
-                    <strong>Pedro García</strong>
-                    <span>Administrador</span>
-                </div>
-            </a>
-        </header>
-        <main class="app-content">
-            <router-outlet />
-        </main>
+        <button
+          class="app-sidebar__account-action app-sidebar__account-action--logout"
+          type="button"
+          (click)="logout()"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </div>
+  </aside>
+
+  @if (sidebarOpen()) {
+    <button
+      class="app-overlay"
+      type="button"
+      aria-label="Cerrar menú de navegación"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+  <div class="app-main">
+    <header class="app-header">
+      <button
+        class="app-header__menu"
+        type="button"
+        aria-label="Abrir menú de navegación"
+        (click)="openSidebar()"
+      >
+        ☰
+      </button>
+
+      <div class="app-header__welcome">
+        <h1>Hola, Pedro 👋</h1>
+        <p>Bienvenido a CIMS</p>
+      </div>
+
+      <div class="app-header__account">
+        <button
+          class="app-header__user"
+          type="button"
+          aria-label="Abrir menú de usuario"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="userMenuOpen()"
+          (click)="toggleUserMenu()"
+        >
+          <span class="app-header__avatar">
+            PG
+          </span>
+
+          <span class="app-header__user-info">
+            <strong>Pedro García</strong>
+            <span>Administrador</span>
+          </span>
+
+          <span
+            class="app-header__chevron"
+            aria-hidden="true"
+          >
+            ▾
+          </span>
+        </button>
+
+        @if (userMenuOpen()) {
+          <div
+            class="app-header__user-menu"
+            role="menu"
+          >
+            <a
+              class="app-header__user-menu-item"
+              routerLink="/profile"
+              role="menuitem"
+              (click)="closeUserMenu()"
+            >
+              Mi perfil
+            </a>
+
+            <button
+              class="app-header__user-menu-item app-header__user-menu-item--logout"
+              type="button"
+              role="menuitem"
+              (click)="logout()"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    </header>
+
+    <main class="app-content">
+      <router-outlet />
+    </main>
+  </div>
 </div>
