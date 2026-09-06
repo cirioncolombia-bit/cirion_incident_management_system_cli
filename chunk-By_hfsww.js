@@ -1,0 +1,1 @@
+import{f as Lm,h as Rs,p as Os,u as Jg}from"./main-W2EF4TOE.js";var o=class t{static ɵfac=function(e){return new(e||t)};static ɵcmp=Jg({type:t,selectors:[[`app-delivery`]],decls:2,vars:0,template:function(e,l){e&1&&(Rs(0,`p`),Lm(1,`delivery works!`),Os())},encapsulation:2})};export{o as Delivery};
