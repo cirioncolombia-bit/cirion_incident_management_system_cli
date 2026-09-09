@@ -1,1 +1,0 @@
-import{f as Lm,h as Rs,p as Os,u as Jg}from"./main-W2EF4TOE.js";var m=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=Jg({type:s,selectors:[[`app-assignments`]],decls:2,vars:0,template:function(e,p){e&1&&(Rs(0,`p`),Lm(1,`assignments works!`),Os())},encapsulation:2})};export{m as Assignments};

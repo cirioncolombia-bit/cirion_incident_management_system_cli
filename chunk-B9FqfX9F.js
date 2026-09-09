@@ -1,1 +1,0 @@
-import{f as Lm,h as Rs,p as Os,u as Jg}from"./main-W2EF4TOE.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=Jg({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(Rs(0,`p`),Lm(1,`incidents works!`),Os())},encapsulation:2})};export{a as Incidents};

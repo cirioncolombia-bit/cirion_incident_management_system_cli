@@ -1,0 +1,1 @@
+import{T as Ia,Vt as ly,rn as sv,sn as va}from"./chunk-Cz44BQOT.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=ly({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(va(0,`p`),sv(1,`incidents works!`),Ia())},encapsulation:2})};export{a as Incidents};

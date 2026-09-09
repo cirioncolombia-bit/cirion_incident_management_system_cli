@@ -1,0 +1,1 @@
+import{T as Ia,Vt as ly,rn as sv,sn as va}from"./chunk-Cz44BQOT.js";var m=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=ly({type:s,selectors:[[`app-assignments`]],decls:2,vars:0,template:function(e,p){e&1&&(va(0,`p`),sv(1,`assignments works!`),Ia())},encapsulation:2})};export{m as Assignments};
