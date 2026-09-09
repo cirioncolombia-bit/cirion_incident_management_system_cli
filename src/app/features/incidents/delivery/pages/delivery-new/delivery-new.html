@@ -1,0 +1,139 @@
+<section
+  class="delivery-section"
+  aria-labelledby="identification-title"
+>
+  <button
+    class="delivery-section__header delivery-section__header--toggle"
+    type="button"
+    [attr.aria-expanded]="identificationOpen()"
+    aria-controls="identification-content"
+    (click)="toggleIdentification()"
+  >
+    <span
+      class="delivery-section__icon"
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 24 24">
+        <path d="M8 6h12" />
+        <path d="M8 12h12" />
+        <path d="M8 18h12" />
+        <path d="m3 6 1 1 2-2" />
+        <path d="m3 12 1 1 2-2" />
+        <path d="m3 18 1 1 2-2" />
+      </svg>
+    </span>
+
+    <span class="delivery-section__heading">
+      <span id="identification-title">
+        1. Identificación
+      </span>
+
+      <small>
+        Información principal para identificar el delivery.
+      </small>
+    </span>
+
+    <span
+      class="delivery-section__chevron"
+      aria-hidden="true"
+    >
+      @if (identificationOpen()) {
+        ˄
+      } @else {
+        ˅
+      }
+    </span>
+  </button>
+
+  <div
+    id="identification-content"
+    class="delivery-section__content"
+    [class.delivery-section__content--closed]="!identificationOpen()"
+  >
+    <div class="delivery-section__grid">
+      <div class="delivery-field">
+        <label for="dkoTkt">
+          DKO/TKT
+          <span aria-hidden="true">*</span>
+        </label>
+
+        <input
+          id="dkoTkt"
+          type="text"
+          formControlName="dkoTkt"
+          placeholder="Orden de trabajo interna"
+        />
+
+        <small class="delivery-field__help">
+          Orden de trabajo interna.
+        </small>
+
+        @if (
+          form.controls.dkoTkt.touched
+          && form.controls.dkoTkt.hasError('required')
+        ) {
+          <p class="delivery-field__error">
+            DKO/TKT es obligatorio.
+          </p>
+        }
+      </div>
+
+      <div class="delivery-field">
+        <label for="rfsFiberChain">
+          RFS FIBER CHAIN
+          <span aria-hidden="true">*</span>
+        </label>
+
+        <input
+          id="rfsFiberChain"
+          type="text"
+          formControlName="rfsFiberChain"
+          placeholder="Número ID del circuito"
+        />
+
+        <small class="delivery-field__help">
+          Número ID del circuito.
+        </small>
+
+        @if (
+          form.controls.rfsFiberChain.touched
+          && form.controls.rfsFiberChain.hasError('required')
+        ) {
+          <p class="delivery-field__error">
+            RFS FIBER CHAIN es obligatorio.
+          </p>
+        }
+      </div>
+
+      <div class="delivery-field">
+        <label for="consecutive">
+          CONSECUTIVO
+        </label>
+
+        <input
+          id="consecutive"
+          type="text"
+          formControlName="consecutive"
+          placeholder="Número de aprobado del proveedor"
+        />
+
+        <small class="delivery-field__help">
+          Número de aprobado del proveedor con el que se instaló.
+        </small>
+      </div>
+
+      <div class="delivery-field">
+        <label for="soSap">
+          SO SAP
+        </label>
+
+        <input
+          id="soSap"
+          type="text"
+          formControlName="soSap"
+          placeholder="Ingresa el SO SAP"
+        />
+      </div>
+    </div>
+  </div>
+</section>

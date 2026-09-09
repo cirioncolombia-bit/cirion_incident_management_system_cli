@@ -1,1 +1,266 @@
-<p>delivery works!</p>
+<section class="delivery-page">
+    <header class="delivery-page__header">
+        <div>
+            <p class="delivery-page__breadcrumb">
+                Deliveries
+            </p>
+
+            <h1>Deliveries</h1>
+
+            <p class="delivery-page__description">
+                Consulta y gestiona todos los deliveries,
+                independientemente de su estado.
+            </p>
+        </div>
+
+        <a class="delivery-page__create" routerLink="/delivery/new">
+            <span aria-hidden="true">＋</span>
+            New Delivery
+        </a>
+    </header>
+
+    <section class="delivery-filters" aria-label="Filtros de deliveries">
+        <div class="delivery-filters__search">
+            <span aria-hidden="true">⌕</span>
+
+            <input type="search" placeholder="Buscar por DKO/TKT, cliente, sede, ciudad..." [value]="searchTerm()"
+                (input)="onSearch($event)" />
+        </div>
+
+        <div class="delivery-filters__actions">
+            <button class="delivery-filters__button" type="button">
+                Filtros
+            </button>
+
+            <button class="delivery-filters__clear" type="button" (click)="clearFilters()">
+                Limpiar filtros
+            </button>
+        </div>
+    </section>
+
+    <section class="delivery-summary" aria-label="Resumen de deliveries">
+        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+        selectedStatus() === 'TODOS'
+      " (click)="filterByStatus('TODOS')">
+            <span>Todos</span>
+            <strong>{{ totalDeliveries() }}</strong>
+        </button>
+
+        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+        selectedStatus() === 'EN PROCESO'
+      " (click)="filterByStatus('EN PROCESO')">
+            <span class="delivery-summary__label">
+                <i class="delivery-status-dot delivery-status-dot--progress"></i>
+                En proceso
+            </span>
+
+            <strong>{{ inProgressDeliveries() }}</strong>
+        </button>
+
+        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+        selectedStatus() === 'DETENIDO'
+      " (click)="filterByStatus('DETENIDO')">
+            <span class="delivery-summary__label">
+                <i class="delivery-status-dot delivery-status-dot--stopped"></i>
+                Detenidos
+            </span>
+
+            <strong>{{ stoppedDeliveries() }}</strong>
+        </button>
+
+        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+        selectedStatus() === 'TERMINADO'
+      " (click)="filterByStatus('TERMINADO')">
+            <span class="delivery-summary__label">
+                <i class="delivery-status-dot delivery-status-dot--completed"></i>
+                Terminados
+            </span>
+
+            <strong>{{ completedDeliveries() }}</strong>
+        </button>
+    </section>
+
+    <!-- Mobile -->
+    <div class="delivery-list">
+        @for (
+        delivery of filteredDeliveries();
+        track delivery.id
+        ) {
+        <article class="delivery-card">
+            <header class="delivery-card__header">
+                <div>
+                    <strong>
+                        {{ delivery.dkoTkt }}
+                    </strong>
+
+                    <p>
+                        {{ delivery.client }}
+                    </p>
+
+                    <span>
+                        {{ delivery.building }}
+                    </span>
+                </div>
+
+                <span class="delivery-status" [class.delivery-status--progress]="
+              delivery.status === 'EN PROCESO'
+            " [class.delivery-status--stopped]="
+              delivery.status === 'DETENIDO'
+            " [class.delivery-status--completed]="
+              delivery.status === 'TERMINADO'
+            ">
+                    {{ delivery.status }}
+                </span>
+            </header>
+
+            <div class="delivery-card__details">
+                <div>
+                    <span>Ciudad</span>
+                    <strong>{{ delivery.city }}</strong>
+                </div>
+
+                <div>
+                    <span>Tecnología</span>
+                    <strong>{{ delivery.technology }}</strong>
+                </div>
+
+                <div>
+                    <span>Responsable</span>
+                    <strong>{{ delivery.responsible }}</strong>
+                </div>
+
+                <div>
+                    <span>Fecha asignación</span>
+                    <strong>{{ delivery.assignmentDate }}</strong>
+                </div>
+            </div>
+
+            <button class="delivery-card__detail" type="button">
+                Ver detalle
+                <span aria-hidden="true">›</span>
+            </button>
+        </article>
+        } @empty {
+        <div class="delivery-empty">
+            <strong>
+                No encontramos deliveries
+            </strong>
+
+            <p>
+                Prueba cambiando los filtros o el término de búsqueda.
+            </p>
+        </div>
+        }
+    </div>
+
+    <!-- Desktop -->
+    <div class="delivery-table-wrapper">
+        <table class="delivery-table">
+            <thead>
+                <tr>
+                    <th>DKO/TKT</th>
+                    <th>Cliente</th>
+                    <th>Sede / Edificio</th>
+                    <th>Ciudad</th>
+                    <th>Tecnología</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Responsable</th>
+                    <th>Fecha asignación</th>
+                    <th aria-label="Acciones"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (
+                delivery of filteredDeliveries();
+                track delivery.id
+                ) {
+                <tr>
+                    <td>
+                        <strong>
+                            {{ delivery.dkoTkt }}
+                        </strong>
+                    </td>
+
+                    <td>{{ delivery.client }}</td>
+
+                    <td>{{ delivery.building }}</td>
+
+                    <td>{{ delivery.city }}</td>
+
+                    <td>{{ delivery.technology }}</td>
+
+                    <td>{{ delivery.type }}</td>
+
+                    <td>
+                        <span class="delivery-status" [class.delivery-status--progress]="
+                  delivery.status === 'EN PROCESO'
+                " [class.delivery-status--stopped]="
+                  delivery.status === 'DETENIDO'
+                " [class.delivery-status--completed]="
+                  delivery.status === 'TERMINADO'
+                ">
+                            {{ delivery.status }}
+                        </span>
+                    </td>
+
+                    <td>{{ delivery.responsible }}</td>
+
+                    <td>{{ delivery.assignmentDate }}</td>
+
+                    <td>
+                        <button class="delivery-table__actions" type="button" aria-label="Acciones del delivery">
+                            •••
+                        </button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td class="delivery-table__empty" colspan="10">
+                        No encontramos deliveries con los filtros actuales.
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="delivery-pagination">
+        <p>
+            Mostrando
+            {{ filteredDeliveries().length }}
+            de
+            {{ totalDeliveries() }}
+            resultados
+        </p>
+
+        <nav aria-label="Paginación">
+            <button type="button" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+                ‹
+            </button>
+
+            <button type="button" [class.delivery-pagination__active]="
+          currentPage() === 1
+        " (click)="goToPage(1)">
+                1
+            </button>
+
+            <button type="button" [class.delivery-pagination__active]="
+          currentPage() === 2
+        " (click)="goToPage(2)">
+                2
+            </button>
+
+            <button type="button" [class.delivery-pagination__active]="
+          currentPage() === 3
+        " (click)="goToPage(3)">
+                3
+            </button>
+
+            <button type="button" (click)="goToPage(currentPage() + 1)">
+                ›
+            </button>
+        </nav>
+    </footer>
+</section>

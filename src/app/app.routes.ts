@@ -4,9 +4,7 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/auth/pages/login/login').then(
-        (component) => component.Login,
-      ),
+      import('./features/auth/pages/login/login').then((component) => component.Login),
   },
 
   {
@@ -33,9 +31,7 @@ export const routes: Routes = [
       {
         path: 'incidents',
         loadComponent: () =>
-          import(
-            './features/incidents/incidents/pages/incidents/incidents'
-          ).then(
+          import('./features/incidents/incidents/pages/incidents/incidents').then(
             (component) => component.Incidents,
           ),
       },
@@ -43,9 +39,7 @@ export const routes: Routes = [
       {
         path: 'assignments',
         loadComponent: () =>
-          import(
-            './features/incidents/assignments/pages/assignments/assignments'
-          ).then(
+          import('./features/incidents/assignments/pages/assignments/assignments').then(
             (component) => component.Assignments,
           ),
       },
@@ -53,9 +47,7 @@ export const routes: Routes = [
       {
         path: 'delivery',
         loadComponent: () =>
-          import(
-            './features/incidents/delivery/pages/delivery/delivery'
-          ).then(
+          import('./features/incidents/delivery/pages/delivery/delivery').then(
             (component) => component.Delivery,
           ),
       },
@@ -63,9 +55,7 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () =>
-          import(
-            './features/users/pages/users-list/users-list'
-          ).then(
+          import('./features/users/pages/users-list/users-list').then(
             (component) => component.UsersList,
           ),
       },
@@ -73,8 +63,13 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./features/profile/pages/profile/profile').then(
-            (component) => component.Profile,
+          import('./features/profile/pages/profile/profile').then((component) => component.Profile),
+      },
+      {
+        path: 'delivery/new',
+        loadComponent: () =>
+          import('./features/incidents/delivery/pages/delivery-new/delivery-new').then(
+            (component) => component.DeliveryNew,
           ),
       },
     ],
