@@ -1,1 +1,0 @@
-import{T as Ia,Vt as ly,rn as sv,sn as va}from"./chunk-Cz44BQOT.js";var a=class t{static ɵfac=function(e){return new(e||t)};static ɵcmp=ly({type:t,selectors:[[`app-profile`]],decls:2,vars:0,template:function(e,f){e&1&&(va(0,`p`),sv(1,`profile works!`),Ia())},encapsulation:2})};export{a as Profile};

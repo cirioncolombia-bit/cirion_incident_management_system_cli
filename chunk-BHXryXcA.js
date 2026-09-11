@@ -1,0 +1,1 @@
+import{Y as fv,Z as gy,_ as Ea,h as Da}from"./main-NVGDOVJZ.js";var m=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=gy({type:s,selectors:[[`app-assignments`]],decls:2,vars:0,template:function(e,p){e&1&&(Ea(0,`p`),fv(1,`assignments works!`),Da())},encapsulation:2})};export{m as Assignments};

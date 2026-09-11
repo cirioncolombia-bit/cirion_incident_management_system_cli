@@ -1,0 +1,1 @@
+import{Y as fv,Z as gy,_ as Ea,h as Da}from"./main-NVGDOVJZ.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=gy({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(Ea(0,`p`),fv(1,`incidents works!`),Da())},encapsulation:2})};export{a as Incidents};
