@@ -1,0 +1,1045 @@
+<section class="delivery-edit">
+  @if (delivery(); as delivery) {
+    <header class="delivery-edit__header">
+      <a
+        class="delivery-edit__back"
+        [routerLink]="[
+          '/delivery',
+          delivery.id
+        ]"
+      >
+        <span aria-hidden="true">
+          ←
+        </span>
+
+        <span>
+          Back to Delivery Details
+        </span>
+      </a>
+
+      <div class="delivery-edit__heading">
+        <div>
+          <p class="delivery-edit__eyebrow">
+            Delivery
+          </p>
+
+          <h1>
+            Edit Delivery
+          </h1>
+
+          <p class="delivery-edit__subtitle">
+            Update the delivery information below.
+          </p>
+        </div>
+
+        <div class="delivery-edit__reference">
+          <span>
+            DKO/TKT
+          </span>
+
+          <strong>
+            {{ delivery.dkoTkt }}
+          </strong>
+        </div>
+      </div>
+    </header>
+
+    <form
+      class="delivery-edit__form"
+      [formGroup]="editForm"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <!-- IDENTIFICATION -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('identification')
+          "
+          aria-controls="identification-content"
+          (click)="
+            toggleSection('identification')
+          "
+        >
+          <div>
+            <h2>
+              Identification
+            </h2>
+
+            <p>
+              Internal work order and circuit references.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen(
+                'identification'
+              )
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="identification-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen(
+              'identification'
+            )
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label>
+                DKO/TKT
+              </label>
+
+              <input
+                type="text"
+                [value]="delivery.dkoTkt"
+                readonly
+              />
+
+              <span class="delivery-field__help">
+                Internal Work Order.
+                This value cannot be changed.
+              </span>
+            </div>
+
+            <div class="delivery-field">
+              <label for="rfsFiberChain">
+                RFS Fiber Chain
+                <span aria-hidden="true">
+                  *
+                </span>
+              </label>
+
+              <input
+                id="rfsFiberChain"
+                type="text"
+                formControlName="rfsFiberChain"
+              />
+
+              <span class="delivery-field__help">
+                Circuit ID.
+              </span>
+
+              @if (
+                editForm.controls.rfsFiberChain.invalid
+                && (
+                  editForm.controls.rfsFiberChain.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  RFS Fiber Chain is required.
+                </span>
+              }
+            </div>
+
+            <div class="delivery-field">
+              <label for="consecutive">
+                Consecutive
+                <span aria-hidden="true">
+                  *
+                </span>
+              </label>
+
+              <input
+                id="consecutive"
+                type="text"
+                formControlName="consecutive"
+              />
+
+              <span class="delivery-field__help">
+                Vendor approval number.
+              </span>
+
+              @if (
+                editForm.controls.consecutive.invalid
+                && (
+                  editForm.controls.consecutive.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  Consecutive is required.
+                </span>
+              }
+            </div>
+
+            <div class="delivery-field">
+              <label for="soSap">
+                SO SAP
+                <span aria-hidden="true">
+                  *
+                </span>
+              </label>
+
+              <input
+                id="soSap"
+                type="text"
+                formControlName="soSap"
+              />
+
+              @if (
+                editForm.controls.soSap.invalid
+                && (
+                  editForm.controls.soSap.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  SO SAP is required.
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENT & LOCATION -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen(
+              'clientLocation'
+            )
+          "
+          aria-controls="client-location-content"
+          (click)="
+            toggleSection(
+              'clientLocation'
+            )
+          "
+        >
+          <div>
+            <h2>
+              Client & Location
+            </h2>
+
+            <p>
+              Customer, site and commercial information.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen(
+                'clientLocation'
+              )
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="client-location-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen(
+              'clientLocation'
+            )
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="clientName">
+                Client Name *
+              </label>
+
+              <input
+                id="clientName"
+                type="text"
+                formControlName="clientName"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="buildingName">
+                Building / Site *
+              </label>
+
+              <input
+                id="buildingName"
+                type="text"
+                formControlName="buildingName"
+              />
+            </div>
+
+            <div class="delivery-field delivery-field--wide">
+              <label for="address">
+                Address *
+              </label>
+
+              <input
+                id="address"
+                type="text"
+                formControlName="address"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="city">
+                City *
+              </label>
+
+              <select
+                id="city"
+                formControlName="city"
+              >
+                <option value="">
+                  Select a city
+                </option>
+
+                @for (
+                  city of cities;
+                  track city
+                ) {
+                  <option
+                    [value]="city"
+                  >
+                    {{ city }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="node">
+                Node *
+              </label>
+
+              <select
+                id="node"
+                formControlName="node"
+              >
+                <option value="">
+                  Select a node
+                </option>
+
+                @for (
+                  node of nodes;
+                  track node
+                ) {
+                  <option
+                    [value]="node"
+                  >
+                    {{ node }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="revenue">
+                Revenue *
+              </label>
+
+              <input
+                id="revenue"
+                type="text"
+                inputmode="numeric"
+                formControlName="revenue"
+              />
+
+              @if (
+                editForm.controls.revenue.invalid
+                && (
+                  editForm.controls.revenue.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  Enter a valid revenue amount.
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLASSIFICATION -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen(
+              'classification'
+            )
+          "
+          aria-controls="classification-content"
+          (click)="
+            toggleSection(
+              'classification'
+            )
+          "
+        >
+          <div>
+            <h2>
+              Classification
+            </h2>
+
+            <p>
+              Delivery type, status and technology.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen(
+                'classification'
+              )
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="classification-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen(
+              'classification'
+            )
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="type">
+                Type *
+              </label>
+
+              <select
+                id="type"
+                formControlName="type"
+              >
+                <option value="">
+                  Select a type
+                </option>
+
+                @for (
+                  type of types;
+                  track type
+                ) {
+                  <option
+                    [value]="type"
+                  >
+                    {{ typeLabel(type) }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="status">
+                Status *
+              </label>
+
+              <select
+                id="status"
+                formControlName="status"
+              >
+                <option value="">
+                  Select a status
+                </option>
+
+                @for (
+                  status of statuses;
+                  track status
+                ) {
+                  <option
+                    [value]="status"
+                  >
+                    {{
+                      statusLabel(
+                        status
+                      )
+                    }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="technology">
+                Technology *
+              </label>
+
+              <select
+                id="technology"
+                formControlName="technology"
+              >
+                <option value="">
+                  Select a technology
+                </option>
+
+                @for (
+                  technology
+                    of technologies;
+                  track technology
+                ) {
+                  <option
+                    [value]="technology"
+                  >
+                    {{
+                      technologyLabel(
+                        technology
+                      )
+                    }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ASSIGNMENT -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('assignment')
+          "
+          aria-controls="assignment-content"
+          (click)="
+            toggleSection('assignment')
+          "
+        >
+          <div>
+            <h2>
+              Assignment
+            </h2>
+
+            <p>
+              Vendor, contractor and Cirion ownership.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen(
+                'assignment'
+              )
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="assignment-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen(
+              'assignment'
+            )
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="landlord">
+                Landlord *
+              </label>
+
+              <select
+                id="landlord"
+                formControlName="landlord"
+              >
+                <option value="">
+                  Select a vendor
+                </option>
+
+                @for (
+                  landlord
+                    of landlords;
+                  track landlord
+                ) {
+                  <option
+                    [value]="landlord"
+                  >
+                    {{ landlord }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="eaim">
+                EAIM *
+              </label>
+
+              <select
+                id="eaim"
+                formControlName="eaim"
+              >
+                <option value="">
+                  Select a contractor
+                </option>
+
+                @for (
+                  contractor
+                    of contractors;
+                  track contractor
+                ) {
+                  <option
+                    [value]="contractor"
+                  >
+                    {{ contractor }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="responsible">
+                Responsible *
+              </label>
+
+              <select
+                id="responsible"
+                formControlName="responsible"
+              >
+                <option value="">
+                  Select an engineer
+                </option>
+
+                @for (
+                  responsible
+                    of responsibles;
+                  track responsible
+                ) {
+                  <option
+                    [value]="responsible"
+                  >
+                    {{ responsible }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DATES -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('dates')
+          "
+          aria-controls="dates-content"
+          (click)="
+            toggleSection('dates')
+          "
+        >
+          <div>
+            <h2>
+              Dates
+            </h2>
+
+            <p>
+              Assignment, survey and installation milestones.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen('dates')
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="dates-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('dates')
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="dkoAssignmentDate">
+                DKO Assignment Date *
+              </label>
+
+              <input
+                id="dkoAssignmentDate"
+                type="date"
+                formControlName="dkoAssignmentDate"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="eaimSurveyRequestDate">
+                EAIM Survey Request Date *
+              </label>
+
+              <input
+                id="eaimSurveyRequestDate"
+                type="date"
+                formControlName="eaimSurveyRequestDate"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="installationDate">
+                Installation Date *
+              </label>
+
+              <input
+                id="installationDate"
+                type="date"
+                formControlName="installationDate"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COSTS -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('costs')
+          "
+          aria-controls="costs-content"
+          (click)="
+            toggleSection('costs')
+          "
+        >
+          <div>
+            <h2>
+              Costs
+            </h2>
+
+            <p>
+              Survey and installation financial information.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen('costs')
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="costs-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('costs')
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="surveyCost">
+                Survey Cost *
+              </label>
+
+              <input
+                id="surveyCost"
+                type="text"
+                inputmode="numeric"
+                formControlName="surveyCost"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="installationBudget">
+                Installation Budget *
+              </label>
+
+              <input
+                id="installationBudget"
+                type="text"
+                inputmode="numeric"
+                formControlName="installationBudget"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="installationCost">
+                Installation Cost *
+              </label>
+
+              <input
+                id="installationCost"
+                type="text"
+                inputmode="numeric"
+                formControlName="installationCost"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('contact')
+          "
+          aria-controls="contact-content"
+          (click)="
+            toggleSection('contact')
+          "
+        >
+          <div>
+            <h2>
+              Contact
+            </h2>
+
+            <p>
+              Primary delivery contact information.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen('contact')
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="contact-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('contact')
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="email">
+                Email *
+              </label>
+
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+              />
+
+              @if (
+                editForm.controls.email.invalid
+                && (
+                  editForm.controls.email.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  Enter a valid email address.
+                </span>
+              }
+            </div>
+
+            <div class="delivery-field">
+              <label for="contact">
+                Contact Name *
+              </label>
+
+              <input
+                id="contact"
+                type="text"
+                formControlName="contact"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="phone">
+                Mobile Phone *
+              </label>
+
+              <input
+                id="phone"
+                type="tel"
+                inputmode="numeric"
+                formControlName="phone"
+              />
+
+              @if (
+                editForm.controls.phone.invalid
+                && (
+                  editForm.controls.phone.touched
+                  || submitted()
+                )
+              ) {
+                <span class="delivery-field__error">
+                  Enter a valid Colombian mobile number.
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- OBSERVATIONS -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen(
+              'observations'
+            )
+          "
+          aria-controls="observations-content"
+          (click)="
+            toggleSection(
+              'observations'
+            )
+          "
+        >
+          <div>
+            <h2>
+              Observations
+            </h2>
+
+            <p>
+              Additional operational information.
+            </p>
+          </div>
+
+          <span
+            class="delivery-section__chevron"
+            aria-hidden="true"
+          >
+            @if (
+              isSectionOpen(
+                'observations'
+              )
+            ) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          id="observations-content"
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen(
+              'observations'
+            )
+          "
+        >
+          <div class="delivery-field">
+            <label for="observations">
+              Observations *
+            </label>
+
+            <textarea
+              id="observations"
+              rows="5"
+              formControlName="observations"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <footer class="delivery-edit__footer">
+        <button
+          type="button"
+          class="delivery-edit__cancel"
+          (click)="cancel()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="delivery-edit__save"
+        >
+          Save Changes
+        </button>
+      </footer>
+    </form>
+  } @else {
+    <section class="delivery-edit-empty">
+      <h1>
+        Delivery not found
+      </h1>
+
+      <p>
+        The requested delivery could not be found.
+      </p>
+
+      <a
+        routerLink="/delivery"
+        class="delivery-edit-empty__action"
+      >
+        Back to Delivery
+      </a>
+    </section>
+  }
+</section>

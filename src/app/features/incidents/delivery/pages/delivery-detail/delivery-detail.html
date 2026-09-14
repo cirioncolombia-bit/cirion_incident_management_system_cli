@@ -1,0 +1,530 @@
+<section class="delivery-detail">
+    @if (delivery(); as delivery) {
+    <header class="delivery-detail__header">
+        <div class="delivery-detail__header-main">
+            <a class="delivery-detail__back" routerLink="/delivery">
+                <span aria-hidden="true">←</span>
+
+                <span>
+                    Back to Delivery
+                </span>
+            </a>
+
+            <div class="delivery-detail__title-row">
+                <div>
+                    <p class="delivery-detail__eyebrow">
+                        Delivery
+                    </p>
+
+                    <h1>
+                        {{ delivery.dkoTkt }}
+                    </h1>
+                </div>
+
+                <span class="delivery-status" [class.delivery-status--progress]="
+              delivery.status === 'EN PROCESO'
+            " [class.delivery-status--stopped]="
+              delivery.status === 'DETENIDO'
+            " [class.delivery-status--completed]="
+              delivery.status === 'TERMINADO'
+            ">
+                    {{
+                    statusLabel(
+                    delivery.status
+                    )
+                    }}
+                </span>
+            </div>
+
+            <p class="delivery-detail__subtitle">
+                Review the complete delivery information.
+            </p>
+            <div class="delivery-detail__actions">
+                <a class="delivery-detail__edit" [routerLink]="[
+      '/delivery',
+      delivery.id,
+      'edit'
+    ]">
+                    <span aria-hidden="true" class="delivery-detail__edit-icon">
+                        ✎
+                    </span>
+
+                    <span>
+                        Edit Delivery
+                    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="delivery-detail__content">
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Identification
+                    </h2>
+
+                    <p>
+                        Internal references and work order information.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        DKO/TKT
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.dkoTkt }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        RFS Fiber Chain
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.rfsFiberChain
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Consecutive
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.consecutive
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        SO SAP
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.soSap }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Client & Location
+                    </h2>
+
+                    <p>
+                        Customer, site and commercial information.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Client Name
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.clientName
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Building / Site
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.buildingName
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field detail-field--wide">
+                    <span class="detail-field__label">
+                        Address
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.address }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        City
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.city }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Node
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.node }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Revenue
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatCurrency(
+                        delivery.revenue
+                        )
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Classification
+                    </h2>
+
+                    <p>
+                        Delivery type, status and technology.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Type
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        typeLabel(
+                        delivery.type
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Status
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        statusLabel(
+                        delivery.status
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Technology
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        technologyLabel(
+                        delivery.technology
+                        )
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Assignment
+                    </h2>
+
+                    <p>
+                        Vendor, contractor and Cirion ownership.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Landlord
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.landlord
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        EAIM
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.eaim }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Responsible
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        delivery.responsible
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Dates
+                    </h2>
+
+                    <p>
+                        Assignment, survey and installation milestones.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        DKO Assignment Date
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatDate(
+                        delivery.dkoAssignmentDate
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        EAIM Survey Request Date
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatDate(
+                        delivery.eaimSurveyRequestDate
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Installation Date
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatDate(
+                        delivery.installationDate
+                        )
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Costs
+                    </h2>
+
+                    <p>
+                        Survey and installation financial information.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Survey Cost
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatCurrency(
+                        delivery.surveyCost
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Installation Budget
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatCurrency(
+                        delivery.installationBudget
+                        )
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Installation Cost
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{
+                        formatCurrency(
+                        delivery.installationCost
+                        )
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Contact
+                    </h2>
+
+                    <p>
+                        Primary delivery contact information.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-grid">
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Email
+                    </span>
+
+                    <a class="detail-field__link" [href]="
+                'mailto:' + delivery.email
+              ">
+                        {{ delivery.email }}
+                    </a>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Contact Name
+                    </span>
+
+                    <strong class="detail-field__value">
+                        {{ delivery.contact }}
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span class="detail-field__label">
+                        Mobile Phone
+                    </span>
+
+                    <a class="detail-field__link" [href]="
+                'tel:' + delivery.phone
+              ">
+                        {{ delivery.phone }}
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <header class="detail-section__header">
+                <div>
+                    <h2>
+                        Observations
+                    </h2>
+
+                    <p>
+                        Additional operational information.
+                    </p>
+                </div>
+            </header>
+
+            <div class="detail-field detail-field--observations">
+                <span class="detail-field__label">
+                    Observations
+                </span>
+
+                <p class="detail-field__text">
+                    {{
+                    delivery.observations
+                    }}
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <footer class="delivery-detail__footer">
+        <a class="delivery-detail__secondary-action" routerLink="/delivery">
+            Back to Delivery
+        </a>
+    </footer>
+    } @else {
+    <section class="delivery-detail-empty">
+        <div class="delivery-detail-empty__icon">
+            !
+        </div>
+
+        <h1>
+            Delivery not found
+        </h1>
+
+        <p>
+            The requested delivery could not be found.
+        </p>
+
+        <a class="delivery-detail-empty__action" routerLink="/delivery">
+            Back to Delivery
+        </a>
+    </section>
+    }
+</section>

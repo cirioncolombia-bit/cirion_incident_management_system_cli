@@ -19,6 +19,7 @@ export const routes: Routes = [
       import('./layouts/authenticated-layout/authenticated-layout').then(
         (component) => component.AuthenticatedLayout,
       ),
+
     children: [
       {
         path: 'dashboard',
@@ -53,6 +54,28 @@ export const routes: Routes = [
       },
 
       {
+        path: 'delivery/new',
+        loadComponent: () =>
+          import('./features/incidents/delivery/pages/delivery-new/delivery-new').then(
+            (component) => component.DeliveryNew,
+          ),
+      },
+      {
+        path: 'delivery/:id/edit',
+        loadComponent: () =>
+          import('./features/incidents/delivery/pages/delivery-edit/delivery-edit').then(
+            (component) => component.DeliveryEdit,
+          ),
+      },
+      {
+        path: 'delivery/:id',
+        loadComponent: () =>
+          import('./features/incidents/delivery/pages/delivery-detail/delivery-detail').then(
+            (component) => component.DeliveryDetail,
+          ),
+      },
+
+      {
         path: 'users',
         loadComponent: () =>
           import('./features/users/pages/users-list/users-list').then(
@@ -64,13 +87,6 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/pages/profile/profile').then((component) => component.Profile),
-      },
-      {
-        path: 'delivery/new',
-        loadComponent: () =>
-          import('./features/incidents/delivery/pages/delivery-new/delivery-new').then(
-            (component) => component.DeliveryNew,
-          ),
       },
     ],
   },
