@@ -1,0 +1,1 @@
+import{R as Ta,St as yv,_ as Da,ft as vy}from"./main-OYZXHCDF.js";var m=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=vy({type:s,selectors:[[`app-assignments`]],decls:2,vars:0,template:function(e,p){e&1&&(Da(0,`p`),yv(1,`assignments works!`),Ta())},encapsulation:2})};export{m as Assignments};

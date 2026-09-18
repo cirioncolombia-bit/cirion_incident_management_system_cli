@@ -1,1 +1,0 @@
-import{$ as hv,S as Ea,at as my,y as Da}from"./main-ERMPDGWX.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=my({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(Ea(0,`p`),hv(1,`incidents works!`),Da())},encapsulation:2})};export{a as Incidents};

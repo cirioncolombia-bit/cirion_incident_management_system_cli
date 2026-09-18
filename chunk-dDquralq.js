@@ -1,0 +1,1 @@
+import{R as Ta,St as yv,_ as Da,ft as vy}from"./main-OYZXHCDF.js";var a=class t{static ɵfac=function(e){return new(e||t)};static ɵcmp=vy({type:t,selectors:[[`app-profile`]],decls:2,vars:0,template:function(e,f){e&1&&(Da(0,`p`),yv(1,`profile works!`),Ta())},encapsulation:2})};export{a as Profile};

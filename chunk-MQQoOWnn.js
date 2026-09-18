@@ -1,1 +1,0 @@
-import{$ as hv,S as Ea,at as my,y as Da}from"./main-ERMPDGWX.js";var a=class s{static ɵfac=function(e){return new(e||s)};static ɵcmp=my({type:s,selectors:[[`app-users-list`]],decls:2,vars:0,template:function(e,p){e&1&&(Ea(0,`p`),hv(1,`users-list works!`),Da())},encapsulation:2})};export{a as UsersList};

@@ -1,0 +1,1 @@
+import{R as Ta,St as yv,_ as Da,ft as vy}from"./main-OYZXHCDF.js";var a=class n{static ɵfac=function(e){return new(e||n)};static ɵcmp=vy({type:n,selectors:[[`app-incidents`]],decls:2,vars:0,template:function(e,d){e&1&&(Da(0,`p`),yv(1,`incidents works!`),Ta())},encapsulation:2})};export{a as Incidents};
