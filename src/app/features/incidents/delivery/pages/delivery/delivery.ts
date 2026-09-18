@@ -9,11 +9,27 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-type DeliveryStatus = 'EN PROCESO' | 'DETENIDO' | 'TERMINADO';
+type DeliveryStatus =
+  | 'EN PROCESO'
+  | 'DETENIDO'
+  | 'TERMINADO';
 
-type DeliveryTechnology = 'METRO2' | 'METRO3' | 'DWDM' | 'TRANSPORTE' | 'FIBRA OSCURA';
+type DeliveryTechnology =
+  | 'METRO2'
+  | 'METRO3'
+  | 'DWDM'
+  | 'TRANSPORTE'
+  | 'FIBRA OSCURA';
 
-type DeliveryType = 'PREVENTA' | 'SAVING';
+type DeliveryType =
+  | 'PREVENTA'
+  | 'SAVING';
+
+interface DeliveryStatusHistory {
+  readonly status: DeliveryStatus;
+  readonly startedAt: string;
+  readonly endedAt: string | null;
+}
 
 interface DeliveryItem {
   readonly id: number;
@@ -36,6 +52,9 @@ interface DeliveryItem {
   readonly type: DeliveryType;
   readonly status: DeliveryStatus;
   readonly technology: DeliveryTechnology;
+
+  // Status lifecycle
+  readonly statusHistory: readonly DeliveryStatusHistory[];
 
   // 4. Assignment
   readonly landlord: string;
@@ -61,11 +80,21 @@ interface DeliveryItem {
   readonly observations: string;
 }
 
-const noWhitespaceValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+const noWhitespaceValidator: ValidatorFn = (
+  control: AbstractControl,
+): ValidationErrors | null => {
   const value = String(control.value ?? '').trim();
 
-  return value.length > 0 ? null : { whitespace: true };
+  return value.length > 0
+    ? null
+    : { whitespace: true };
 };
+
+function hoursAgo(hours: number): string {
+  return new Date(
+    Date.now() - hours * 60 * 60 * 1000,
+  ).toISOString();
+}
 
 function createMockDelivery(
   delivery: Pick<
@@ -80,12 +109,28 @@ function createMockDelivery(
     | 'status'
     | 'responsible'
     | 'dkoAssignmentDate'
-  >,
+  > & {
+    readonly hoursInCurrentStatus: number;
+  },
 ): DeliveryItem {
   const suffix = String(delivery.id).padStart(4, '0');
 
+  const {
+    hoursInCurrentStatus,
+    ...deliveryData
+  } = delivery;
+
+  const statusStartedAt = hoursAgo(
+    hoursInCurrentStatus,
+  );
+
+  const statusEndedAt =
+    delivery.status === 'TERMINADO'
+      ? new Date().toISOString()
+      : null;
+
   return {
-    ...delivery,
+    ...deliveryData,
 
     rfsFiberChain: `RFS-2024-${suffix}`,
     consecutive: `APP-${suffix}`,
@@ -93,61 +138,118 @@ function createMockDelivery(
 
     address: `Business Address ${delivery.id}`,
     node: `Node ${delivery.id}`,
-    revenue: String(15_000_000 + delivery.id * 1_250_000),
 
-    landlord: delivery.id % 2 === 0 ? 'Vendor 2' : 'Vendor 1',
+    revenue: String(
+      15_000_000
+      + delivery.id * 1_250_000,
+    ),
 
-    eaim: delivery.id % 2 === 0 ? 'Contractor 2' : 'Contractor 1',
+    landlord:
+      delivery.id % 2 === 0
+        ? 'Vendor 2'
+        : 'Vendor 1',
+
+    eaim:
+      delivery.id % 2 === 0
+        ? 'Contractor 2'
+        : 'Contractor 1',
+
+    statusHistory: [
+      {
+        status: delivery.status,
+        startedAt: statusStartedAt,
+        endedAt: statusEndedAt,
+      },
+    ],
 
     eaimSurveyRequestDate: '2024-02-20',
     installationDate: '2024-03-15',
 
-    surveyCost: String(500_000 + delivery.id * 50_000),
+    surveyCost: String(
+      500_000
+      + delivery.id * 50_000,
+    ),
 
-    installationBudget: String(5_000_000 + delivery.id * 250_000),
+    installationBudget: String(
+      5_000_000
+      + delivery.id * 250_000,
+    ),
 
-    installationCost: String(4_800_000 + delivery.id * 200_000),
+    installationCost: String(
+      4_800_000
+      + delivery.id * 200_000,
+    ),
 
     email: `contact${delivery.id}@example.com`,
     contact: `Contact ${delivery.id}`,
-    phone: `30012345${String(delivery.id).padStart(2, '0')}`,
 
-    observations: 'Mock delivery information for frontend development.',
+    phone: `30012345${String(
+      delivery.id,
+    ).padStart(2, '0')}`,
+
+    observations:
+      'Mock delivery information for frontend development.',
   };
 }
 
 @Component({
   selector: 'app-delivery',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+  ],
   templateUrl: './delivery.html',
   styleUrl: './delivery.scss',
 })
 export class Delivery {
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly formBuilder =
+    inject(FormBuilder);
 
   readonly searchTerm = signal('');
 
-  readonly selectedStatus = signal<DeliveryStatus | 'TODOS'>('TODOS');
+  readonly selectedStatus =
+    signal<DeliveryStatus | 'TODOS'>(
+      'TODOS',
+    );
 
   readonly currentPage = signal(1);
 
-  readonly editingDeliveryId = signal<number | null>(null);
+  readonly editingDeliveryId =
+    signal<number | null>(null);
 
-  readonly editAttempted = signal(false);
+  readonly editAttempted =
+    signal(false);
 
-  readonly deliveryTypes: readonly DeliveryType[] = ['PREVENTA', 'SAVING'];
+  readonly deliveryTypes:
+    readonly DeliveryType[] = [
+      'PREVENTA',
+      'SAVING',
+    ];
 
-  readonly deliveryStatuses: readonly DeliveryStatus[] = ['EN PROCESO', 'DETENIDO', 'TERMINADO'];
+  readonly deliveryStatuses:
+    readonly DeliveryStatus[] = [
+      'EN PROCESO',
+      'DETENIDO',
+      'TERMINADO',
+    ];
 
-  readonly technologies: readonly DeliveryTechnology[] = [
-    'METRO2',
-    'METRO3',
-    'DWDM',
-    'TRANSPORTE',
-    'FIBRA OSCURA',
-  ];
+  readonly technologies:
+    readonly DeliveryTechnology[] = [
+      'METRO2',
+      'METRO3',
+      'DWDM',
+      'TRANSPORTE',
+      'FIBRA OSCURA',
+    ];
 
-  readonly cities = ['Bogotá', 'Medellín', 'Cali', 'Lima', 'Santiago', 'Madrid'] as const;
+  readonly cities = [
+    'Bogotá',
+    'Medellín',
+    'Cali',
+    'Lima',
+    'Santiago',
+    'Madrid',
+  ] as const;
 
   readonly nodes = [
     'Node 1',
@@ -160,9 +262,15 @@ export class Delivery {
     'Node 8',
   ] as const;
 
-  readonly landlords = ['Vendor 1', 'Vendor 2'] as const;
+  readonly landlords = [
+    'Vendor 1',
+    'Vendor 2',
+  ] as const;
 
-  readonly eaimOptions = ['Contractor 1', 'Contractor 2'] as const;
+  readonly eaimOptions = [
+    'Contractor 1',
+    'Contractor 2',
+  ] as const;
 
   readonly responsibleOptions = [
     'María Torres',
@@ -171,210 +279,388 @@ export class Delivery {
     'Carlos Mendoza',
   ] as const;
 
-  readonly deliveries = signal<readonly DeliveryItem[]>([
-    createMockDelivery({
-      id: 1,
-      dkoTkt: 'DKO-2024-001235',
-      clientName: 'Banco de la Nación',
-      buildingName: 'Edificio Central',
-      city: 'Lima',
-      technology: 'METRO2',
-      type: 'SAVING',
-      status: 'EN PROCESO',
-      responsible: 'María Torres',
-      dkoAssignmentDate: '2024-02-10',
-    }),
+  readonly deliveries =
+    signal<readonly DeliveryItem[]>([
+      createMockDelivery({
+        id: 1,
+        dkoTkt: 'DKO-2024-001235',
+        clientName: 'Banco de la Nación',
+        buildingName: 'Edificio Central',
+        city: 'Lima',
+        technology: 'METRO2',
+        type: 'SAVING',
+        status: 'EN PROCESO',
+        responsible: 'María Torres',
+        dkoAssignmentDate: '2024-02-10',
+        hoursInCurrentStatus: 29,
+      }),
 
-    createMockDelivery({
-      id: 2,
-      dkoTkt: 'DKO-2024-001236',
-      clientName: 'Telefónica',
-      buildingName: 'Sede Norte',
-      city: 'Bogotá',
-      technology: 'DWDM',
-      type: 'SAVING',
-      status: 'DETENIDO',
-      responsible: 'Juan Pérez',
-      dkoAssignmentDate: '2024-02-12',
-    }),
+      createMockDelivery({
+        id: 2,
+        dkoTkt: 'DKO-2024-001236',
+        clientName: 'Telefónica',
+        buildingName: 'Sede Norte',
+        city: 'Bogotá',
+        technology: 'DWDM',
+        type: 'SAVING',
+        status: 'DETENIDO',
+        responsible: 'Juan Pérez',
+        dkoAssignmentDate: '2024-02-12',
+        hoursInCurrentStatus: 76,
+      }),
 
-    createMockDelivery({
-      id: 3,
-      dkoTkt: 'DKO-2024-001237',
-      clientName: 'Claro',
-      buildingName: 'Torre Empresarial',
-      city: 'Santiago',
-      technology: 'FIBRA OSCURA',
-      type: 'PREVENTA',
-      status: 'EN PROCESO',
-      responsible: 'Ana López',
-      dkoAssignmentDate: '2024-02-15',
-    }),
+      createMockDelivery({
+        id: 3,
+        dkoTkt: 'DKO-2024-001237',
+        clientName: 'Claro',
+        buildingName: 'Torre Empresarial',
+        city: 'Santiago',
+        technology: 'FIBRA OSCURA',
+        type: 'PREVENTA',
+        status: 'EN PROCESO',
+        responsible: 'Ana López',
+        dkoAssignmentDate: '2024-02-15',
+        hoursInCurrentStatus: 8,
+      }),
 
-    createMockDelivery({
-      id: 4,
-      dkoTkt: 'DKO-2024-001238',
-      clientName: 'Banco BBVA',
-      buildingName: 'Torre 1',
-      city: 'Lima',
-      technology: 'TRANSPORTE',
-      type: 'SAVING',
-      status: 'TERMINADO',
-      responsible: 'Carlos Mendoza',
-      dkoAssignmentDate: '2024-02-18',
-    }),
+      createMockDelivery({
+        id: 4,
+        dkoTkt: 'DKO-2024-001238',
+        clientName: 'Banco BBVA',
+        buildingName: 'Torre 1',
+        city: 'Lima',
+        technology: 'TRANSPORTE',
+        type: 'SAVING',
+        status: 'TERMINADO',
+        responsible: 'Carlos Mendoza',
+        dkoAssignmentDate: '2024-02-18',
+        hoursInCurrentStatus: 45,
+      }),
 
-    createMockDelivery({
-      id: 5,
-      dkoTkt: 'DKO-2024-001239',
-      clientName: 'Entel',
-      buildingName: 'Edificio Principal',
-      city: 'Madrid',
-      technology: 'METRO3',
-      type: 'SAVING',
-      status: 'EN PROCESO',
-      responsible: 'María Torres',
-      dkoAssignmentDate: '2024-02-20',
-    }),
+      createMockDelivery({
+        id: 5,
+        dkoTkt: 'DKO-2024-001239',
+        clientName: 'Entel',
+        buildingName: 'Edificio Principal',
+        city: 'Madrid',
+        technology: 'METRO3',
+        type: 'SAVING',
+        status: 'EN PROCESO',
+        responsible: 'María Torres',
+        dkoAssignmentDate: '2024-02-20',
+        hoursInCurrentStatus: 103,
+      }),
 
-    createMockDelivery({
-      id: 6,
-      dkoTkt: 'DKO-2024-001240',
-      clientName: 'Grupo Aval',
-      buildingName: 'Sede Centro',
-      city: 'Bogotá',
-      technology: 'METRO2',
-      type: 'SAVING',
-      status: 'DETENIDO',
-      responsible: 'Juan Pérez',
-      dkoAssignmentDate: '2024-02-22',
-    }),
+      createMockDelivery({
+        id: 6,
+        dkoTkt: 'DKO-2024-001240',
+        clientName: 'Grupo Aval',
+        buildingName: 'Sede Centro',
+        city: 'Bogotá',
+        technology: 'METRO2',
+        type: 'SAVING',
+        status: 'DETENIDO',
+        responsible: 'Juan Pérez',
+        dkoAssignmentDate: '2024-02-22',
+        hoursInCurrentStatus: 18,
+      }),
 
-    createMockDelivery({
-      id: 7,
-      dkoTkt: 'DKO-2024-001241',
-      clientName: 'Movistar',
-      buildingName: 'Torre Empresarial',
-      city: 'Lima',
-      technology: 'DWDM',
-      type: 'SAVING',
-      status: 'EN PROCESO',
-      responsible: 'Ana López',
-      dkoAssignmentDate: '2024-02-25',
-    }),
+      createMockDelivery({
+        id: 7,
+        dkoTkt: 'DKO-2024-001241',
+        clientName: 'Movistar',
+        buildingName: 'Torre Empresarial',
+        city: 'Lima',
+        technology: 'DWDM',
+        type: 'SAVING',
+        status: 'EN PROCESO',
+        responsible: 'Ana López',
+        dkoAssignmentDate: '2024-02-25',
+        hoursInCurrentStatus: 151,
+      }),
 
-    createMockDelivery({
-      id: 8,
-      dkoTkt: 'DKO-2024-001242',
-      clientName: 'Empresa XYZ',
-      buildingName: 'Edificio Corporativo',
-      city: 'Santiago',
-      technology: 'FIBRA OSCURA',
-      type: 'SAVING',
-      status: 'TERMINADO',
-      responsible: 'Carlos Mendoza',
-      dkoAssignmentDate: '2024-02-28',
-    }),
-  ]);
+      createMockDelivery({
+        id: 8,
+        dkoTkt: 'DKO-2024-001242',
+        clientName: 'Empresa XYZ',
+        buildingName: 'Edificio Corporativo',
+        city: 'Santiago',
+        technology: 'FIBRA OSCURA',
+        type: 'SAVING',
+        status: 'TERMINADO',
+        responsible: 'Carlos Mendoza',
+        dkoAssignmentDate: '2024-02-28',
+        hoursInCurrentStatus: 62,
+      }),
+    ]);
 
-  readonly editForm = this.formBuilder.nonNullable.group({
-    rfsFiberChain: ['', [Validators.required, noWhitespaceValidator]],
+  readonly editForm =
+    this.formBuilder.nonNullable.group({
+      rfsFiberChain: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    consecutive: ['', [Validators.required, noWhitespaceValidator]],
+      consecutive: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    soSap: ['', [Validators.required, noWhitespaceValidator]],
+      soSap: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    clientName: ['', [Validators.required, noWhitespaceValidator]],
+      clientName: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    buildingName: ['', [Validators.required, noWhitespaceValidator]],
+      buildingName: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    address: ['', [Validators.required, noWhitespaceValidator]],
+      address: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    city: ['', Validators.required],
+      city: [
+        '',
+        Validators.required,
+      ],
 
-    node: ['', Validators.required],
+      node: [
+        '',
+        Validators.required,
+      ],
 
-    revenue: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
+      revenue: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d+$/),
+          Validators.min(0),
+        ],
+      ],
 
-    type: ['', Validators.required],
+      type: [
+        '',
+        Validators.required,
+      ],
 
-    status: ['', Validators.required],
+      status: [
+        '',
+        Validators.required,
+      ],
 
-    technology: ['', Validators.required],
+      technology: [
+        '',
+        Validators.required,
+      ],
 
-    landlord: ['', Validators.required],
+      landlord: [
+        '',
+        Validators.required,
+      ],
 
-    eaim: ['', Validators.required],
+      eaim: [
+        '',
+        Validators.required,
+      ],
 
-    responsible: ['', Validators.required],
+      responsible: [
+        '',
+        Validators.required,
+      ],
 
-    dkoAssignmentDate: ['', Validators.required],
+      dkoAssignmentDate: [
+        '',
+        Validators.required,
+      ],
 
-    eaimSurveyRequestDate: ['', Validators.required],
+      eaimSurveyRequestDate: [
+        '',
+        Validators.required,
+      ],
 
-    installationDate: ['', Validators.required],
+      installationDate: [
+        '',
+        Validators.required,
+      ],
 
-    surveyCost: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
+      surveyCost: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d+$/),
+          Validators.min(0),
+        ],
+      ],
 
-    installationBudget: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
+      installationBudget: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d+$/),
+          Validators.min(0),
+        ],
+      ],
 
-    installationCost: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
+      installationCost: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d+$/),
+          Validators.min(0),
+        ],
+      ],
 
-    email: ['', [Validators.required, Validators.email]],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.email,
+        ],
+      ],
 
-    contact: ['', [Validators.required, noWhitespaceValidator]],
+      contact: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
 
-    phone: [
-      '',
-      [Validators.required, Validators.pattern(/^(?:\+57[\s-]?)?3\d{2}[\s-]?\d{3}[\s-]?\d{4}$/)],
-    ],
+      phone: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(
+            /^(?:\+57[\s-]?)?3\d{2}[\s-]?\d{3}[\s-]?\d{4}$/,
+          ),
+        ],
+      ],
 
-    observations: ['', [Validators.required, noWhitespaceValidator]],
-  });
-
-  readonly filteredDeliveries = computed(() => {
-    const search = this.searchTerm().trim().toLocaleLowerCase();
-
-    const selectedStatus = this.selectedStatus();
-
-    return this.deliveries().filter((delivery) => {
-      const matchesStatus = selectedStatus === 'TODOS' || delivery.status === selectedStatus;
-
-      const matchesSearch =
-        !search ||
-        delivery.dkoTkt.toLocaleLowerCase().includes(search) ||
-        delivery.rfsFiberChain.toLocaleLowerCase().includes(search) ||
-        delivery.clientName.toLocaleLowerCase().includes(search) ||
-        delivery.buildingName.toLocaleLowerCase().includes(search) ||
-        delivery.city.toLocaleLowerCase().includes(search) ||
-        delivery.responsible.toLocaleLowerCase().includes(search);
-
-      return matchesStatus && matchesSearch;
+      observations: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+        ],
+      ],
     });
-  });
 
-  readonly totalDeliveries = computed(() => this.deliveries().length);
+  readonly filteredDeliveries =
+    computed(() => {
+      const search =
+        this.searchTerm()
+          .trim()
+          .toLocaleLowerCase();
 
-  readonly inProgressDeliveries = computed(
-    () => this.deliveries().filter((delivery) => delivery.status === 'EN PROCESO').length,
-  );
+      const selectedStatus =
+        this.selectedStatus();
 
-  readonly stoppedDeliveries = computed(
-    () => this.deliveries().filter((delivery) => delivery.status === 'DETENIDO').length,
-  );
+      return this.deliveries().filter(
+        (delivery) => {
+          const matchesStatus =
+            selectedStatus === 'TODOS'
+            || delivery.status === selectedStatus;
 
-  readonly completedDeliveries = computed(
-    () => this.deliveries().filter((delivery) => delivery.status === 'TERMINADO').length,
-  );
+          const matchesSearch =
+            !search
+            || delivery.dkoTkt
+              .toLocaleLowerCase()
+              .includes(search)
+            || delivery.rfsFiberChain
+              .toLocaleLowerCase()
+              .includes(search)
+            || delivery.clientName
+              .toLocaleLowerCase()
+              .includes(search)
+            || delivery.buildingName
+              .toLocaleLowerCase()
+              .includes(search)
+            || delivery.city
+              .toLocaleLowerCase()
+              .includes(search)
+            || delivery.responsible
+              .toLocaleLowerCase()
+              .includes(search);
+
+          return (
+            matchesStatus
+            && matchesSearch
+          );
+        },
+      );
+    });
+
+  readonly totalDeliveries =
+    computed(
+      () => this.deliveries().length,
+    );
+
+  readonly inProgressDeliveries =
+    computed(
+      () =>
+        this.deliveries().filter(
+          (delivery) =>
+            delivery.status === 'EN PROCESO',
+        ).length,
+    );
+
+  readonly stoppedDeliveries =
+    computed(
+      () =>
+        this.deliveries().filter(
+          (delivery) =>
+            delivery.status === 'DETENIDO',
+        ).length,
+    );
+
+  readonly completedDeliveries =
+    computed(
+      () =>
+        this.deliveries().filter(
+          (delivery) =>
+            delivery.status === 'TERMINADO',
+        ).length,
+    );
 
   onSearch(event: Event): void {
-    const input = event.target as HTMLInputElement;
+    const target = event.target;
 
-    this.searchTerm.set(input.value);
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    this.searchTerm.set(target.value);
     this.currentPage.set(1);
   }
 
-  filterByStatus(status: DeliveryStatus | 'TODOS'): void {
+  filterByStatus(
+    status: DeliveryStatus | 'TODOS',
+  ): void {
     this.selectedStatus.set(status);
     this.currentPage.set(1);
   }
@@ -393,62 +679,91 @@ export class Delivery {
     this.currentPage.set(page);
   }
 
-  startEdit(delivery: DeliveryItem): void {
+  startEdit(
+    delivery: DeliveryItem,
+  ): void {
     this.editAttempted.set(false);
 
     this.editForm.reset({
-      rfsFiberChain: delivery.rfsFiberChain,
+      rfsFiberChain:
+        delivery.rfsFiberChain,
 
-      consecutive: delivery.consecutive,
+      consecutive:
+        delivery.consecutive,
 
-      soSap: delivery.soSap,
+      soSap:
+        delivery.soSap,
 
-      clientName: delivery.clientName,
+      clientName:
+        delivery.clientName,
 
-      buildingName: delivery.buildingName,
+      buildingName:
+        delivery.buildingName,
 
-      address: delivery.address,
+      address:
+        delivery.address,
 
-      city: delivery.city,
+      city:
+        delivery.city,
 
-      node: delivery.node,
+      node:
+        delivery.node,
 
-      revenue: delivery.revenue,
+      revenue:
+        delivery.revenue,
 
-      type: delivery.type,
+      type:
+        delivery.type,
 
-      status: delivery.status,
+      status:
+        delivery.status,
 
-      technology: delivery.technology,
+      technology:
+        delivery.technology,
 
-      landlord: delivery.landlord,
+      landlord:
+        delivery.landlord,
 
-      eaim: delivery.eaim,
+      eaim:
+        delivery.eaim,
 
-      responsible: delivery.responsible,
+      responsible:
+        delivery.responsible,
 
-      dkoAssignmentDate: delivery.dkoAssignmentDate,
+      dkoAssignmentDate:
+        delivery.dkoAssignmentDate,
 
-      eaimSurveyRequestDate: delivery.eaimSurveyRequestDate,
+      eaimSurveyRequestDate:
+        delivery.eaimSurveyRequestDate,
 
-      installationDate: delivery.installationDate,
+      installationDate:
+        delivery.installationDate,
 
-      surveyCost: delivery.surveyCost,
+      surveyCost:
+        delivery.surveyCost,
 
-      installationBudget: delivery.installationBudget,
+      installationBudget:
+        delivery.installationBudget,
 
-      installationCost: delivery.installationCost,
+      installationCost:
+        delivery.installationCost,
 
-      email: delivery.email,
+      email:
+        delivery.email,
 
-      contact: delivery.contact,
+      contact:
+        delivery.contact,
 
-      phone: delivery.phone,
+      phone:
+        delivery.phone,
 
-      observations: delivery.observations,
+      observations:
+        delivery.observations,
     });
 
-    this.editingDeliveryId.set(delivery.id);
+    this.editingDeliveryId.set(
+      delivery.id,
+    );
   }
 
   cancelEdit(): void {
@@ -465,83 +780,166 @@ export class Delivery {
       return;
     }
 
-    const editingId = this.editingDeliveryId();
+    const editingId =
+      this.editingDeliveryId();
 
     if (editingId === null) {
       return;
     }
 
-    const value = this.editForm.getRawValue();
+    const value =
+      this.editForm.getRawValue();
 
-    this.deliveries.update((deliveries) =>
-      deliveries.map((delivery) => {
-        if (delivery.id !== editingId) {
-          return delivery;
-        }
+    this.deliveries.update(
+      (deliveries) =>
+        deliveries.map(
+          (delivery) => {
+            if (
+              delivery.id !== editingId
+            ) {
+              return delivery;
+            }
 
-        return {
-          ...delivery,
+            const newStatus =
+              value.status as DeliveryStatus;
 
-          rfsFiberChain: value.rfsFiberChain,
-          consecutive: value.consecutive,
-          soSap: value.soSap,
+            const newType =
+              value.type as DeliveryType;
 
-          clientName: value.clientName,
-          buildingName: value.buildingName,
-          address: value.address,
-          city: value.city,
-          node: value.node,
-          revenue: value.revenue,
+            const newTechnology =
+              value.technology as DeliveryTechnology;
 
-          type: value.type as DeliveryType,
-          status: value.status as DeliveryStatus,
-          technology: value.technology as DeliveryTechnology,
+            const statusHistory =
+              this.updateStatusHistory(
+                delivery,
+                newStatus,
+              );
 
-          landlord: value.landlord,
-          eaim: value.eaim,
-          responsible: value.responsible,
+            return {
+              ...delivery,
 
-          dkoAssignmentDate: value.dkoAssignmentDate,
-          eaimSurveyRequestDate: value.eaimSurveyRequestDate,
-          installationDate: value.installationDate,
+              rfsFiberChain:
+                value.rfsFiberChain,
 
-          surveyCost: value.surveyCost,
-          installationBudget: value.installationBudget,
-          installationCost: value.installationCost,
+              consecutive:
+                value.consecutive,
 
-          email: value.email,
-          contact: value.contact,
-          phone: value.phone,
+              soSap:
+                value.soSap,
 
-          observations: value.observations,
-        };
-      }),
+              clientName:
+                value.clientName,
+
+              buildingName:
+                value.buildingName,
+
+              address:
+                value.address,
+
+              city:
+                value.city,
+
+              node:
+                value.node,
+
+              revenue:
+                value.revenue,
+
+              type:
+                newType,
+
+              status:
+                newStatus,
+
+              technology:
+                newTechnology,
+
+              statusHistory,
+
+              landlord:
+                value.landlord,
+
+              eaim:
+                value.eaim,
+
+              responsible:
+                value.responsible,
+
+              dkoAssignmentDate:
+                value.dkoAssignmentDate,
+
+              eaimSurveyRequestDate:
+                value.eaimSurveyRequestDate,
+
+              installationDate:
+                value.installationDate,
+
+              surveyCost:
+                value.surveyCost,
+
+              installationBudget:
+                value.installationBudget,
+
+              installationCost:
+                value.installationCost,
+
+              email:
+                value.email,
+
+              contact:
+                value.contact,
+
+              phone:
+                value.phone,
+
+              observations:
+                value.observations,
+            };
+          },
+        ),
     );
 
     this.editingDeliveryId.set(null);
     this.editAttempted.set(false);
   }
 
-  isEditing(deliveryId: number): boolean {
-    return this.editingDeliveryId() === deliveryId;
+  isEditing(
+    deliveryId: number,
+  ): boolean {
+    return (
+      this.editingDeliveryId()
+      === deliveryId
+    );
   }
 
-  formatCurrency(value: string): string {
-    const numericValue = Number(value);
+  formatCurrency(
+    value: string,
+  ): string {
+    const numericValue =
+      Number(value);
 
-    if (!Number.isFinite(numericValue)) {
+    if (
+      !Number.isFinite(
+        numericValue,
+      )
+    ) {
       return value;
     }
 
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(numericValue);
+    return new Intl.NumberFormat(
+      'es-CO',
+      {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      },
+    ).format(numericValue);
   }
 
-  statusLabel(status: DeliveryStatus): string {
+  statusLabel(
+    status: DeliveryStatus,
+  ): string {
     switch (status) {
       case 'EN PROCESO':
         return 'In Progress';
@@ -554,11 +952,17 @@ export class Delivery {
     }
   }
 
-  typeLabel(type: DeliveryType): string {
-    return type === 'PREVENTA' ? 'Pre-Sale' : 'Saving';
+  typeLabel(
+    type: DeliveryType,
+  ): string {
+    return type === 'PREVENTA'
+      ? 'Pre-Sale'
+      : 'Saving';
   }
 
-  technologyLabel(technology: DeliveryTechnology): string {
+  technologyLabel(
+    technology: DeliveryTechnology,
+  ): string {
     switch (technology) {
       case 'TRANSPORTE':
         return 'Transport';
@@ -569,5 +973,118 @@ export class Delivery {
       default:
         return technology;
     }
+  }
+
+  timeInCurrentStatus(
+    delivery: DeliveryItem,
+  ): string {
+    const currentStatus =
+      this.currentStatusHistory(
+        delivery,
+      );
+
+    if (!currentStatus) {
+      return '—';
+    }
+
+    const start = new Date(
+      currentStatus.startedAt,
+    ).getTime();
+
+    const end =
+      currentStatus.endedAt
+        ? new Date(
+            currentStatus.endedAt,
+          ).getTime()
+        : Date.now();
+
+    if (
+      Number.isNaN(start)
+      || Number.isNaN(end)
+      || end < start
+    ) {
+      return '—';
+    }
+
+    const totalMinutes =
+      Math.floor(
+        (end - start) / 60_000,
+      );
+
+    const days =
+      Math.floor(
+        totalMinutes / 1_440,
+      );
+
+    const hours =
+      Math.floor(
+        (totalMinutes % 1_440) / 60,
+      );
+
+    const minutes =
+      totalMinutes % 60;
+
+    return (
+      `${days}d `
+      + `${String(hours).padStart(
+        2,
+        '0',
+      )}h `
+      + `${String(minutes).padStart(
+        2,
+        '0',
+      )}m`
+    );
+  }
+
+  private currentStatusHistory(
+    delivery: DeliveryItem,
+  ): DeliveryStatusHistory | undefined {
+    return delivery.statusHistory[
+      delivery.statusHistory.length - 1
+    ];
+  }
+
+  private updateStatusHistory(
+    delivery: DeliveryItem,
+    newStatus: DeliveryStatus,
+  ): readonly DeliveryStatusHistory[] {
+    if (
+      delivery.status === newStatus
+    ) {
+      return delivery.statusHistory;
+    }
+
+    const now =
+      new Date().toISOString();
+
+    const history = [
+      ...delivery.statusHistory,
+    ];
+
+    const lastIndex =
+      history.length - 1;
+
+    if (lastIndex >= 0) {
+      history[lastIndex] = {
+        ...history[lastIndex],
+
+        endedAt:
+          history[lastIndex].endedAt
+          ?? now,
+      };
+    }
+
+    history.push({
+      status: newStatus,
+      startedAt: now,
+
+      endedAt:
+        newStatus === 'TERMINADO'
+          ? now
+          : null,
+    });
+
+    return history;
   }
 }

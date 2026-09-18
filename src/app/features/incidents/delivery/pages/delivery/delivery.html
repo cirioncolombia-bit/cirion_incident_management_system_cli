@@ -1,777 +1,1267 @@
 <section class="delivery-page">
-    <header class="delivery-page__header">
-        <div>
-            <p class="delivery-page__breadcrumb">
-                Deliveries
-            </p>
+  <header class="delivery-page__header">
+    <div>
+      <p class="delivery-page__breadcrumb">
+        Deliveries
+      </p>
 
-            <h1>Deliveries</h1>
+      <h1>Deliveries</h1>
 
-            <p class="delivery-page__description">
-                View and manage all delivery information.
-            </p>
-        </div>
+      <p class="delivery-page__description">
+        View and manage all delivery information.
+      </p>
+    </div>
 
-        <a class="delivery-page__create" routerLink="/delivery/new">
-            <span aria-hidden="true">＋</span>
-            New Delivery
-        </a>
-    </header>
+    <a
+      class="delivery-page__create"
+      routerLink="/delivery/new"
+    >
+      <span aria-hidden="true">＋</span>
+      New Delivery
+    </a>
+  </header>
 
-    <section class="delivery-filters" aria-label="Delivery filters">
-        <div class="delivery-filters__search">
-            <span aria-hidden="true">
-                ⌕
-            </span>
+  <section
+    class="delivery-filters"
+    aria-label="Delivery filters"
+  >
+    <div class="delivery-filters__search">
+      <span aria-hidden="true">
+        ⌕
+      </span>
 
-            <input type="search" placeholder="Search by DKO/TKT, RFS, client, site, city or responsible..."
-                [value]="searchTerm()" (input)="onSearch($event)" />
-        </div>
+      <input
+        type="search"
+        placeholder="Search by DKO/TKT, RFS, client, site, city or responsible..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+    </div>
 
-        <div class="delivery-filters__actions">
-            <button class="delivery-filters__button" type="button">
-                Filters
-            </button>
+    <div class="delivery-filters__actions">
+      <button
+        class="delivery-filters__button"
+        type="button"
+      >
+        Filters
+      </button>
 
-            <button class="delivery-filters__clear" type="button" (click)="clearFilters()">
-                Clear filters
-            </button>
-        </div>
-    </section>
+      <button
+        class="delivery-filters__clear"
+        type="button"
+        (click)="clearFilters()"
+      >
+        Clear filters
+      </button>
+    </div>
+  </section>
 
-    <section class="delivery-summary" aria-label="Delivery summary">
-        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+  <section
+    class="delivery-summary"
+    aria-label="Delivery summary"
+  >
+    <button
+      class="delivery-summary__item"
+      type="button"
+      [class.delivery-summary__item--active]="
         selectedStatus() === 'TODOS'
-      " (click)="filterByStatus('TODOS')">
-            <span>All</span>
+      "
+      (click)="filterByStatus('TODOS')"
+    >
+      <span>All</span>
 
-            <strong>
-                {{ totalDeliveries() }}
-            </strong>
-        </button>
+      <strong>
+        {{ totalDeliveries() }}
+      </strong>
+    </button>
 
-        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+    <button
+      class="delivery-summary__item"
+      type="button"
+      [class.delivery-summary__item--active]="
         selectedStatus() === 'EN PROCESO'
-      " (click)="filterByStatus('EN PROCESO')">
-            <span class="delivery-summary__label">
-                <i class="delivery-status-dot delivery-status-dot--progress"></i>
+      "
+      (click)="filterByStatus('EN PROCESO')"
+    >
+      <span class="delivery-summary__label">
+        <i
+          class="
+            delivery-status-dot
+            delivery-status-dot--progress
+          "
+        ></i>
 
-                In Progress
-            </span>
+        In Progress
+      </span>
 
-            <strong>
-                {{ inProgressDeliveries() }}
-            </strong>
-        </button>
+      <strong>
+        {{ inProgressDeliveries() }}
+      </strong>
+    </button>
 
-        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+    <button
+      class="delivery-summary__item"
+      type="button"
+      [class.delivery-summary__item--active]="
         selectedStatus() === 'DETENIDO'
-      " (click)="filterByStatus('DETENIDO')">
-            <span class="delivery-summary__label">
-                <i class="delivery-status-dot delivery-status-dot--stopped"></i>
+      "
+      (click)="filterByStatus('DETENIDO')"
+    >
+      <span class="delivery-summary__label">
+        <i
+          class="
+            delivery-status-dot
+            delivery-status-dot--stopped
+          "
+        ></i>
 
-                Stopped
-            </span>
+        Stopped
+      </span>
 
-            <strong>
-                {{ stoppedDeliveries() }}
-            </strong>
-        </button>
+      <strong>
+        {{ stoppedDeliveries() }}
+      </strong>
+    </button>
 
-        <button class="delivery-summary__item" type="button" [class.delivery-summary__item--active]="
+    <button
+      class="delivery-summary__item"
+      type="button"
+      [class.delivery-summary__item--active]="
         selectedStatus() === 'TERMINADO'
-      " (click)="filterByStatus('TERMINADO')">
-            <span class="delivery-summary__label">
-                <i class="delivery-status-dot delivery-status-dot--completed"></i>
+      "
+      (click)="filterByStatus('TERMINADO')"
+    >
+      <span class="delivery-summary__label">
+        <i
+          class="
+            delivery-status-dot
+            delivery-status-dot--completed
+          "
+        ></i>
 
-                Completed
-            </span>
+        Completed
+      </span>
 
+      <strong>
+        {{ completedDeliveries() }}
+      </strong>
+    </button>
+  </section>
+
+  <!-- ============================================= -->
+  <!-- MOBILE / TABLET -->
+  <!-- ============================================= -->
+
+  <div class="delivery-list">
+    @for (
+      delivery of filteredDeliveries();
+      track delivery.id
+    ) {
+      <article class="delivery-card">
+        <header class="delivery-card__header">
+          <div>
             <strong>
-                {{ completedDeliveries() }}
-            </strong>
-        </button>
-    </section>
-
-    <!-- MOBILE / TABLET SUMMARY -->
-    <div class="delivery-list">
-        @for (
-        delivery of filteredDeliveries();
-        track delivery.id
-        ) {
-        <article class="delivery-card">
-            <header class="delivery-card__header">
-                <div>
-                    <strong>
-                        {{ delivery.dkoTkt }}
-                    </strong>
-
-                    <p>
-                        {{ delivery.clientName }}
-                    </p>
-
-                    <span>
-                        {{ delivery.buildingName }}
-                    </span>
-                </div>
-
-                <span class="delivery-status" [class.delivery-status--progress]="
-              delivery.status === 'EN PROCESO'
-            " [class.delivery-status--stopped]="
-              delivery.status === 'DETENIDO'
-            " [class.delivery-status--completed]="
-              delivery.status === 'TERMINADO'
-            ">
-                    {{ statusLabel(delivery.status) }}
-                </span>
-            </header>
-
-            <div class="delivery-card__details">
-                <div>
-                    <span>RFS Fiber Chain</span>
-
-                    <strong>
-                        {{ delivery.rfsFiberChain }}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>City</span>
-
-                    <strong>
-                        {{ delivery.city }}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Technology</span>
-
-                    <strong>
-                        {{
-                        technologyLabel(
-                        delivery.technology
-                        )
-                        }}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Responsible</span>
-
-                    <strong>
-                        {{ delivery.responsible }}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Assignment Date</span>
-
-                    <strong>
-                        {{
-                        delivery.dkoAssignmentDate
-                        }}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Revenue</span>
-
-                    <strong>
-                        {{
-                        formatCurrency(
-                        delivery.revenue
-                        )
-                        }}
-                    </strong>
-                </div>
-            </div>
-
-            <a class="delivery-card__details" [routerLink]="[
-    '/delivery',
-    delivery.id
-  ]">
-                <span>View details</span>
-
-                <span class="delivery-card__details-icon" aria-hidden="true">
-                    →
-                </span>
-            </a>
-        </article>
-        } @empty {
-        <div class="delivery-empty">
-            <strong>
-                No deliveries found
+              {{ delivery.dkoTkt }}
             </strong>
 
             <p>
-                Try changing the filters or search term.
+              {{ delivery.clientName }}
             </p>
+
+            <span>
+              {{ delivery.buildingName }}
+            </span>
+          </div>
+
+          <div class="delivery-card__status">
+            <span
+              class="delivery-status"
+              [class.delivery-status--progress]="
+                delivery.status
+                === 'EN PROCESO'
+              "
+              [class.delivery-status--stopped]="
+                delivery.status
+                === 'DETENIDO'
+              "
+              [class.delivery-status--completed]="
+                delivery.status
+                === 'TERMINADO'
+              "
+            >
+              {{
+                statusLabel(
+                  delivery.status
+                )
+              }}
+            </span>
+
+            <span
+              class="
+                delivery-card__status-time-label
+              "
+            >
+              Time in status
+            </span>
+
+            <strong
+              class="
+                delivery-card__status-time
+              "
+            >
+              {{
+                timeInCurrentStatus(
+                  delivery
+                )
+              }}
+            </strong>
+          </div>
+        </header>
+
+        <div class="delivery-card__details">
+          <div>
+            <span>
+              RFS Fiber Chain
+            </span>
+
+            <strong>
+              {{ delivery.rfsFiberChain }}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              City
+            </span>
+
+            <strong>
+              {{ delivery.city }}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Technology
+            </span>
+
+            <strong>
+              {{
+                technologyLabel(
+                  delivery.technology
+                )
+              }}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Responsible
+            </span>
+
+            <strong>
+              {{ delivery.responsible }}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Time in Status
+            </span>
+
+            <strong
+              class="
+                delivery-card__time-value
+              "
+            >
+              {{
+                timeInCurrentStatus(
+                  delivery
+                )
+              }}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Revenue
+            </span>
+
+            <strong>
+              {{
+                formatCurrency(
+                  delivery.revenue
+                )
+              }}
+            </strong>
+          </div>
         </div>
-        }
-    </div>
 
-    <!-- DESKTOP FULL DATA GRID -->
-    <form class="delivery-table-form" [formGroup]="editForm" (ngSubmit)="saveEdit()">
-        <div class="delivery-table-wrapper">
-            <table class="delivery-table">
-                <thead>
-                    <tr>
-                        <th class="delivery-table__edit-column">
-                            Edit
-                        </th>
+        <a
+          class="delivery-card__link"
+          [routerLink]="[
+            '/delivery',
+            delivery.id
+          ]"
+        >
+          <span>
+            View details
+          </span>
 
-                        <th class="delivery-table__dko-column">
-                            DKO/TKT
-                        </th>
+          <span
+            class="
+              delivery-card__details-icon
+            "
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </a>
+      </article>
+    } @empty {
+      <div class="delivery-empty">
+        <strong>
+          No deliveries found
+        </strong>
 
-                        <th>RFS Fiber Chain</th>
-                        <th>Client Name</th>
-                        <th>Building / Site</th>
-                        <th>Address</th>
-                        <th>Revenue</th>
-                        <th>Node</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Landlord</th>
-                        <th>Consecutive</th>
-                        <th>City</th>
-                        <th>EAIM</th>
-                        <th>Responsible</th>
-                        <th>Technology</th>
-                        <th>DKO Assignment Date</th>
-                        <th>EAIM Survey Request Date</th>
-                        <th>Installation Date</th>
-                        <th>Survey Cost</th>
-                        <th>Installation Budget</th>
-                        <th>Installation Cost</th>
-                        <th>SO SAP</th>
-                        <th>Email</th>
-                        <th>Contact Name</th>
-                        <th>Mobile Phone</th>
-                        <th>Observations</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @for (
-                    delivery of filteredDeliveries();
-                    track delivery.id
-                    ) {
-                    <tr [class.delivery-table__row--editing]="
-                isEditing(delivery.id)
-              ">
-                        <!-- EDIT -->
-                        <td class="delivery-table__edit-column">
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <div class="delivery-table__edit-actions">
-                                <button class="delivery-table__save" type="submit">
-                                    Save
-                                </button>
-
-                                <button class="delivery-table__cancel" type="button" (click)="cancelEdit()">
-                                    Cancel
-                                </button>
-                            </div>
-
-                            @if (
-                            editAttempted()
-                            && editForm.invalid
-                            ) {
-                            <small class="delivery-table__edit-error">
-                                Review required fields.
-                            </small>
-                            }
-                            } @else {
-                            <button class="delivery-table__edit" type="button" [attr.aria-label]="
-                      'Edit ' + delivery.dkoTkt
-                    " (click)="startEdit(delivery)">
-                                <span aria-hidden="true">
-                                    ✎
-                                </span>
-
-                                Edit
-                            </button>
-                            }
-                        </td>
-
-                        <!-- DKO/TKT: NEVER EDITABLE -->
-                        <td class="delivery-table__dko-column">
-                            <strong>
-                                {{ delivery.dkoTkt }}
-                            </strong>
-                        </td>
-
-                        <!-- RFS -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="rfsFiberChain"
-                                [attr.aria-invalid]="
-                      editForm.controls
-                        .rfsFiberChain.invalid
-                    " />
-                            } @else {
-                            {{ delivery.rfsFiberChain }}
-                            }
-                        </td>
-
-                        <!-- CLIENT -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="clientName" />
-                            } @else {
-                            {{ delivery.clientName }}
-                            }
-                        </td>
-
-                        <!-- BUILDING -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="buildingName" />
-                            } @else {
-                            {{ delivery.buildingName }}
-                            }
-                        </td>
-
-                        <!-- ADDRESS -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--wide" type="text"
-                                formControlName="address" />
-                            } @else {
-                            {{ delivery.address }}
-                            }
-                        </td>
-
-                        <!-- REVENUE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--money" type="text"
-                                inputmode="numeric" formControlName="revenue" />
-                            } @else {
-                            {{
-                            formatCurrency(
-                            delivery.revenue
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- NODE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="node">
-                                @for (
-                                node of nodes;
-                                track node
-                                ) {
-                                <option [value]="node">
-                                    {{ node }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{ delivery.node }}
-                            }
-                        </td>
-
-                        <!-- TYPE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="type">
-                                @for (
-                                type of deliveryTypes;
-                                track type
-                                ) {
-                                <option [value]="type">
-                                    {{ typeLabel(type) }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{
-                            typeLabel(
-                            delivery.type
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- STATUS -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="status">
-                                @for (
-                                status of
-                                deliveryStatuses;
-                                track status
-                                ) {
-                                <option [value]="status">
-                                    {{
-                                    statusLabel(status)
-                                    }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            <span class="delivery-status" [class.delivery-status--progress]="
-                      delivery.status
-                        === 'EN PROCESO'
-                    " [class.delivery-status--stopped]="
-                      delivery.status
-                        === 'DETENIDO'
-                    " [class.delivery-status--completed]="
-                      delivery.status
-                        === 'TERMINADO'
-                    ">
-                                {{
-                                statusLabel(
-                                delivery.status
-                                )
-                                }}
-                            </span>
-                            }
-                        </td>
-
-                        <!-- LANDLORD -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="landlord">
-                                @for (
-                                landlord of landlords;
-                                track landlord
-                                ) {
-                                <option [value]="landlord">
-                                    {{ landlord }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{ delivery.landlord }}
-                            }
-                        </td>
-
-                        <!-- CONSECUTIVE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="consecutive" />
-                            } @else {
-                            {{ delivery.consecutive }}
-                            }
-                        </td>
-
-                        <!-- CITY -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="city">
-                                @for (
-                                city of cities;
-                                track city
-                                ) {
-                                <option [value]="city">
-                                    {{ city }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{ delivery.city }}
-                            }
-                        </td>
-
-                        <!-- EAIM -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="eaim">
-                                @for (
-                                eaim of eaimOptions;
-                                track eaim
-                                ) {
-                                <option [value]="eaim">
-                                    {{ eaim }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{ delivery.eaim }}
-                            }
-                        </td>
-
-                        <!-- RESPONSIBLE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select delivery-table__select--wide"
-                                formControlName="responsible">
-                                @for (
-                                responsible of
-                                responsibleOptions;
-                                track responsible
-                                ) {
-                                <option [value]="responsible">
-                                    {{ responsible }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{ delivery.responsible }}
-                            }
-                        </td>
-
-                        <!-- TECHNOLOGY -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <select class="delivery-table__select" formControlName="technology">
-                                @for (
-                                technology of technologies;
-                                track technology
-                                ) {
-                                <option [value]="technology">
-                                    {{
-                                    technologyLabel(
-                                    technology
-                                    )
-                                    }}
-                                </option>
-                                }
-                            </select>
-                            } @else {
-                            {{
-                            technologyLabel(
-                            delivery.technology
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- DKO ASSIGNMENT DATE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--date" type="date"
-                                formControlName="dkoAssignmentDate" />
-                            } @else {
-                            {{
-                            delivery.dkoAssignmentDate
-                            }}
-                            }
-                        </td>
-
-                        <!-- SURVEY REQUEST DATE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--date" type="date"
-                                formControlName="eaimSurveyRequestDate" />
-                            } @else {
-                            {{
-                            delivery.eaimSurveyRequestDate
-                            }}
-                            }
-                        </td>
-
-                        <!-- INSTALLATION DATE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--date" type="date"
-                                formControlName="installationDate" />
-                            } @else {
-                            {{
-                            delivery.installationDate
-                            }}
-                            }
-                        </td>
-
-                        <!-- SURVEY COST -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--money" type="text"
-                                inputmode="numeric" formControlName="surveyCost" />
-                            } @else {
-                            {{
-                            formatCurrency(
-                            delivery.surveyCost
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- INSTALLATION BUDGET -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--money" type="text"
-                                inputmode="numeric" formControlName="installationBudget" />
-                            } @else {
-                            {{
-                            formatCurrency(
-                            delivery.installationBudget
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- INSTALLATION COST -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--money" type="text"
-                                inputmode="numeric" formControlName="installationCost" />
-                            } @else {
-                            {{
-                            formatCurrency(
-                            delivery.installationCost
-                            )
-                            }}
-                            }
-                        </td>
-
-                        <!-- SO SAP -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="soSap" />
-                            } @else {
-                            {{ delivery.soSap }}
-                            }
-                        </td>
-
-                        <!-- EMAIL -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input delivery-table__input--wide" type="email"
-                                formControlName="email" />
-                            } @else {
-                            {{ delivery.email }}
-                            }
-                        </td>
-
-                        <!-- CONTACT -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="text" formControlName="contact" />
-                            } @else {
-                            {{ delivery.contact }}
-                            }
-                        </td>
-
-                        <!-- PHONE -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <input class="delivery-table__input" type="tel" inputmode="tel" formControlName="phone" />
-                            } @else {
-                            {{ delivery.phone }}
-                            }
-                        </td>
-
-                        <!-- OBSERVATIONS -->
-                        <td>
-                            @if (
-                            isEditing(delivery.id)
-                            ) {
-                            <textarea class="delivery-table__textarea" formControlName="observations"
-                                rows="3"></textarea>
-                            } @else {
-                            <span class="delivery-table__observations">
-                                {{ delivery.observations }}
-                            </span>
-                            }
-                        </td>
-                    </tr>
-                    } @empty {
-                    <tr>
-                        <td class="delivery-table__empty" colspan="27">
-                            No deliveries found with
-                            the current filters.
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </form>
-
-    <footer class="delivery-pagination">
         <p>
-            Showing
-            {{ filteredDeliveries().length }}
-            of
-            {{ totalDeliveries() }}
-            results
+          Try changing the filters or search term.
         </p>
+      </div>
+    }
+  </div>
 
-        <nav aria-label="Pagination">
-            <button type="button" [disabled]="currentPage() === 1" (click)="
-          goToPage(currentPage() - 1)
-        ">
-                ‹
-            </button>
+  <!-- ============================================= -->
+  <!-- DESKTOP FULL DATA GRID -->
+  <!-- ============================================= -->
 
-            <button type="button" [class.delivery-pagination__active]="
+  <form
+    class="delivery-table-form"
+    [formGroup]="editForm"
+    (ngSubmit)="saveEdit()"
+  >
+    <div class="delivery-table-wrapper">
+      <table class="delivery-table">
+        <thead>
+          <tr>
+            <th
+              class="
+                delivery-table__edit-column
+              "
+            >
+              Edit
+            </th>
+
+            <th
+              class="
+                delivery-table__dko-column
+              "
+            >
+              DKO/TKT
+            </th>
+
+            <th>RFS Fiber Chain</th>
+            <th>Client Name</th>
+            <th>Building / Site</th>
+            <th>Address</th>
+            <th>Revenue</th>
+            <th>Node</th>
+            <th>Type</th>
+            <th>Status</th>
+
+            <th
+              class="
+                delivery-table__time-column
+              "
+            >
+              Time in Status
+            </th>
+
+            <th>Landlord</th>
+            <th>Consecutive</th>
+            <th>City</th>
+            <th>EAIM</th>
+            <th>Responsible</th>
+            <th>Technology</th>
+            <th>DKO Assignment Date</th>
+            <th>EAIM Survey Request Date</th>
+            <th>Installation Date</th>
+            <th>Survey Cost</th>
+            <th>Installation Budget</th>
+            <th>Installation Cost</th>
+            <th>SO SAP</th>
+            <th>Email</th>
+            <th>Contact Name</th>
+            <th>Mobile Phone</th>
+            <th>Observations</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (
+            delivery of filteredDeliveries();
+            track delivery.id
+          ) {
+            <tr
+              [class.delivery-table__row--editing]="
+                isEditing(delivery.id)
+              "
+            >
+              <!-- EDIT -->
+
+              <td
+                class="
+                  delivery-table__edit-column
+                "
+              >
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <div
+                    class="
+                      delivery-table__edit-actions
+                    "
+                  >
+                    <button
+                      class="
+                        delivery-table__save
+                      "
+                      type="submit"
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      class="
+                        delivery-table__cancel
+                      "
+                      type="button"
+                      (click)="cancelEdit()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  @if (
+                    editAttempted()
+                    && editForm.invalid
+                  ) {
+                    <small
+                      class="
+                        delivery-table__edit-error
+                      "
+                    >
+                      Review required fields.
+                    </small>
+                  }
+                } @else {
+                  <button
+                    class="
+                      delivery-table__edit
+                    "
+                    type="button"
+                    [attr.aria-label]="
+                      'Edit '
+                      + delivery.dkoTkt
+                    "
+                    (click)="
+                      startEdit(delivery)
+                    "
+                  >
+                    <span aria-hidden="true">
+                      ✎
+                    </span>
+
+                    Edit
+                  </button>
+                }
+              </td>
+
+              <!-- DKO/TKT -->
+
+              <td
+                class="
+                  delivery-table__dko-column
+                "
+              >
+                <strong>
+                  {{ delivery.dkoTkt }}
+                </strong>
+              </td>
+
+              <!-- RFS -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      rfsFiberChain
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery.rfsFiberChain
+                  }}
+                }
+              </td>
+
+              <!-- CLIENT -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      clientName
+                    "
+                  />
+                } @else {
+                  {{ delivery.clientName }}
+                }
+              </td>
+
+              <!-- BUILDING -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      buildingName
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery.buildingName
+                  }}
+                }
+              </td>
+
+              <!-- ADDRESS -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--wide
+                    "
+                    type="text"
+                    formControlName="
+                      address
+                    "
+                  />
+                } @else {
+                  {{ delivery.address }}
+                }
+              </td>
+
+              <!-- REVENUE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--money
+                    "
+                    type="text"
+                    inputmode="numeric"
+                    formControlName="
+                      revenue
+                    "
+                  />
+                } @else {
+                  {{
+                    formatCurrency(
+                      delivery.revenue
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- NODE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="node"
+                  >
+                    @for (
+                      node of nodes;
+                      track node
+                    ) {
+                      <option
+                        [value]="node"
+                      >
+                        {{ node }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{ delivery.node }}
+                }
+              </td>
+
+              <!-- TYPE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="type"
+                  >
+                    @for (
+                      type of deliveryTypes;
+                      track type
+                    ) {
+                      <option
+                        [value]="type"
+                      >
+                        {{
+                          typeLabel(type)
+                        }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{
+                    typeLabel(
+                      delivery.type
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- STATUS -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="status"
+                  >
+                    @for (
+                      status
+                        of deliveryStatuses;
+                      track status
+                    ) {
+                      <option
+                        [value]="status"
+                      >
+                        {{
+                          statusLabel(
+                            status
+                          )
+                        }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  <span
+                    class="delivery-status"
+                    [class.delivery-status--progress]="
+                      delivery.status
+                      === 'EN PROCESO'
+                    "
+                    [class.delivery-status--stopped]="
+                      delivery.status
+                      === 'DETENIDO'
+                    "
+                    [class.delivery-status--completed]="
+                      delivery.status
+                      === 'TERMINADO'
+                    "
+                  >
+                    {{
+                      statusLabel(
+                        delivery.status
+                      )
+                    }}
+                  </span>
+                }
+              </td>
+
+              <!-- TIME IN STATUS -->
+
+              <td
+                class="
+                  delivery-table__time-column
+                "
+              >
+                <div
+                  class="
+                    delivery-table__time
+                  "
+                >
+                  <strong>
+                    {{
+                      timeInCurrentStatus(
+                        delivery
+                      )
+                    }}
+                  </strong>
+
+                  <span>
+                    Current status
+                  </span>
+                </div>
+              </td>
+
+              <!-- LANDLORD -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="
+                      landlord
+                    "
+                  >
+                    @for (
+                      landlord
+                        of landlords;
+                      track landlord
+                    ) {
+                      <option
+                        [value]="landlord"
+                      >
+                        {{ landlord }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{ delivery.landlord }}
+                }
+              </td>
+
+              <!-- CONSECUTIVE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      consecutive
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery.consecutive
+                  }}
+                }
+              </td>
+
+              <!-- CITY -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="city"
+                  >
+                    @for (
+                      city of cities;
+                      track city
+                    ) {
+                      <option
+                        [value]="city"
+                      >
+                        {{ city }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{ delivery.city }}
+                }
+              </td>
+
+              <!-- EAIM -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="eaim"
+                  >
+                    @for (
+                      eaim of eaimOptions;
+                      track eaim
+                    ) {
+                      <option
+                        [value]="eaim"
+                      >
+                        {{ eaim }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{ delivery.eaim }}
+                }
+              </td>
+
+              <!-- RESPONSIBLE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                      delivery-table__select--wide
+                    "
+                    formControlName="
+                      responsible
+                    "
+                  >
+                    @for (
+                      responsible
+                        of responsibleOptions;
+                      track responsible
+                    ) {
+                      <option
+                        [value]="
+                          responsible
+                        "
+                      >
+                        {{ responsible }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{
+                    delivery.responsible
+                  }}
+                }
+              </td>
+
+              <!-- TECHNOLOGY -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <select
+                    class="
+                      delivery-table__select
+                    "
+                    formControlName="
+                      technology
+                    "
+                  >
+                    @for (
+                      technology
+                        of technologies;
+                      track technology
+                    ) {
+                      <option
+                        [value]="
+                          technology
+                        "
+                      >
+                        {{
+                          technologyLabel(
+                            technology
+                          )
+                        }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{
+                    technologyLabel(
+                      delivery.technology
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- DKO ASSIGNMENT DATE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--date
+                    "
+                    type="date"
+                    formControlName="
+                      dkoAssignmentDate
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery
+                      .dkoAssignmentDate
+                  }}
+                }
+              </td>
+
+              <!-- SURVEY REQUEST DATE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--date
+                    "
+                    type="date"
+                    formControlName="
+                      eaimSurveyRequestDate
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery
+                      .eaimSurveyRequestDate
+                  }}
+                }
+              </td>
+
+              <!-- INSTALLATION DATE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--date
+                    "
+                    type="date"
+                    formControlName="
+                      installationDate
+                    "
+                  />
+                } @else {
+                  {{
+                    delivery
+                      .installationDate
+                  }}
+                }
+              </td>
+
+              <!-- SURVEY COST -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--money
+                    "
+                    type="text"
+                    inputmode="numeric"
+                    formControlName="
+                      surveyCost
+                    "
+                  />
+                } @else {
+                  {{
+                    formatCurrency(
+                      delivery.surveyCost
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- INSTALLATION BUDGET -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--money
+                    "
+                    type="text"
+                    inputmode="numeric"
+                    formControlName="
+                      installationBudget
+                    "
+                  />
+                } @else {
+                  {{
+                    formatCurrency(
+                      delivery
+                        .installationBudget
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- INSTALLATION COST -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--money
+                    "
+                    type="text"
+                    inputmode="numeric"
+                    formControlName="
+                      installationCost
+                    "
+                  />
+                } @else {
+                  {{
+                    formatCurrency(
+                      delivery
+                        .installationCost
+                    )
+                  }}
+                }
+              </td>
+
+              <!-- SO SAP -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="soSap"
+                  />
+                } @else {
+                  {{ delivery.soSap }}
+                }
+              </td>
+
+              <!-- EMAIL -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--wide
+                    "
+                    type="email"
+                    formControlName="email"
+                  />
+                } @else {
+                  {{ delivery.email }}
+                }
+              </td>
+
+              <!-- CONTACT -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      contact
+                    "
+                  />
+                } @else {
+                  {{ delivery.contact }}
+                }
+              </td>
+
+              <!-- PHONE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="tel"
+                    inputmode="tel"
+                    formControlName="phone"
+                  />
+                } @else {
+                  {{ delivery.phone }}
+                }
+              </td>
+
+              <!-- OBSERVATIONS -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <textarea
+                    class="
+                      delivery-table__textarea
+                    "
+                    formControlName="
+                      observations
+                    "
+                    rows="3"
+                  ></textarea>
+                } @else {
+                  <span
+                    class="
+                      delivery-table__observations
+                    "
+                  >
+                    {{
+                      delivery.observations
+                    }}
+                  </span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td
+                class="
+                  delivery-table__empty
+                "
+                colspan="28"
+              >
+                No deliveries found with
+                the current filters.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  <footer class="delivery-pagination">
+    <p>
+      Showing
+      {{ filteredDeliveries().length }}
+      of
+      {{ totalDeliveries() }}
+      results
+    </p>
+
+    <nav aria-label="Pagination">
+      <button
+        type="button"
+        [disabled]="currentPage() === 1"
+        (click)="
+          goToPage(
+            currentPage() - 1
+          )
+        "
+      >
+        ‹
+      </button>
+
+      <button
+        type="button"
+        [class.delivery-pagination__active]="
           currentPage() === 1
-        " (click)="goToPage(1)">
-                1
-            </button>
+        "
+        (click)="goToPage(1)"
+      >
+        1
+      </button>
 
-            <button type="button" [class.delivery-pagination__active]="
+      <button
+        type="button"
+        [class.delivery-pagination__active]="
           currentPage() === 2
-        " (click)="goToPage(2)">
-                2
-            </button>
+        "
+        (click)="goToPage(2)"
+      >
+        2
+      </button>
 
-            <button type="button" [class.delivery-pagination__active]="
+      <button
+        type="button"
+        [class.delivery-pagination__active]="
           currentPage() === 3
-        " (click)="goToPage(3)">
-                3
-            </button>
+        "
+        (click)="goToPage(3)"
+      >
+        3
+      </button>
 
-            <button type="button" (click)="
-          goToPage(currentPage() + 1)
-        ">
-                ›
-            </button>
-        </nav>
-    </footer>
+      <button
+        type="button"
+        (click)="
+          goToPage(
+            currentPage() + 1
+          )
+        "
+      >
+        ›
+      </button>
+    </nav>
+  </footer>
 </section>

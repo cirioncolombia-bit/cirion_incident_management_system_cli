@@ -27,7 +27,10 @@
     (ngSubmit)="submit()"
     novalidate
   >
+    <!-- ====================================================== -->
     <!-- 1. IDENTIFICATION -->
+    <!-- ====================================================== -->
+
     <section
       class="delivery-section"
       aria-labelledby="identification-title"
@@ -138,36 +141,12 @@
           </div>
 
           <div class="delivery-field">
-            <label for="consecutive">
-              CONSECUTIVE
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="consecutive"
-              type="text"
-              formControlName="consecutive"
-              placeholder="Vendor Approval Number"
-            />
-
-            <small class="delivery-field__help">
-              Vendor approval number used for the installation.
-            </small>
-
-            @if (
-              form.controls.consecutive.touched
-              && form.controls.consecutive.invalid
-            ) {
-              <p class="delivery-field__error">
-                CONSECUTIVE is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
             <label for="soSap">
               SO SAP
-              <span aria-hidden="true">*</span>
+
+              @if (form.controls.status.value === 'TERMINADO') {
+                <span aria-hidden="true">*</span>
+              }
             </label>
 
             <input
@@ -177,12 +156,16 @@
               placeholder="Enter the SO SAP"
             />
 
+            <small class="delivery-field__help">
+              Required when the delivery status is Completed.
+            </small>
+
             @if (
               form.controls.soSap.touched
-              && form.controls.soSap.invalid
+              && form.controls.soSap.hasError('required')
             ) {
               <p class="delivery-field__error">
-                SO SAP is required.
+                SO SAP is required when the delivery is completed.
               </p>
             }
           </div>
@@ -190,7 +173,10 @@
       </div>
     </section>
 
+    <!-- ====================================================== -->
     <!-- 2. CLIENT & LOCATION -->
+    <!-- ====================================================== -->
+
     <section
       class="delivery-section"
       aria-labelledby="client-location-title"
@@ -327,15 +313,12 @@
               <option value="">
                 Select a city
               </option>
-
               <option value="bogota">
                 Bogotá
               </option>
-
               <option value="medellin">
                 Medellín
               </option>
-
               <option value="cali">
                 Cali
               </option>
@@ -368,11 +351,9 @@
               <option value="">
                 Select a node
               </option>
-
               <option value="node-1">
                 Node 1
               </option>
-
               <option value="node-2">
                 Node 2
               </option>
@@ -395,7 +376,10 @@
           <div class="delivery-field">
             <label for="revenue">
               Revenue
-              <span aria-hidden="true">*</span>
+
+              @if (form.controls.status.value === 'TERMINADO') {
+                <span aria-hidden="true">*</span>
+              }
             </label>
 
             <input
@@ -409,6 +393,7 @@
 
             <small class="delivery-field__help">
               Sales value associated with the delivery in COP.
+              Required when the delivery status is Completed.
             </small>
 
             @if (
@@ -416,7 +401,7 @@
               && form.controls.revenue.hasError('required')
             ) {
               <p class="delivery-field__error">
-                Revenue is required.
+                Revenue is required when the delivery is completed.
               </p>
             }
 
@@ -433,610 +418,10 @@
       </div>
     </section>
 
-    <!-- 3. CLASSIFICATION -->
-    <section
-      class="delivery-section"
-      aria-labelledby="classification-title"
-    >
-      <button
-        class="delivery-section__header delivery-section__header--toggle"
-        type="button"
-        [attr.aria-expanded]="isSectionOpen('classification')"
-        aria-controls="classification-content"
-        (click)="toggleSection('classification')"
-      >
-        <span
-          class="delivery-section__icon"
-          aria-hidden="true"
-        >
-          <svg viewBox="0 0 24 24">
-            <path d="M4 6h16" />
-            <path d="M4 12h10" />
-            <path d="M4 18h7" />
-            <circle cx="18" cy="12" r="2" />
-            <circle cx="15" cy="18" r="2" />
-          </svg>
-        </span>
+    <!-- ====================================================== -->
+    <!-- 3. CONTACT INFORMATION -->
+    <!-- ====================================================== -->
 
-        <span class="delivery-section__heading">
-          <span id="classification-title">
-            3. Classification
-          </span>
-
-          <small>
-            Classification and current status of the delivery.
-          </small>
-        </span>
-
-        <span
-          class="delivery-section__chevron"
-          aria-hidden="true"
-        >
-          @if (isSectionOpen('classification')) {
-            ˄
-          } @else {
-            ˅
-          }
-        </span>
-      </button>
-
-      <div
-        id="classification-content"
-        class="delivery-section__content"
-        [class.delivery-section__content--closed]="
-          !isSectionOpen('classification')
-        "
-      >
-        <div class="delivery-section__grid">
-          <div class="delivery-field">
-            <label for="type">
-              Type
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="type"
-              formControlName="type"
-            >
-              <option value="">
-                Select a type
-              </option>
-
-              <option value="PREVENTA">
-                PREVENTA
-              </option>
-
-              <option value="SAVING">
-                SAVING
-              </option>
-            </select>
-
-            @if (
-              form.controls.type.touched
-              && form.controls.type.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Type is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="status">
-              Status
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="status"
-              formControlName="status"
-            >
-              <option value="">
-                Select a status
-              </option>
-
-              <option value="EN PROCESO">
-                EN PROCESO
-              </option>
-
-              <option value="DETENIDO">
-                DETENIDO
-              </option>
-
-              <option value="TERMINADO">
-                TERMINADO
-              </option>
-            </select>
-
-            @if (
-              form.controls.status.touched
-              && form.controls.status.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Status is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="technology">
-              Technology
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="technology"
-              formControlName="technology"
-            >
-              <option value="">
-                Select a technology
-              </option>
-
-              <option value="METRO2">
-                METRO2
-              </option>
-
-              <option value="METRO3">
-                METRO3
-              </option>
-
-              <option value="DWDM">
-                DWDM
-              </option>
-
-              <option value="TRANSPORTE">
-                TRANSPORTE
-              </option>
-
-              <option value="FIBRA OSCURA">
-                FIBRA OSCURA
-              </option>
-            </select>
-
-            @if (
-              form.controls.technology.touched
-              && form.controls.technology.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Technology is required.
-              </p>
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. ASSIGNMENT -->
-    <section
-      class="delivery-section"
-      aria-labelledby="assignment-title"
-    >
-      <button
-        class="delivery-section__header delivery-section__header--toggle"
-        type="button"
-        [attr.aria-expanded]="isSectionOpen('assignment')"
-        aria-controls="assignment-content"
-        (click)="toggleSection('assignment')"
-      >
-        <span
-          class="delivery-section__icon"
-          aria-hidden="true"
-        >
-          <svg viewBox="0 0 24 24">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-        </span>
-
-        <span class="delivery-section__heading">
-          <span id="assignment-title">
-            4. Assignment
-          </span>
-
-          <small>
-            Vendor, contractor and responsible engineer information.
-          </small>
-        </span>
-
-        <span
-          class="delivery-section__chevron"
-          aria-hidden="true"
-        >
-          @if (isSectionOpen('assignment')) {
-            ˄
-          } @else {
-            ˅
-          }
-        </span>
-      </button>
-
-      <div
-        id="assignment-content"
-        class="delivery-section__content"
-        [class.delivery-section__content--closed]="
-          !isSectionOpen('assignment')
-        "
-      >
-        <div class="delivery-section__grid">
-          <div class="delivery-field">
-            <label for="landlord">
-              Landlord
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="landlord"
-              formControlName="landlord"
-            >
-              <option value="">
-                Select a vendor
-              </option>
-
-              <option value="vendor-1">
-                Vendor 1
-              </option>
-
-              <option value="vendor-2">
-                Vendor 2
-              </option>
-            </select>
-
-            @if (
-              form.controls.landlord.touched
-              && form.controls.landlord.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Landlord is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="eaim">
-              EAIM
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="eaim"
-              formControlName="eaim"
-            >
-              <option value="">
-                Select a contractor
-              </option>
-
-              <option value="contractor-1">
-                Contractor 1
-              </option>
-
-              <option value="contractor-2">
-                Contractor 2
-              </option>
-            </select>
-
-            @if (
-              form.controls.eaim.touched
-              && form.controls.eaim.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                EAIM is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="responsible">
-              Responsible
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <select
-              id="responsible"
-              formControlName="responsible"
-            >
-              <option value="">
-                Select a responsible engineer
-              </option>
-
-              <option value="engineer-1">
-                Engineer 1
-              </option>
-
-              <option value="engineer-2">
-                Engineer 2
-              </option>
-            </select>
-
-            @if (
-              form.controls.responsible.touched
-              && form.controls.responsible.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Responsible engineer is required.
-              </p>
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. DATES -->
-    <section
-      class="delivery-section"
-      aria-labelledby="dates-title"
-    >
-      <button
-        class="delivery-section__header delivery-section__header--toggle"
-        type="button"
-        [attr.aria-expanded]="isSectionOpen('dates')"
-        aria-controls="dates-content"
-        (click)="toggleSection('dates')"
-      >
-        <span
-          class="delivery-section__icon"
-          aria-hidden="true"
-        >
-          <svg viewBox="0 0 24 24">
-            <rect
-              x="3"
-              y="5"
-              width="18"
-              height="16"
-              rx="2"
-            />
-            <path d="M16 3v4" />
-            <path d="M8 3v4" />
-            <path d="M3 11h18" />
-          </svg>
-        </span>
-
-        <span class="delivery-section__heading">
-          <span id="dates-title">
-            5. Dates
-          </span>
-
-          <small>
-            Key dates associated with the delivery process.
-          </small>
-        </span>
-
-        <span
-          class="delivery-section__chevron"
-          aria-hidden="true"
-        >
-          @if (isSectionOpen('dates')) {
-            ˄
-          } @else {
-            ˅
-          }
-        </span>
-      </button>
-
-      <div
-        id="dates-content"
-        class="delivery-section__content"
-        [class.delivery-section__content--closed]="
-          !isSectionOpen('dates')
-        "
-      >
-        <div class="delivery-section__grid">
-          <div class="delivery-field">
-            <label for="dkoAssignmentDate">
-              DKO Assignment Date
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="dkoAssignmentDate"
-              type="date"
-              formControlName="dkoAssignmentDate"
-            />
-
-            @if (
-              form.controls.dkoAssignmentDate.touched
-              && form.controls.dkoAssignmentDate.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                DKO Assignment Date is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="eaimSurveyRequestDate">
-              EAIM Survey Request Date
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="eaimSurveyRequestDate"
-              type="date"
-              formControlName="eaimSurveyRequestDate"
-            />
-
-            @if (
-              form.controls.eaimSurveyRequestDate.touched
-              && form.controls.eaimSurveyRequestDate.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                EAIM Survey Request Date is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="installationDate">
-              Installation Date
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="installationDate"
-              type="date"
-              formControlName="installationDate"
-            />
-
-            @if (
-              form.controls.installationDate.touched
-              && form.controls.installationDate.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Installation Date is required.
-              </p>
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. COSTS -->
-    <section
-      class="delivery-section"
-      aria-labelledby="costs-title"
-    >
-      <button
-        class="delivery-section__header delivery-section__header--toggle"
-        type="button"
-        [attr.aria-expanded]="isSectionOpen('costs')"
-        aria-controls="costs-content"
-        (click)="toggleSection('costs')"
-      >
-        <span
-          class="delivery-section__icon"
-          aria-hidden="true"
-        >
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <path
-              d="M16 8.5c-.7-.9-1.9-1.5-3.4-1.5-2 0-3.6 1-3.6 2.5 0 1.7 1.5 2.2 3.6 2.7 2.1.5 3.4 1.1 3.4 2.8 0 1.6-1.5 2.7-3.8 2.7-1.7 0-3.2-.6-4.2-1.8"
-            />
-            <path d="M12 5v14" />
-          </svg>
-        </span>
-
-        <span class="delivery-section__heading">
-          <span id="costs-title">
-            6. Costs
-          </span>
-
-          <small>
-            Survey, budget and installation cost information.
-          </small>
-        </span>
-
-        <span
-          class="delivery-section__chevron"
-          aria-hidden="true"
-        >
-          @if (isSectionOpen('costs')) {
-            ˄
-          } @else {
-            ˅
-          }
-        </span>
-      </button>
-
-      <div
-        id="costs-content"
-        class="delivery-section__content"
-        [class.delivery-section__content--closed]="
-          !isSectionOpen('costs')
-        "
-      >
-        <div class="delivery-section__grid">
-          <div class="delivery-field">
-            <label for="surveyCost">
-              Survey Cost
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="surveyCost"
-              cimsCurrencyInput
-              type="text"
-              inputmode="numeric"
-              formControlName="surveyCost"
-              placeholder="$ 0"
-            />
-
-            <small class="delivery-field__help">
-              Cost associated with the site survey in COP.
-            </small>
-
-            @if (
-              form.controls.surveyCost.touched
-              && form.controls.surveyCost.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Survey Cost is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="installationBudget">
-              Installation Budget
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="installationBudget"
-              cimsCurrencyInput
-              type="text"
-              inputmode="numeric"
-              formControlName="installationBudget"
-              placeholder="$ 0"
-            />
-
-            <small class="delivery-field__help">
-              Estimated installation budget in COP.
-            </small>
-
-            @if (
-              form.controls.installationBudget.touched
-              && form.controls.installationBudget.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Installation Budget is required.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="installationCost">
-              Installation Cost
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="installationCost"
-              cimsCurrencyInput
-              type="text"
-              inputmode="numeric"
-              formControlName="installationCost"
-              placeholder="$ 0"
-            />
-
-            <small class="delivery-field__help">
-              Final installation cost in COP.
-            </small>
-
-            @if (
-              form.controls.installationCost.touched
-              && form.controls.installationCost.hasError('required')
-            ) {
-              <p class="delivery-field__error">
-                Installation Cost is required.
-              </p>
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. CONTACT -->
     <section
       class="delivery-section"
       aria-labelledby="contact-title"
@@ -1060,11 +445,11 @@
 
         <span class="delivery-section__heading">
           <span id="contact-title">
-            7. Contact
+            3. Contact Information
           </span>
 
           <small>
-            Contact information associated with the delivery.
+            Primary contact information associated with the delivery.
           </small>
         </span>
 
@@ -1088,6 +473,30 @@
         "
       >
         <div class="delivery-section__grid">
+          <div class="delivery-field">
+            <label for="contact">
+              Contact Name
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <input
+              id="contact"
+              type="text"
+              formControlName="contact"
+              autocomplete="name"
+              placeholder="Enter the contact name"
+            />
+
+            @if (
+              form.controls.contact.touched
+              && form.controls.contact.invalid
+            ) {
+              <p class="delivery-field__error">
+                Contact Name is required.
+              </p>
+            }
+          </div>
+
           <div class="delivery-field">
             <label for="email">
               Email
@@ -1117,30 +526,6 @@
             ) {
               <p class="delivery-field__error">
                 Enter a valid email address.
-              </p>
-            }
-          </div>
-
-          <div class="delivery-field">
-            <label for="contact">
-              Contact Name
-              <span aria-hidden="true">*</span>
-            </label>
-
-            <input
-              id="contact"
-              type="text"
-              formControlName="contact"
-              autocomplete="name"
-              placeholder="Enter the contact name"
-            />
-
-            @if (
-              form.controls.contact.touched
-              && form.controls.contact.invalid
-            ) {
-              <p class="delivery-field__error">
-                Contact Name is required.
               </p>
             }
           </div>
@@ -1186,7 +571,804 @@
       </div>
     </section>
 
+    <!-- ====================================================== -->
+    <!-- 4. CLASSIFICATION -->
+    <!-- ====================================================== -->
+
+    <section
+      class="delivery-section"
+      aria-labelledby="classification-title"
+    >
+      <button
+        class="delivery-section__header delivery-section__header--toggle"
+        type="button"
+        [attr.aria-expanded]="isSectionOpen('classification')"
+        aria-controls="classification-content"
+        (click)="toggleSection('classification')"
+      >
+        <span
+          class="delivery-section__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M4 6h16" />
+            <path d="M4 12h10" />
+            <path d="M4 18h7" />
+            <circle cx="18" cy="12" r="2" />
+            <circle cx="15" cy="18" r="2" />
+          </svg>
+        </span>
+
+        <span class="delivery-section__heading">
+          <span id="classification-title">
+            4. Classification
+          </span>
+
+          <small>
+            Classification and current status of the delivery.
+          </small>
+        </span>
+
+        <span
+          class="delivery-section__chevron"
+          aria-hidden="true"
+        >
+          @if (isSectionOpen('classification')) {
+            ˄
+          } @else {
+            ˅
+          }
+        </span>
+      </button>
+
+      <div
+        id="classification-content"
+        class="delivery-section__content"
+        [class.delivery-section__content--closed]="
+          !isSectionOpen('classification')
+        "
+      >
+        <div class="delivery-section__grid">
+          <div class="delivery-field">
+            <label for="type">
+              Type
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <select
+              id="type"
+              formControlName="type"
+            >
+              <option value="">
+                Select a type
+              </option>
+              <option value="PREVENTA">
+                PREVENTA
+              </option>
+              <option value="SAVING">
+                SAVING
+              </option>
+            </select>
+
+            @if (
+              form.controls.type.touched
+              && form.controls.type.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Type is required.
+              </p>
+            }
+          </div>
+
+          <div class="delivery-field">
+            <label for="status">
+              Status
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <select
+              id="status"
+              formControlName="status"
+            >
+              <option value="">
+                Select a status
+              </option>
+              <option value="EN PROCESO">
+                EN PROCESO
+              </option>
+              <option value="DETENIDO">
+                DETENIDO
+              </option>
+              <option value="DETENIDO CLIENTE">
+                DETENIDO CLIENTE
+              </option>
+              <option value="TERMINADO">
+                TERMINADO
+              </option>
+            </select>
+
+            @if (
+              form.controls.status.touched
+              && form.controls.status.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Status is required.
+              </p>
+            }
+          </div>
+
+          <div class="delivery-field">
+            <label for="technology">
+              Technology
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <select
+              id="technology"
+              formControlName="technology"
+            >
+              <option value="">
+                Select a technology
+              </option>
+              <option value="METRO2">
+                METRO2
+              </option>
+              <option value="METRO3">
+                METRO3
+              </option>
+              <option value="DWDM">
+                DWDM
+              </option>
+              <option value="TRANSPORTE">
+                TRANSPORTE
+              </option>
+              <option value="FIBRA OSCURA">
+                FIBRA OSCURA
+              </option>
+            </select>
+
+            @if (
+              form.controls.technology.touched
+              && form.controls.technology.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Technology is required.
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================== -->
+    <!-- 5. LANDLORDS & CONSECUTIVES -->
+    <!-- ====================================================== -->
+
+    <section
+      class="delivery-section"
+      aria-labelledby="landlord-consecutives-title"
+    >
+      <button
+        class="delivery-section__header delivery-section__header--toggle"
+        type="button"
+        [attr.aria-expanded]="isSectionOpen('landlordConsecutives')"
+        aria-controls="landlord-consecutives-content"
+        (click)="toggleSection('landlordConsecutives')"
+      >
+        <span
+          class="delivery-section__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M3 21h18" />
+            <path d="M5 21V8h14v13" />
+            <path d="M8 12h8" />
+            <path d="M8 16h8" />
+            <path d="M9 8V4h6v4" />
+          </svg>
+        </span>
+
+        <span class="delivery-section__heading">
+          <span id="landlord-consecutives-title">
+            5. Landlords & Consecutives
+          </span>
+
+          <small>
+            Add each landlord involved in the delivery and its corresponding
+            approval number. Required when the delivery is completed.
+          </small>
+        </span>
+
+        <span
+          class="delivery-section__chevron"
+          aria-hidden="true"
+        >
+          @if (isSectionOpen('landlordConsecutives')) {
+            ˄
+          } @else {
+            ˅
+          }
+        </span>
+      </button>
+
+      <div
+        id="landlord-consecutives-content"
+        class="delivery-section__content"
+        [class.delivery-section__content--closed]="
+          !isSectionOpen('landlordConsecutives')
+        "
+      >
+        <div
+          class="landlord-list"
+          formArrayName="landlordConsecutives"
+        >
+          @for (
+            item of landlordConsecutives.controls;
+            track item;
+            let index = $index
+          ) {
+            <article
+              class="landlord-item"
+              [formGroupName]="index"
+            >
+              <header class="landlord-item__header">
+                <div>
+                  <strong>
+                    Landlord {{ index + 1 }}
+                  </strong>
+
+                  <small>
+                    Select a landlord and enter its corresponding
+                    approval number.
+                  </small>
+                </div>
+
+                @if (landlordConsecutives.length > 1) {
+                  <button
+                    class="landlord-item__remove"
+                    type="button"
+                    (click)="removeLandlordConsecutive(index)"
+                    [attr.aria-label]="
+                      'Remove landlord ' + (index + 1)
+                    "
+                  >
+                    Remove
+                  </button>
+                }
+              </header>
+
+              <div class="landlord-item__grid">
+                <div class="delivery-field">
+                  <label [for]="'landlord-' + index">
+                    Landlord
+
+                    @if (form.controls.status.value === 'TERMINADO') {
+                      <span aria-hidden="true">*</span>
+                    }
+                  </label>
+
+                  <select
+                    [id]="'landlord-' + index"
+                    formControlName="landlord"
+                  >
+                    <option value="">
+                      Select a landlord
+                    </option>
+                    <option value="vendor-1">
+                      Vendor 1
+                    </option>
+                    <option value="vendor-2">
+                      Vendor 2
+                    </option>
+                  </select>
+
+                  @if (
+                    item.controls.landlord.touched
+                    && item.controls.landlord.hasError('required')
+                  ) {
+                    <p class="delivery-field__error">
+                      Landlord is required when the delivery is completed.
+                    </p>
+                  }
+                </div>
+
+                <div class="delivery-field">
+                  <label [for]="'consecutive-' + index">
+                    Consecutive
+
+                    @if (form.controls.status.value === 'TERMINADO') {
+                      <span aria-hidden="true">*</span>
+                    }
+                  </label>
+
+                  <input
+                    [id]="'consecutive-' + index"
+                    type="text"
+                    formControlName="consecutive"
+                    placeholder="Vendor Approval Number"
+                  />
+
+                  <small class="delivery-field__help">
+                    Approval number associated with this landlord.
+                  </small>
+
+                  @if (
+                    item.controls.consecutive.touched
+                    && item.controls.consecutive.hasError('required')
+                  ) {
+                    <p class="delivery-field__error">
+                      Consecutive is required when the delivery is completed.
+                    </p>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+
+        <button
+          class="landlord-add"
+          type="button"
+          (click)="addLandlordConsecutive()"
+        >
+          <span aria-hidden="true">＋</span>
+          Add another landlord
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================== -->
+    <!-- 6. ASSIGNMENT -->
+    <!-- ====================================================== -->
+
+    <section
+      class="delivery-section"
+      aria-labelledby="assignment-title"
+    >
+      <button
+        class="delivery-section__header delivery-section__header--toggle"
+        type="button"
+        [attr.aria-expanded]="isSectionOpen('assignment')"
+        aria-controls="assignment-content"
+        (click)="toggleSection('assignment')"
+      >
+        <span
+          class="delivery-section__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </span>
+
+        <span class="delivery-section__heading">
+          <span id="assignment-title">
+            6. Assignment
+          </span>
+
+          <small>
+            Contractor and responsible engineer information.
+          </small>
+        </span>
+
+        <span
+          class="delivery-section__chevron"
+          aria-hidden="true"
+        >
+          @if (isSectionOpen('assignment')) {
+            ˄
+          } @else {
+            ˅
+          }
+        </span>
+      </button>
+
+      <div
+        id="assignment-content"
+        class="delivery-section__content"
+        [class.delivery-section__content--closed]="
+          !isSectionOpen('assignment')
+        "
+      >
+        <div class="delivery-section__grid">
+          <div class="delivery-field">
+            <label for="eaim">
+              EAIM
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <select
+              id="eaim"
+              formControlName="eaim"
+            >
+              <option value="">
+                Select a contractor
+              </option>
+              <option value="contractor-1">
+                Contractor 1
+              </option>
+              <option value="contractor-2">
+                Contractor 2
+              </option>
+            </select>
+
+            @if (
+              form.controls.eaim.touched
+              && form.controls.eaim.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                EAIM is required.
+              </p>
+            }
+          </div>
+
+          <div class="delivery-field">
+            <label for="responsible">
+              Responsible
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <select
+              id="responsible"
+              formControlName="responsible"
+            >
+              <option value="">
+                Select a responsible engineer
+              </option>
+              <option value="engineer-1">
+                Engineer 1
+              </option>
+              <option value="engineer-2">
+                Engineer 2
+              </option>
+            </select>
+
+            @if (
+              form.controls.responsible.touched
+              && form.controls.responsible.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Responsible engineer is required.
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================== -->
+    <!-- 7. COSTS -->
+    <!-- ====================================================== -->
+
+    <section
+      class="delivery-section"
+      aria-labelledby="costs-title"
+    >
+      <button
+        class="delivery-section__header delivery-section__header--toggle"
+        type="button"
+        [attr.aria-expanded]="isSectionOpen('costs')"
+        aria-controls="costs-content"
+        (click)="toggleSection('costs')"
+      >
+        <span
+          class="delivery-section__icon"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path
+              d="M16 8.5c-.7-.9-1.9-1.5-3.4-1.5-2 0-3.6 1-3.6 2.5 0 1.7 1.5 2.2 3.6 2.7 2.1.5 3.4 1.1 3.4 2.8 0 1.6-1.5 2.7-3.8 2.7-1.7 0-3.2-.6-4.2-1.8"
+            />
+            <path d="M12 5v14" />
+          </svg>
+        </span>
+
+        <span class="delivery-section__heading">
+          <span id="costs-title">
+            7. Costs
+          </span>
+
+          <small>
+            Survey, budget and installation cost information.
+          </small>
+        </span>
+
+        <span
+          class="delivery-section__chevron"
+          aria-hidden="true"
+        >
+          @if (isSectionOpen('costs')) {
+            ˄
+          } @else {
+            ˅
+          }
+        </span>
+      </button>
+
+      <div
+        id="costs-content"
+        class="delivery-section__content"
+        [class.delivery-section__content--closed]="
+          !isSectionOpen('costs')
+        "
+      >
+        <!-- GENERAL COSTS -->
+
+        <div class="delivery-section__grid">
+          <div class="delivery-field">
+            <label for="surveyCost">
+              Survey Cost
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <input
+              id="surveyCost"
+              cimsCurrencyInput
+              type="text"
+              inputmode="numeric"
+              formControlName="surveyCost"
+              placeholder="$ 0"
+            />
+
+            <small class="delivery-field__help">
+              Cost associated with the site survey in COP.
+            </small>
+
+            @if (
+              form.controls.surveyCost.touched
+              && form.controls.surveyCost.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Survey Cost is required.
+              </p>
+            }
+
+            @if (
+              form.controls.surveyCost.touched
+              && form.controls.surveyCost.hasError('pattern')
+            ) {
+              <p class="delivery-field__error">
+                Survey Cost must contain numbers only.
+              </p>
+            }
+          </div>
+
+          <div class="delivery-field">
+            <label for="installationBudget">
+              Installation Budget
+              <span aria-hidden="true">*</span>
+            </label>
+
+            <input
+              id="installationBudget"
+              cimsCurrencyInput
+              type="text"
+              inputmode="numeric"
+              formControlName="installationBudget"
+              placeholder="$ 0"
+            />
+
+            <small class="delivery-field__help">
+              Estimated installation budget in COP.
+            </small>
+
+            @if (
+              form.controls.installationBudget.touched
+              && form.controls.installationBudget.hasError('required')
+            ) {
+              <p class="delivery-field__error">
+                Installation Budget is required.
+              </p>
+            }
+
+            @if (
+              form.controls.installationBudget.touched
+              && form.controls.installationBudget.hasError('pattern')
+            ) {
+              <p class="delivery-field__error">
+                Installation Budget must contain numbers only.
+              </p>
+            }
+          </div>
+        </div>
+
+        <!-- INSTALLATION COSTS -->
+
+        <div
+          class="installation-costs"
+          formArrayName="installationCosts"
+        >
+          <header class="installation-costs__heading">
+            <div>
+              <strong>
+                Installation Costs
+              </strong>
+
+              <small>
+                Add each installation cost and select the cause that generated it.
+              </small>
+            </div>
+          </header>
+
+          <div class="installation-costs__list">
+            @for (
+              item of installationCosts.controls;
+              track item;
+              let index = $index
+            ) {
+              <article
+                class="installation-cost-item"
+                [formGroupName]="index"
+              >
+                <header class="installation-cost-item__header">
+                  <div>
+                    <strong>
+                      Installation Cost {{ index + 1 }}
+                    </strong>
+
+                    <small>
+                      Identify the cause and enter the associated cost in COP.
+                    </small>
+                  </div>
+
+                  @if (installationCosts.length > 1) {
+                    <button
+                      class="installation-cost-item__remove"
+                      type="button"
+                      (click)="removeInstallationCost(index)"
+                      [attr.aria-label]="
+                        'Remove installation cost ' + (index + 1)
+                      "
+                    >
+                      Remove
+                    </button>
+                  }
+                </header>
+
+                <div class="installation-cost-item__grid">
+                  <!-- COST CAUSE -->
+
+                  <div class="delivery-field">
+                    <label [for]="'installation-cost-cause-' + index">
+                      Cost Cause
+                      <span aria-hidden="true">*</span>
+                    </label>
+
+                    <select
+                      [id]="'installation-cost-cause-' + index"
+                      formControlName="cause"
+                    >
+                      <option value="">
+                        Select a cost cause
+                      </option>
+
+                      <option value="CIVIL_WORKS">
+                        Civil Works
+                      </option>
+
+                      <option value="ADDITIONAL_MATERIALS">
+                        Additional Materials
+                      </option>
+
+                      <option value="ADDITIONAL_FIBER">
+                        Additional Fiber
+                      </option>
+
+                      <option value="LABOR">
+                        Labor
+                      </option>
+
+                      <option value="TRANSPORTATION">
+                        Transportation
+                      </option>
+
+                      <option value="PERMITS">
+                        Permits
+                      </option>
+
+                      <option value="EQUIPMENT">
+                        Equipment
+                      </option>
+
+                      <option value="INFRASTRUCTURE_ADAPTATION">
+                        Infrastructure Adaptation
+                      </option>
+
+                      <option value="TECHNICAL_REWORK">
+                        Technical Rework
+                      </option>
+
+                      <option value="CLIENT_REQUIREMENT">
+                        Client Requirement
+                      </option>
+
+                      <option value="LANDLORD_REQUIREMENT">
+                        Landlord Requirement
+                      </option>
+
+                      <option value="OTHER">
+                        Other
+                      </option>
+                    </select>
+
+                    <small class="delivery-field__help">
+                      Select the main reason associated with this installation cost.
+                    </small>
+
+                    @if (
+                      item.controls.cause.touched
+                      && item.controls.cause.hasError('required')
+                    ) {
+                      <p class="delivery-field__error">
+                        Cost Cause is required.
+                      </p>
+                    }
+                  </div>
+
+                  <!-- AMOUNT -->
+
+                  <div class="delivery-field">
+                    <label [for]="'installation-cost-' + index">
+                      Amount
+                      <span aria-hidden="true">*</span>
+                    </label>
+
+                    <input
+                      [id]="'installation-cost-' + index"
+                      cimsCurrencyInput
+                      type="text"
+                      inputmode="numeric"
+                      formControlName="amount"
+                      placeholder="$ 0"
+                    />
+
+                    <small class="delivery-field__help">
+                      Installation cost amount in COP.
+                    </small>
+
+                    @if (
+                      item.controls.amount.touched
+                      && item.controls.amount.hasError('required')
+                    ) {
+                      <p class="delivery-field__error">
+                        Installation Cost is required.
+                      </p>
+                    }
+
+                    @if (
+                      item.controls.amount.touched
+                      && item.controls.amount.hasError('pattern')
+                    ) {
+                      <p class="delivery-field__error">
+                        Installation Cost must contain numbers only.
+                      </p>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+
+          <button
+            class="installation-cost-add"
+            type="button"
+            (click)="addInstallationCost()"
+          >
+            <span aria-hidden="true">＋</span>
+            Add another installation cost
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================== -->
     <!-- 8. OBSERVATIONS -->
+    <!-- ====================================================== -->
+
     <section
       class="delivery-section"
       aria-labelledby="observations-title"
@@ -1262,6 +1444,10 @@
         </div>
       </div>
     </section>
+
+    <!-- ====================================================== -->
+    <!-- ACTIONS -->
+    <!-- ====================================================== -->
 
     <footer class="delivery-new__actions">
       <a

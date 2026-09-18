@@ -3,18 +3,10 @@
     <header class="delivery-edit__header">
       <a
         class="delivery-edit__back"
-        [routerLink]="[
-          '/delivery',
-          delivery.id
-        ]"
+        [routerLink]="['/delivery', delivery.id]"
       >
-        <span aria-hidden="true">
-          ←
-        </span>
-
-        <span>
-          Back to Delivery Details
-        </span>
+        <span aria-hidden="true">←</span>
+        <span>Back to Delivery Details</span>
       </a>
 
       <div class="delivery-edit__heading">
@@ -23,9 +15,7 @@
             Delivery
           </p>
 
-          <h1>
-            Edit Delivery
-          </h1>
+          <h1>Edit Delivery</h1>
 
           <p class="delivery-edit__subtitle">
             Update the delivery information below.
@@ -33,13 +23,8 @@
         </div>
 
         <div class="delivery-edit__reference">
-          <span>
-            DKO/TKT
-          </span>
-
-          <strong>
-            {{ delivery.dkoTkt }}
-          </strong>
+          <span>DKO/TKT</span>
+          <strong>{{ delivery.dkoTkt }}</strong>
         </div>
       </div>
     </header>
@@ -50,39 +35,25 @@
       (ngSubmit)="save()"
       novalidate
     >
-      <!-- IDENTIFICATION -->
+      <!-- ================================================= -->
+      <!-- 1. IDENTIFICATION -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('identification')
-          "
-          aria-controls="identification-content"
-          (click)="
-            toggleSection('identification')
-          "
+          [attr.aria-expanded]="isSectionOpen('identification')"
+          (click)="toggleSection('identification')"
         >
           <div>
-            <h2>
-              Identification
-            </h2>
-
-            <p>
-              Internal work order and circuit references.
-            </p>
+            <span class="delivery-section__number">1</span>
+            <h2>Identification</h2>
+            <p>Internal work order and circuit references.</p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen(
-                'identification'
-              )
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('identification')) {
               −
             } @else {
               +
@@ -91,19 +62,14 @@
         </button>
 
         <div
-          id="identification-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
-            !isSectionOpen(
-              'identification'
-            )
+            !isSectionOpen('identification')
           "
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label>
-                DKO/TKT
-              </label>
+              <label>DKO/TKT</label>
 
               <input
                 type="text"
@@ -111,18 +77,15 @@
                 readonly
               />
 
-              <span class="delivery-field__help">
-                Internal Work Order.
+              <small class="delivery-field__help">
                 This value cannot be changed.
-              </span>
+              </small>
             </div>
 
             <div class="delivery-field">
               <label for="rfsFiberChain">
                 RFS Fiber Chain
-                <span aria-hidden="true">
-                  *
-                </span>
+                <span>*</span>
               </label>
 
               <input
@@ -131,60 +94,25 @@
                 formControlName="rfsFiberChain"
               />
 
-              <span class="delivery-field__help">
-                Circuit ID.
-              </span>
-
               @if (
-                editForm.controls.rfsFiberChain.invalid
-                && (
-                  editForm.controls.rfsFiberChain.touched
-                  || submitted()
-                )
+                editForm.controls.rfsFiberChain.touched
+                && editForm.controls.rfsFiberChain.invalid
               ) {
-                <span class="delivery-field__error">
+                <p class="delivery-field__error">
                   RFS Fiber Chain is required.
-                </span>
-              }
-            </div>
-
-            <div class="delivery-field">
-              <label for="consecutive">
-                Consecutive
-                <span aria-hidden="true">
-                  *
-                </span>
-              </label>
-
-              <input
-                id="consecutive"
-                type="text"
-                formControlName="consecutive"
-              />
-
-              <span class="delivery-field__help">
-                Vendor approval number.
-              </span>
-
-              @if (
-                editForm.controls.consecutive.invalid
-                && (
-                  editForm.controls.consecutive.touched
-                  || submitted()
-                )
-              ) {
-                <span class="delivery-field__error">
-                  Consecutive is required.
-                </span>
+                </p>
               }
             </div>
 
             <div class="delivery-field">
               <label for="soSap">
                 SO SAP
-                <span aria-hidden="true">
-                  *
-                </span>
+
+                @if (
+                  editForm.controls.status.value === 'TERMINADO'
+                ) {
+                  <span>*</span>
+                }
               </label>
 
               <input
@@ -193,59 +121,42 @@
                 formControlName="soSap"
               />
 
+              <small class="delivery-field__help">
+                Required when the delivery is completed.
+              </small>
+
               @if (
-                editForm.controls.soSap.invalid
-                && (
-                  editForm.controls.soSap.touched
-                  || submitted()
-                )
+                editForm.controls.soSap.touched
+                && editForm.controls.soSap.hasError('required')
               ) {
-                <span class="delivery-field__error">
-                  SO SAP is required.
-                </span>
+                <p class="delivery-field__error">
+                  SO SAP is required to complete the delivery.
+                </p>
               }
             </div>
           </div>
         </div>
       </section>
 
-      <!-- CLIENT & LOCATION -->
+      <!-- ================================================= -->
+      <!-- 2. CLIENT & LOCATION -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen(
-              'clientLocation'
-            )
-          "
-          aria-controls="client-location-content"
-          (click)="
-            toggleSection(
-              'clientLocation'
-            )
-          "
+          [attr.aria-expanded]="isSectionOpen('clientLocation')"
+          (click)="toggleSection('clientLocation')"
         >
           <div>
-            <h2>
-              Client & Location
-            </h2>
-
-            <p>
-              Customer, site and commercial information.
-            </p>
+            <span class="delivery-section__number">2</span>
+            <h2>Client & Location</h2>
+            <p>Customer, site and commercial information.</p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen(
-                'clientLocation'
-              )
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('clientLocation')) {
               −
             } @else {
               +
@@ -254,18 +165,15 @@
         </button>
 
         <div
-          id="client-location-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
-            !isSectionOpen(
-              'clientLocation'
-            )
+            !isSectionOpen('clientLocation')
           "
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
               <label for="clientName">
-                Client Name *
+                Client Name <span>*</span>
               </label>
 
               <input
@@ -277,7 +185,7 @@
 
             <div class="delivery-field">
               <label for="buildingName">
-                Building / Site *
+                Building / Site <span>*</span>
               </label>
 
               <input
@@ -289,7 +197,7 @@
 
             <div class="delivery-field delivery-field--wide">
               <label for="address">
-                Address *
+                Address <span>*</span>
               </label>
 
               <input
@@ -301,24 +209,17 @@
 
             <div class="delivery-field">
               <label for="city">
-                City *
+                City <span>*</span>
               </label>
 
               <select
                 id="city"
                 formControlName="city"
               >
-                <option value="">
-                  Select a city
-                </option>
+                <option value="">Select a city</option>
 
-                @for (
-                  city of cities;
-                  track city
-                ) {
-                  <option
-                    [value]="city"
-                  >
+                @for (city of cities; track city) {
+                  <option [value]="city">
                     {{ city }}
                   </option>
                 }
@@ -327,24 +228,17 @@
 
             <div class="delivery-field">
               <label for="node">
-                Node *
+                Node <span>*</span>
               </label>
 
               <select
                 id="node"
                 formControlName="node"
               >
-                <option value="">
-                  Select a node
-                </option>
+                <option value="">Select a node</option>
 
-                @for (
-                  node of nodes;
-                  track node
-                ) {
-                  <option
-                    [value]="node"
-                  >
+                @for (node of nodes; track node) {
+                  <option [value]="node">
                     {{ node }}
                   </option>
                 }
@@ -353,69 +247,69 @@
 
             <div class="delivery-field">
               <label for="revenue">
-                Revenue *
+                Revenue
+
+                @if (
+                  editForm.controls.status.value === 'TERMINADO'
+                ) {
+                  <span>*</span>
+                }
               </label>
 
               <input
                 id="revenue"
+                cimsCurrencyInput
                 type="text"
                 inputmode="numeric"
                 formControlName="revenue"
+                placeholder="$ 0"
               />
 
+              <small class="delivery-field__help">
+                Required when the delivery is completed.
+              </small>
+
               @if (
-                editForm.controls.revenue.invalid
-                && (
-                  editForm.controls.revenue.touched
-                  || submitted()
-                )
+                editForm.controls.revenue.touched
+                && editForm.controls.revenue.hasError('required')
               ) {
-                <span class="delivery-field__error">
-                  Enter a valid revenue amount.
-                </span>
+                <p class="delivery-field__error">
+                  Revenue is required to complete the delivery.
+                </p>
+              }
+
+              @if (
+                editForm.controls.revenue.touched
+                && editForm.controls.revenue.hasError('pattern')
+              ) {
+                <p class="delivery-field__error">
+                  Revenue must contain numbers only.
+                </p>
               }
             </div>
           </div>
         </div>
       </section>
 
-      <!-- CLASSIFICATION -->
+      <!-- ================================================= -->
+      <!-- 3. CONTACT -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen(
-              'classification'
-            )
-          "
-          aria-controls="classification-content"
-          (click)="
-            toggleSection(
-              'classification'
-            )
-          "
+          [attr.aria-expanded]="isSectionOpen('contact')"
+          (click)="toggleSection('contact')"
         >
           <div>
-            <h2>
-              Classification
-            </h2>
-
-            <p>
-              Delivery type, status and technology.
-            </p>
+            <span class="delivery-section__number">3</span>
+            <h2>Contact Information</h2>
+            <p>Primary delivery contact information.</p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen(
-                'classification'
-              )
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('contact')) {
               −
             } @else {
               +
@@ -424,35 +318,115 @@
         </button>
 
         <div
-          id="classification-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
-            !isSectionOpen(
-              'classification'
-            )
+            !isSectionOpen('contact')
+          "
+        >
+          <div class="delivery-form-grid">
+            <div class="delivery-field">
+              <label for="contact">
+                Contact Name <span>*</span>
+              </label>
+
+              <input
+                id="contact"
+                type="text"
+                formControlName="contact"
+              />
+            </div>
+
+            <div class="delivery-field">
+              <label for="email">
+                Email <span>*</span>
+              </label>
+
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+              />
+
+              @if (
+                editForm.controls.email.touched
+                && editForm.controls.email.invalid
+              ) {
+                <p class="delivery-field__error">
+                  Enter a valid email address.
+                </p>
+              }
+            </div>
+
+            <div class="delivery-field">
+              <label for="phone">
+                Mobile Phone <span>*</span>
+              </label>
+
+              <input
+                id="phone"
+                type="tel"
+                formControlName="phone"
+              />
+
+              @if (
+                editForm.controls.phone.touched
+                && editForm.controls.phone.invalid
+              ) {
+                <p class="delivery-field__error">
+                  Enter a valid Colombian mobile number.
+                </p>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================= -->
+      <!-- 4. CLASSIFICATION -->
+      <!-- ================================================= -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="isSectionOpen('classification')"
+          (click)="toggleSection('classification')"
+        >
+          <div>
+            <span class="delivery-section__number">4</span>
+            <h2>Classification</h2>
+            <p>Delivery type, status and technology.</p>
+          </div>
+
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('classification')) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('classification')
           "
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
               <label for="type">
-                Type *
+                Type <span>*</span>
               </label>
 
               <select
                 id="type"
                 formControlName="type"
               >
-                <option value="">
-                  Select a type
-                </option>
+                <option value="">Select a type</option>
 
-                @for (
-                  type of types;
-                  track type
-                ) {
-                  <option
-                    [value]="type"
-                  >
+                @for (type of types; track type) {
+                  <option [value]="type">
                     {{ typeLabel(type) }}
                   </option>
                 }
@@ -461,7 +435,7 @@
 
             <div class="delivery-field">
               <label for="status">
-                Status *
+                Status <span>*</span>
               </label>
 
               <select
@@ -472,26 +446,22 @@
                   Select a status
                 </option>
 
-                @for (
-                  status of statuses;
-                  track status
-                ) {
-                  <option
-                    [value]="status"
-                  >
-                    {{
-                      statusLabel(
-                        status
-                      )
-                    }}
+                @for (status of statuses; track status) {
+                  <option [value]="status">
+                    {{ statusLabel(status) }}
                   </option>
                 }
               </select>
+
+              <small class="delivery-field__help">
+                Changing the status automatically creates a
+                status-history entry.
+              </small>
             </div>
 
             <div class="delivery-field">
               <label for="technology">
-                Technology *
+                Technology <span>*</span>
               </label>
 
               <select
@@ -503,59 +473,59 @@
                 </option>
 
                 @for (
-                  technology
-                    of technologies;
+                  technology of technologies;
                   track technology
                 ) {
-                  <option
-                    [value]="technology"
-                  >
-                    {{
-                      technologyLabel(
-                        technology
-                      )
-                    }}
+                  <option [value]="technology">
+                    {{ technologyLabel(technology) }}
                   </option>
                 }
               </select>
             </div>
           </div>
+
+          @if (
+            editForm.controls.status.value === 'TERMINADO'
+            && editForm.invalid
+          ) {
+            <div class="completion-warning">
+              <strong>
+                Complete Delivery
+              </strong>
+
+              <p>
+                All required delivery information must be
+                completed before the status can be saved as
+                Completed.
+              </p>
+            </div>
+          }
         </div>
       </section>
 
-      <!-- ASSIGNMENT -->
+      <!-- ================================================= -->
+      <!-- 5. DATES & STATUS HISTORY -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('assignment')
-          "
-          aria-controls="assignment-content"
-          (click)="
-            toggleSection('assignment')
-          "
+          [attr.aria-expanded]="isSectionOpen('dates')"
+          (click)="toggleSection('dates')"
         >
           <div>
-            <h2>
-              Assignment
-            </h2>
+            <span class="delivery-section__number">5</span>
+
+            <h2>Dates & Status History</h2>
 
             <p>
-              Vendor, contractor and Cirion ownership.
+              Status transitions and time spent in each stage.
             </p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen(
-                'assignment'
-              )
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('dates')) {
               −
             } @else {
               +
@@ -564,45 +534,320 @@
         </button>
 
         <div
-          id="assignment-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
-            !isSectionOpen(
-              'assignment'
-            )
+            !isSectionOpen('dates')
+          "
+        >
+          <div class="history-notice">
+            <span
+              class="history-notice__icon"
+              aria-hidden="true"
+            >
+              🔒
+            </span>
+
+            <div>
+              <strong>System-managed information</strong>
+
+              <p>
+                Status dates and elapsed times are generated
+                automatically and cannot be edited.
+              </p>
+            </div>
+          </div>
+
+          <div class="status-history__desktop">
+            <div class="status-history__table-wrapper">
+              <table class="status-history__table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Time in Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (
+                    history of delivery.statusHistory;
+                    track history.startedAt
+                  ) {
+                    <tr>
+                      <td>
+                        <span
+                          class="status-history__badge"
+                          [class.status-history__badge--progress]="
+                            history.status === 'EN PROCESO'
+                          "
+                          [class.status-history__badge--stopped]="
+                            history.status === 'DETENIDO'
+                            || history.status === 'DETENIDO CLIENTE'
+                          "
+                          [class.status-history__badge--completed]="
+                            history.status === 'TERMINADO'
+                          "
+                        >
+                          {{ statusLabel(history.status) }}
+                        </span>
+                      </td>
+
+                      <td>
+                        {{ formatDateTime(history.startedAt) }}
+                      </td>
+
+                      <td>
+                        @if (history.endedAt) {
+                          {{ formatDateTime(history.endedAt) }}
+                        } @else {
+                          <span class="status-history__current">
+                            Current
+                          </span>
+                        }
+                      </td>
+
+                      <td>
+                        <strong>
+                          {{ formatStatusDuration(history) }}
+                        </strong>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="status-history__mobile">
+            @for (
+              history of delivery.statusHistory;
+              track history.startedAt
+            ) {
+              <article class="status-history-card">
+                <header class="status-history-card__header">
+                  <span
+                    class="status-history__badge"
+                    [class.status-history__badge--progress]="
+                      history.status === 'EN PROCESO'
+                    "
+                    [class.status-history__badge--stopped]="
+                      history.status === 'DETENIDO'
+                      || history.status === 'DETENIDO CLIENTE'
+                    "
+                    [class.status-history__badge--completed]="
+                      history.status === 'TERMINADO'
+                    "
+                  >
+                    {{ statusLabel(history.status) }}
+                  </span>
+
+                  <strong>
+                    {{ formatStatusDuration(history) }}
+                  </strong>
+                </header>
+
+                <div class="status-history-card__dates">
+                  <div>
+                    <span>Started</span>
+                    <strong>
+                      {{ formatDateTime(history.startedAt) }}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Ended</span>
+
+                    <strong>
+                      @if (history.endedAt) {
+                        {{ formatDateTime(history.endedAt) }}
+                      } @else {
+                        Current
+                      }
+                    </strong>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================= -->
+      <!-- 6. LANDLORDS & CONSECUTIVES -->
+      <!-- ================================================= -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="
+            isSectionOpen('landlordConsecutives')
+          "
+          (click)="toggleSection('landlordConsecutives')"
+        >
+          <div>
+            <span class="delivery-section__number">6</span>
+            <h2>Landlords & Consecutives</h2>
+
+            <p>
+              Associate each landlord with its corresponding
+              approval consecutive.
+            </p>
+          </div>
+
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('landlordConsecutives')) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('landlordConsecutives')
+          "
+        >
+          <div
+            class="landlord-list"
+            formArrayName="landlordConsecutives"
+          >
+            @for (
+              item of landlordConsecutives.controls;
+              track item;
+              let index = $index
+            ) {
+              <article
+                class="landlord-item"
+                [formGroupName]="index"
+              >
+                <header class="landlord-item__header">
+                  <div>
+                    <strong>
+                      Landlord {{ index + 1 }}
+                    </strong>
+
+                    <small>
+                      One consecutive belongs to one landlord.
+                    </small>
+                  </div>
+
+                  @if (landlordConsecutives.length > 1) {
+                    <button
+                      type="button"
+                      class="item-remove"
+                      (click)="removeLandlordConsecutive(index)"
+                    >
+                      Remove
+                    </button>
+                  }
+                </header>
+
+                <div class="repeatable-grid">
+                  <div class="delivery-field">
+                    <label [for]="'landlord-' + index">
+                      Landlord
+
+                      @if (
+                        editForm.controls.status.value
+                          === 'TERMINADO'
+                      ) {
+                        <span>*</span>
+                      }
+                    </label>
+
+                    <select
+                      [id]="'landlord-' + index"
+                      formControlName="landlord"
+                    >
+                      <option value="">
+                        Select a landlord
+                      </option>
+
+                      @for (
+                        landlord of landlords;
+                        track landlord
+                      ) {
+                        <option [value]="landlord">
+                          {{ landlord }}
+                        </option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="delivery-field">
+                    <label [for]="'consecutive-' + index">
+                      Consecutive
+
+                      @if (
+                        editForm.controls.status.value
+                          === 'TERMINADO'
+                      ) {
+                        <span>*</span>
+                      }
+                    </label>
+
+                    <input
+                      [id]="'consecutive-' + index"
+                      type="text"
+                      formControlName="consecutive"
+                    />
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="repeatable-add"
+            (click)="addLandlordConsecutive()"
+          >
+            <span aria-hidden="true">+</span>
+            Add Landlord & Consecutive
+          </button>
+        </div>
+      </section>
+
+      <!-- ================================================= -->
+      <!-- 7. ASSIGNMENT -->
+      <!-- ================================================= -->
+
+      <section class="delivery-section">
+        <button
+          type="button"
+          class="delivery-section__header"
+          [attr.aria-expanded]="isSectionOpen('assignment')"
+          (click)="toggleSection('assignment')"
+        >
+          <div>
+            <span class="delivery-section__number">7</span>
+            <h2>Assignment</h2>
+            <p>Contractor and Cirion ownership.</p>
+          </div>
+
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('assignment')) {
+              −
+            } @else {
+              +
+            }
+          </span>
+        </button>
+
+        <div
+          class="delivery-section__content"
+          [class.delivery-section__content--closed]="
+            !isSectionOpen('assignment')
           "
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="landlord">
-                Landlord *
-              </label>
-
-              <select
-                id="landlord"
-                formControlName="landlord"
-              >
-                <option value="">
-                  Select a vendor
-                </option>
-
-                @for (
-                  landlord
-                    of landlords;
-                  track landlord
-                ) {
-                  <option
-                    [value]="landlord"
-                  >
-                    {{ landlord }}
-                  </option>
-                }
-              </select>
-            </div>
-
-            <div class="delivery-field">
               <label for="eaim">
-                EAIM *
+                EAIM <span>*</span>
               </label>
 
               <select
@@ -614,13 +859,10 @@
                 </option>
 
                 @for (
-                  contractor
-                    of contractors;
+                  contractor of contractors;
                   track contractor
                 ) {
-                  <option
-                    [value]="contractor"
-                  >
+                  <option [value]="contractor">
                     {{ contractor }}
                   </option>
                 }
@@ -629,7 +871,7 @@
 
             <div class="delivery-field">
               <label for="responsible">
-                Responsible *
+                Responsible <span>*</span>
               </label>
 
               <select
@@ -641,13 +883,10 @@
                 </option>
 
                 @for (
-                  responsible
-                    of responsibles;
+                  responsible of responsibles;
                   track responsible
                 ) {
-                  <option
-                    [value]="responsible"
-                  >
+                  <option [value]="responsible">
                     {{ responsible }}
                   </option>
                 }
@@ -657,37 +896,28 @@
         </div>
       </section>
 
-      <!-- DATES -->
+      <!-- ================================================= -->
+      <!-- 8. COSTS -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('dates')
-          "
-          aria-controls="dates-content"
-          (click)="
-            toggleSection('dates')
-          "
+          [attr.aria-expanded]="isSectionOpen('costs')"
+          (click)="toggleSection('costs')"
         >
           <div>
-            <h2>
-              Dates
-            </h2>
+            <span class="delivery-section__number">8</span>
+            <h2>Costs</h2>
 
             <p>
-              Assignment, survey and installation milestones.
+              Survey, budget and installation cost information.
             </p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen('dates')
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('costs')) {
               −
             } @else {
               +
@@ -696,92 +926,6 @@
         </button>
 
         <div
-          id="dates-content"
-          class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('dates')
-          "
-        >
-          <div class="delivery-form-grid">
-            <div class="delivery-field">
-              <label for="dkoAssignmentDate">
-                DKO Assignment Date *
-              </label>
-
-              <input
-                id="dkoAssignmentDate"
-                type="date"
-                formControlName="dkoAssignmentDate"
-              />
-            </div>
-
-            <div class="delivery-field">
-              <label for="eaimSurveyRequestDate">
-                EAIM Survey Request Date *
-              </label>
-
-              <input
-                id="eaimSurveyRequestDate"
-                type="date"
-                formControlName="eaimSurveyRequestDate"
-              />
-            </div>
-
-            <div class="delivery-field">
-              <label for="installationDate">
-                Installation Date *
-              </label>
-
-              <input
-                id="installationDate"
-                type="date"
-                formControlName="installationDate"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- COSTS -->
-
-      <section class="delivery-section">
-        <button
-          type="button"
-          class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('costs')
-          "
-          aria-controls="costs-content"
-          (click)="
-            toggleSection('costs')
-          "
-        >
-          <div>
-            <h2>
-              Costs
-            </h2>
-
-            <p>
-              Survey and installation financial information.
-            </p>
-          </div>
-
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen('costs')
-            ) {
-              −
-            } @else {
-              +
-            }
-          </span>
-        </button>
-
-        <div
-          id="costs-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
             !isSectionOpen('costs')
@@ -790,77 +934,160 @@
           <div class="delivery-form-grid">
             <div class="delivery-field">
               <label for="surveyCost">
-                Survey Cost *
+                Survey Cost <span>*</span>
               </label>
 
               <input
                 id="surveyCost"
+                cimsCurrencyInput
                 type="text"
                 inputmode="numeric"
                 formControlName="surveyCost"
+                placeholder="$ 0"
               />
             </div>
 
             <div class="delivery-field">
               <label for="installationBudget">
-                Installation Budget *
+                Installation Budget <span>*</span>
               </label>
 
               <input
                 id="installationBudget"
+                cimsCurrencyInput
                 type="text"
                 inputmode="numeric"
                 formControlName="installationBudget"
+                placeholder="$ 0"
               />
             </div>
+          </div>
 
-            <div class="delivery-field">
-              <label for="installationCost">
-                Installation Cost *
-              </label>
+          <div
+            class="installation-costs"
+            formArrayName="installationCosts"
+          >
+            <header class="repeatable-heading">
+              <div>
+                <strong>Installation Costs</strong>
 
-              <input
-                id="installationCost"
-                type="text"
-                inputmode="numeric"
-                formControlName="installationCost"
-              />
+                <small>
+                  Each additional cost must have a measurable cause.
+                </small>
+              </div>
+            </header>
+
+            <div class="installation-costs__list">
+              @for (
+                item of installationCosts.controls;
+                track item;
+                let index = $index
+              ) {
+                <article
+                  class="installation-cost-item"
+                  [formGroupName]="index"
+                >
+                  <header class="landlord-item__header">
+                    <div>
+                      <strong>
+                        Installation Cost {{ index + 1 }}
+                      </strong>
+
+                      <small>
+                        Identify why this cost was generated.
+                      </small>
+                    </div>
+
+                    @if (installationCosts.length > 1) {
+                      <button
+                        type="button"
+                        class="item-remove"
+                        (click)="removeInstallationCost(index)"
+                      >
+                        Remove
+                      </button>
+                    }
+                  </header>
+
+                  <div class="repeatable-grid">
+                    <div class="delivery-field">
+                      <label [for]="'cost-cause-' + index">
+                        Cost Cause <span>*</span>
+                      </label>
+
+                      <select
+                        [id]="'cost-cause-' + index"
+                        formControlName="cause"
+                      >
+                        <option value="">
+                          Select a cost cause
+                        </option>
+
+                        @for (
+                          cause of installationCostCauses;
+                          track cause
+                        ) {
+                          <option [value]="cause">
+                            {{
+                              installationCostCauseLabel(
+                                cause
+                              )
+                            }}
+                          </option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="delivery-field">
+                      <label [for]="'cost-amount-' + index">
+                        Amount <span>*</span>
+                      </label>
+
+                      <input
+                        [id]="'cost-amount-' + index"
+                        cimsCurrencyInput
+                        type="text"
+                        inputmode="numeric"
+                        formControlName="amount"
+                        placeholder="$ 0"
+                      />
+                    </div>
+                  </div>
+                </article>
+              }
             </div>
+
+            <button
+              type="button"
+              class="repeatable-add"
+              (click)="addInstallationCost()"
+            >
+              <span aria-hidden="true">+</span>
+              Add Installation Cost
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- CONTACT -->
+      <!-- ================================================= -->
+      <!-- 9. OBSERVATIONS -->
+      <!-- ================================================= -->
 
       <section class="delivery-section">
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('contact')
-          "
-          aria-controls="contact-content"
-          (click)="
-            toggleSection('contact')
-          "
+          [attr.aria-expanded]="isSectionOpen('observations')"
+          (click)="toggleSection('observations')"
         >
           <div>
-            <h2>
-              Contact
-            </h2>
-
-            <p>
-              Primary delivery contact information.
-            </p>
+            <span class="delivery-section__number">9</span>
+            <h2>Observations</h2>
+            <p>Additional operational information.</p>
           </div>
 
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen('contact')
-            ) {
+          <span class="delivery-section__chevron">
+            @if (isSectionOpen('observations')) {
               −
             } @else {
               +
@@ -869,133 +1096,14 @@
         </button>
 
         <div
-          id="contact-content"
           class="delivery-section__content"
           [class.delivery-section__content--closed]="
-            !isSectionOpen('contact')
-          "
-        >
-          <div class="delivery-form-grid">
-            <div class="delivery-field">
-              <label for="email">
-                Email *
-              </label>
-
-              <input
-                id="email"
-                type="email"
-                formControlName="email"
-              />
-
-              @if (
-                editForm.controls.email.invalid
-                && (
-                  editForm.controls.email.touched
-                  || submitted()
-                )
-              ) {
-                <span class="delivery-field__error">
-                  Enter a valid email address.
-                </span>
-              }
-            </div>
-
-            <div class="delivery-field">
-              <label for="contact">
-                Contact Name *
-              </label>
-
-              <input
-                id="contact"
-                type="text"
-                formControlName="contact"
-              />
-            </div>
-
-            <div class="delivery-field">
-              <label for="phone">
-                Mobile Phone *
-              </label>
-
-              <input
-                id="phone"
-                type="tel"
-                inputmode="numeric"
-                formControlName="phone"
-              />
-
-              @if (
-                editForm.controls.phone.invalid
-                && (
-                  editForm.controls.phone.touched
-                  || submitted()
-                )
-              ) {
-                <span class="delivery-field__error">
-                  Enter a valid Colombian mobile number.
-                </span>
-              }
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- OBSERVATIONS -->
-
-      <section class="delivery-section">
-        <button
-          type="button"
-          class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen(
-              'observations'
-            )
-          "
-          aria-controls="observations-content"
-          (click)="
-            toggleSection(
-              'observations'
-            )
-          "
-        >
-          <div>
-            <h2>
-              Observations
-            </h2>
-
-            <p>
-              Additional operational information.
-            </p>
-          </div>
-
-          <span
-            class="delivery-section__chevron"
-            aria-hidden="true"
-          >
-            @if (
-              isSectionOpen(
-                'observations'
-              )
-            ) {
-              −
-            } @else {
-              +
-            }
-          </span>
-        </button>
-
-        <div
-          id="observations-content"
-          class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen(
-              'observations'
-            )
+            !isSectionOpen('observations')
           "
         >
           <div class="delivery-field">
             <label for="observations">
-              Observations *
+              Observations <span>*</span>
             </label>
 
             <textarea
@@ -1026,9 +1134,7 @@
     </form>
   } @else {
     <section class="delivery-edit-empty">
-      <h1>
-        Delivery not found
-      </h1>
+      <h1>Delivery not found</h1>
 
       <p>
         The requested delivery could not be found.
