@@ -4,7 +4,13 @@
 // PAGE
 // ======================================================
 
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .delivery-detail {
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   gap: var(--cims-space-5);
 
