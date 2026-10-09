@@ -24,3 +24,11 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+// Route components are custom elements; give each view a shrinkable block boundary.
+app-root,
+.app-content > :not(router-outlet) {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}

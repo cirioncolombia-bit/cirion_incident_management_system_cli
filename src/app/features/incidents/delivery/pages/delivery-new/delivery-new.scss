@@ -4,7 +4,13 @@
 // PAGE
 // ======================================================
 
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .delivery-new {
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   gap: var(--cims-space-5);
 }
@@ -400,7 +406,7 @@
 .landlord-item__remove {
   flex: 0 0 auto;
 
-  min-height: 2.25rem;
+  min-height: 2.75rem;
 
   display: inline-flex;
   align-items: center;
@@ -604,7 +610,7 @@
 .installation-cost-item__remove {
   flex: 0 0 auto;
 
-  min-height: 2.25rem;
+  min-height: 2.75rem;
 
   display: inline-flex;
   align-items: center;
@@ -689,7 +695,7 @@
 
 .delivery-new__actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 
   gap: var(--cims-space-3);
 }

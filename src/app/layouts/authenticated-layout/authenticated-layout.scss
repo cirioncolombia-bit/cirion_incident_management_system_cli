@@ -8,6 +8,8 @@
 }
 
 .app-sidebar {
+  max-width: calc(100vw - 3rem);
+  overflow-y: auto;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 30;
@@ -21,7 +23,7 @@
     var(--cims-space-8)
     var(--cims-space-5);
 
-  overflow: hidden;
+  overflow-x: hidden;
 
   color: #ffffff;
 
@@ -228,6 +230,7 @@
 }
 
 .app-sidebar__account-action {
+  min-height: 2.75rem;
   width: 100%;
 
   display: block;
@@ -323,6 +326,11 @@
   font-size: var(--cims-font-size-xl);
 
   cursor: pointer;
+}
+
+.app-header__welcome {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .app-header__welcome h1 {
@@ -437,6 +445,7 @@
 }
 
 .app-header__user-menu-item {
+  min-height: 2.75rem;
   width: 100%;
 
   display: block;
@@ -510,6 +519,7 @@
   }
 
   .app-sidebar {
+    max-width: none;
     position: relative;
 
     width: auto;

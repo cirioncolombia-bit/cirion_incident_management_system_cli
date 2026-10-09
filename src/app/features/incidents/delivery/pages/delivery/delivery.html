@@ -49,6 +49,7 @@
 
       <input
         type="search"
+        aria-label="Search deliveries"
         placeholder="Search by DKO/TKT, RFS, client, site, city or responsible..."
         [value]="searchTerm()"
         (input)="onSearch($event)"
@@ -84,6 +85,7 @@
       [class.delivery-summary__item--active]="
         selectedStatus() === 'TODOS'
       "
+      [attr.aria-pressed]="selectedStatus() === 'TODOS'"
       (click)="filterByStatus('TODOS')"
     >
       <span>All</span>
@@ -99,6 +101,7 @@
       [class.delivery-summary__item--active]="
         selectedStatus() === 'EN PROCESO'
       "
+      [attr.aria-pressed]="selectedStatus() === 'EN PROCESO'"
       (click)="filterByStatus('EN PROCESO')"
     >
       <span class="delivery-summary__label">
@@ -123,6 +126,7 @@
       [class.delivery-summary__item--active]="
         selectedStatus() === 'DETENIDO'
       "
+      [attr.aria-pressed]="selectedStatus() === 'DETENIDO'"
       (click)="filterByStatus('DETENIDO')"
     >
       <span class="delivery-summary__label">
@@ -147,6 +151,7 @@
       [class.delivery-summary__item--active]="
         selectedStatus() === 'TERMINADO'
       "
+      [attr.aria-pressed]="selectedStatus() === 'TERMINADO'"
       (click)="filterByStatus('TERMINADO')"
     >
       <span class="delivery-summary__label">
@@ -214,25 +219,7 @@
               }}
             </span>
 
-            <span
-              class="
-                delivery-card__status-time-label
-              "
-            >
-              Time in status
-            </span>
 
-            <strong
-              class="
-                delivery-card__status-time
-              "
-            >
-              {{
-                timeInCurrentStatus(
-                  delivery
-                )
-              }}
-            </strong>
           </div>
         </header>
 
@@ -314,7 +301,11 @@
           </div>
         </div>
 
-        <span class="delivery-card__link" aria-disabled="true" title="Details are not available yet">View details</span>
+        <button type="button" class="delivery-card__edit"
+          (click)="startEdit(delivery)" [attr.aria-label]="'Edit ' + delivery.dkoTkt">
+          <span>Edit Delivery</span>
+          <span aria-hidden="true">→</span>
+        </button>
       </article>
     } @empty {
       <div class="delivery-empty">
