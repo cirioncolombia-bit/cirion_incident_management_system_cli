@@ -21,6 +21,17 @@
     </a>
   </header>
 
+  @if (loading()) {
+    <p role="status">Loading deliveries…</p>
+  }
+  @if (loadError()) {
+    <p role="alert">{{ loadError() }}</p>
+    <button type="button" (click)="loadDeliveries()">Retry</button>
+    <a routerLink="/login">Sign in</a>
+  }
+  @if (!loading() && !loadError() && totalDeliveries() === 0) {
+    <p role="status">No active deliveries are available.</p>
+  }
   <section
     class="delivery-filters"
     aria-label="Delivery filters"
@@ -39,12 +50,13 @@
     </div>
 
     <div class="delivery-filters__actions">
-      <button
-        class="delivery-filters__button"
-        type="button"
-      >
-        Filters
-      </button>
+      <select class="delivery-filters__button" aria-label="Filter by status"
+        [value]="selectedStatus()" (change)="onStatusChange($event)">
+        <option value="TODOS">All statuses</option>
+        @for (status of availableStatuses(); track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
 
       <button
         class="delivery-filters__clear"
@@ -154,7 +166,7 @@
 
   <div class="delivery-list">
     @for (
-      delivery of filteredDeliveries();
+      delivery of pagedDeliveries();
       track delivery.id
     ) {
       <article class="delivery-card">
@@ -296,36 +308,18 @@
           </div>
         </div>
 
-        <a
-          class="delivery-card__link"
-          [routerLink]="[
-            '/delivery',
-            delivery.id
-          ]"
-        >
-          <span>
-            View details
-          </span>
-
-          <span
-            class="
-              delivery-card__details-icon
-            "
-            aria-hidden="true"
-          >
-            →
-          </span>
-        </a>
+        <span class="delivery-card__link" aria-disabled="true" title="Details are not available yet">View details</span>
       </article>
     } @empty {
       <div class="delivery-empty">
-        <strong>
-          No deliveries found
-        </strong>
-
-        <p>
-          Try changing the filters or search term.
-        </p>
+        @if (loading()) {
+          <strong>Loading deliveries…</strong>
+        } @else if (loadError()) {
+          <strong>Deliveries could not be loaded.</strong>
+        } @else {
+          <strong>No deliveries found</strong>
+          <p>Try changing the filters or search term.</p>
+        }
       </div>
     }
   </div>
@@ -398,7 +392,7 @@
 
         <tbody>
           @for (
-            delivery of filteredDeliveries();
+            delivery of pagedDeliveries();
             track delivery.id
           ) {
             <tr
@@ -463,9 +457,8 @@
                       'Edit '
                       + delivery.dkoTkt
                     "
-                    (click)="
-                      startEdit(delivery)
-                    "
+                    disabled
+                    title="Editing is not available yet"
                   >
                     <span aria-hidden="true">
                       ✎
@@ -1190,8 +1183,9 @@
                 "
                 colspan="28"
               >
-                No deliveries found with
-                the current filters.
+                @if (loading()) { Loading deliveries… }
+                @else if (loadError()) { Deliveries could not be loaded. }
+                @else { No deliveries found with the current filters. }
               </td>
             </tr>
           }
@@ -1203,9 +1197,9 @@
   <footer class="delivery-pagination">
     <p>
       Showing
-      {{ filteredDeliveries().length }}
+      {{ pagedDeliveries().length }}
       of
-      {{ totalDeliveries() }}
+      {{ filteredDeliveries().length }}
       results
     </p>
 
@@ -1222,38 +1216,15 @@
         ‹
       </button>
 
-      <button
-        type="button"
-        [class.delivery-pagination__active]="
-          currentPage() === 1
-        "
-        (click)="goToPage(1)"
-      >
-        1
-      </button>
+      @for (page of pageNumbers(); track page) {
+        <button type="button" [class.delivery-pagination__active]="currentPage() === page"
+          [attr.aria-current]="currentPage() === page ? 'page' : null"
+          (click)="goToPage(page)">{{ page }}</button>
+      }
 
       <button
         type="button"
-        [class.delivery-pagination__active]="
-          currentPage() === 2
-        "
-        (click)="goToPage(2)"
-      >
-        2
-      </button>
-
-      <button
-        type="button"
-        [class.delivery-pagination__active]="
-          currentPage() === 3
-        "
-        (click)="goToPage(3)"
-      >
-        3
-      </button>
-
-      <button
-        type="button"
+        [disabled]="currentPage() >= totalPages()"
         (click)="
           goToPage(
             currentPage() + 1

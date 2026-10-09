@@ -1,3 +1,4 @@
+import { DeliverySummary } from '../models/delivery-summary';
 import { CreateDelivery, CreatedDelivery } from '../models/create-delivery';
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -8,6 +9,12 @@ import { ApiResponse, DeliveryCreateOptions } from '../models/delivery-create-op
 @Injectable({ providedIn: 'root' })
 export class DeliveryService {
   private readonly http = inject(HttpClient);
+
+  getAll() {
+    return this.http
+      .get<ApiResponse<DeliverySummary[]>>(`${environment.apiUrl}/api/Delivery`)
+      .pipe(map((response) => response.data));
+  }
 
   create(request: CreateDelivery) {
     return this.http

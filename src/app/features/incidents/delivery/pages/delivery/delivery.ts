@@ -1,4 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DeliveryService } from '../../services/delivery.service';
+import { DeliverySummary } from '../../models/delivery-summary';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -9,21 +13,9 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-type DeliveryStatus =
-  | 'EN PROCESO'
-  | 'DETENIDO'
-  | 'TERMINADO';
-
-type DeliveryTechnology =
-  | 'METRO2'
-  | 'METRO3'
-  | 'DWDM'
-  | 'TRANSPORTE'
-  | 'FIBRA OSCURA';
-
-type DeliveryType =
-  | 'PREVENTA'
-  | 'SAVING';
+type DeliveryStatus = string;
+type DeliveryTechnology = string;
+type DeliveryType = string;
 
 interface DeliveryStatusHistory {
   readonly status: DeliveryStatus;
@@ -46,7 +38,7 @@ interface DeliveryItem {
   readonly address: string;
   readonly city: string;
   readonly node: string;
-  readonly revenue: string;
+  readonly revenue: string | null;
 
   // 3. Classification
   readonly type: DeliveryType;
@@ -69,7 +61,7 @@ interface DeliveryItem {
   // 6. Costs
   readonly surveyCost: string;
   readonly installationBudget: string;
-  readonly installationCost: string;
+  readonly installationCost: string | null;
 
   // 7. Contact
   readonly email: string;
@@ -89,108 +81,6 @@ const noWhitespaceValidator: ValidatorFn = (
     ? null
     : { whitespace: true };
 };
-
-function hoursAgo(hours: number): string {
-  return new Date(
-    Date.now() - hours * 60 * 60 * 1000,
-  ).toISOString();
-}
-
-function createMockDelivery(
-  delivery: Pick<
-    DeliveryItem,
-    | 'id'
-    | 'dkoTkt'
-    | 'clientName'
-    | 'buildingName'
-    | 'city'
-    | 'technology'
-    | 'type'
-    | 'status'
-    | 'responsible'
-    | 'dkoAssignmentDate'
-  > & {
-    readonly hoursInCurrentStatus: number;
-  },
-): DeliveryItem {
-  const suffix = String(delivery.id).padStart(4, '0');
-
-  const {
-    hoursInCurrentStatus,
-    ...deliveryData
-  } = delivery;
-
-  const statusStartedAt = hoursAgo(
-    hoursInCurrentStatus,
-  );
-
-  const statusEndedAt =
-    delivery.status === 'TERMINADO'
-      ? new Date().toISOString()
-      : null;
-
-  return {
-    ...deliveryData,
-
-    rfsFiberChain: `RFS-2024-${suffix}`,
-    consecutive: `APP-${suffix}`,
-    soSap: `SO-${suffix}`,
-
-    address: `Business Address ${delivery.id}`,
-    node: `Node ${delivery.id}`,
-
-    revenue: String(
-      15_000_000
-      + delivery.id * 1_250_000,
-    ),
-
-    landlord:
-      delivery.id % 2 === 0
-        ? 'Vendor 2'
-        : 'Vendor 1',
-
-    eaim:
-      delivery.id % 2 === 0
-        ? 'Contractor 2'
-        : 'Contractor 1',
-
-    statusHistory: [
-      {
-        status: delivery.status,
-        startedAt: statusStartedAt,
-        endedAt: statusEndedAt,
-      },
-    ],
-
-    eaimSurveyRequestDate: '2024-02-20',
-    installationDate: '2024-03-15',
-
-    surveyCost: String(
-      500_000
-      + delivery.id * 50_000,
-    ),
-
-    installationBudget: String(
-      5_000_000
-      + delivery.id * 250_000,
-    ),
-
-    installationCost: String(
-      4_800_000
-      + delivery.id * 200_000,
-    ),
-
-    email: `contact${delivery.id}@example.com`,
-    contact: `Contact ${delivery.id}`,
-
-    phone: `30012345${String(
-      delivery.id,
-    ).padStart(2, '0')}`,
-
-    observations:
-      'Mock delivery information for frontend development.',
-  };
-}
 
 @Component({
   selector: 'app-delivery',
@@ -279,120 +169,67 @@ export class Delivery {
     'Carlos Mendoza',
   ] as const;
 
-  readonly deliveries =
-    signal<readonly DeliveryItem[]>([
-      createMockDelivery({
-        id: 1,
-        dkoTkt: 'DKO-2024-001235',
-        clientName: 'Banco de la Nación',
-        buildingName: 'Edificio Central',
-        city: 'Lima',
-        technology: 'METRO2',
-        type: 'SAVING',
-        status: 'EN PROCESO',
-        responsible: 'María Torres',
-        dkoAssignmentDate: '2024-02-10',
-        hoursInCurrentStatus: 29,
-      }),
+  private readonly deliveryService = inject(DeliveryService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly loading = signal(false);
+  readonly loadError = signal<string | null>(null);
+  readonly deliveries = signal<readonly DeliveryItem[]>([]);
 
-      createMockDelivery({
-        id: 2,
-        dkoTkt: 'DKO-2024-001236',
-        clientName: 'Telefónica',
-        buildingName: 'Sede Norte',
-        city: 'Bogotá',
-        technology: 'DWDM',
-        type: 'SAVING',
-        status: 'DETENIDO',
-        responsible: 'Juan Pérez',
-        dkoAssignmentDate: '2024-02-12',
-        hoursInCurrentStatus: 76,
-      }),
+  constructor() {
+    this.loadDeliveries();
+  }
 
-      createMockDelivery({
-        id: 3,
-        dkoTkt: 'DKO-2024-001237',
-        clientName: 'Claro',
-        buildingName: 'Torre Empresarial',
-        city: 'Santiago',
-        technology: 'FIBRA OSCURA',
-        type: 'PREVENTA',
-        status: 'EN PROCESO',
-        responsible: 'Ana López',
-        dkoAssignmentDate: '2024-02-15',
-        hoursInCurrentStatus: 8,
-      }),
+  loadDeliveries(): void {
+    if (this.loading()) return;
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.deliveries.set([]);
+    this.deliveryService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (deliveries) => {
+          this.deliveries.set(deliveries.map((delivery) => this.toItem(delivery)));
+          this.currentPage.set(1);
+          this.loading.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.loading.set(false);
+          this.loadError.set(error.status === 401
+            ? 'Your session is missing or expired. Please sign in again.'
+            : 'Unable to load deliveries. Please try again.');
+        },
+      });
+  }
 
-      createMockDelivery({
-        id: 4,
-        dkoTkt: 'DKO-2024-001238',
-        clientName: 'Banco BBVA',
-        buildingName: 'Torre 1',
-        city: 'Lima',
-        technology: 'TRANSPORTE',
-        type: 'SAVING',
-        status: 'TERMINADO',
-        responsible: 'Carlos Mendoza',
-        dkoAssignmentDate: '2024-02-18',
-        hoursInCurrentStatus: 45,
-      }),
-
-      createMockDelivery({
-        id: 5,
-        dkoTkt: 'DKO-2024-001239',
-        clientName: 'Entel',
-        buildingName: 'Edificio Principal',
-        city: 'Madrid',
-        technology: 'METRO3',
-        type: 'SAVING',
-        status: 'EN PROCESO',
-        responsible: 'María Torres',
-        dkoAssignmentDate: '2024-02-20',
-        hoursInCurrentStatus: 103,
-      }),
-
-      createMockDelivery({
-        id: 6,
-        dkoTkt: 'DKO-2024-001240',
-        clientName: 'Grupo Aval',
-        buildingName: 'Sede Centro',
-        city: 'Bogotá',
-        technology: 'METRO2',
-        type: 'SAVING',
-        status: 'DETENIDO',
-        responsible: 'Juan Pérez',
-        dkoAssignmentDate: '2024-02-22',
-        hoursInCurrentStatus: 18,
-      }),
-
-      createMockDelivery({
-        id: 7,
-        dkoTkt: 'DKO-2024-001241',
-        clientName: 'Movistar',
-        buildingName: 'Torre Empresarial',
-        city: 'Lima',
-        technology: 'DWDM',
-        type: 'SAVING',
-        status: 'EN PROCESO',
-        responsible: 'Ana López',
-        dkoAssignmentDate: '2024-02-25',
-        hoursInCurrentStatus: 151,
-      }),
-
-      createMockDelivery({
-        id: 8,
-        dkoTkt: 'DKO-2024-001242',
-        clientName: 'Empresa XYZ',
-        buildingName: 'Edificio Corporativo',
-        city: 'Santiago',
-        technology: 'FIBRA OSCURA',
-        type: 'SAVING',
-        status: 'TERMINADO',
-        responsible: 'Carlos Mendoza',
-        dkoAssignmentDate: '2024-02-28',
-        hoursInCurrentStatus: 62,
-      }),
-    ]);
+  private toItem(delivery: DeliverySummary): DeliveryItem {
+    const label = (value: string | null | undefined) => value?.trim().replace(/\s+/g, ' ') || '—';
+    return {
+      id: delivery.id,
+      dkoTkt: delivery.workOrderId,
+      rfsFiberChain: delivery.rfsFiberChain,
+      soSap: delivery.soSap ?? '—',
+      clientName: delivery.clientName,
+      buildingName: delivery.buildingSite,
+      address: delivery.address,
+      city: label(delivery.cityName),
+      node: label(delivery.nodeName),
+      revenue: delivery.revenue == null ? null : String(delivery.revenue),
+      type: label(delivery.typeDescription),
+      status: label(delivery.statusDescription),
+      technology: label(delivery.technologyDescription),
+      eaim: label(delivery.eaimName),
+      responsible: label(delivery.responsibleName),
+      surveyCost: String(delivery.surveryCost),
+      installationBudget: String(delivery.installationBudget),
+      email: delivery.email,
+      contact: delivery.contactName,
+      phone: String(delivery.mobilePhone),
+      observations: delivery.observation,
+      consecutive: '—', landlord: '—', installationCost: null,
+      dkoAssignmentDate: '—', eaimSurveyRequestDate: '—', installationDate: '—',
+      statusHistory: [],
+    };
+  }
 
   readonly editForm =
     this.formBuilder.nonNullable.group({
@@ -615,6 +452,27 @@ export class Delivery {
       );
     });
 
+  readonly availableStatuses = computed(() =>
+    [...new Set(this.deliveries().map((delivery) => delivery.status))]
+      .filter((status) => status !== '—').sort((a, b) => a.localeCompare(b)),
+  );
+  private readonly pageSize = 20;
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredDeliveries().length / this.pageSize)));
+  readonly pagedDeliveries = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredDeliveries().slice(start, start + this.pageSize);
+  });
+  readonly pageNumbers = computed(() => {
+    const first = Math.max(1, this.currentPage() - 2);
+    const last = Math.min(this.totalPages(), first + 4);
+    return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  });
+
+  onStatusChange(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) this.filterByStatus(target.value);
+  }
+
   readonly totalDeliveries =
     computed(
       () => this.deliveries().length,
@@ -672,98 +530,15 @@ export class Delivery {
   }
 
   goToPage(page: number): void {
-    if (page < 1) {
+    if (page < 1 || page > this.totalPages()) {
       return;
     }
 
     this.currentPage.set(page);
   }
 
-  startEdit(
-    delivery: DeliveryItem,
-  ): void {
-    this.editAttempted.set(false);
-
-    this.editForm.reset({
-      rfsFiberChain:
-        delivery.rfsFiberChain,
-
-      consecutive:
-        delivery.consecutive,
-
-      soSap:
-        delivery.soSap,
-
-      clientName:
-        delivery.clientName,
-
-      buildingName:
-        delivery.buildingName,
-
-      address:
-        delivery.address,
-
-      city:
-        delivery.city,
-
-      node:
-        delivery.node,
-
-      revenue:
-        delivery.revenue,
-
-      type:
-        delivery.type,
-
-      status:
-        delivery.status,
-
-      technology:
-        delivery.technology,
-
-      landlord:
-        delivery.landlord,
-
-      eaim:
-        delivery.eaim,
-
-      responsible:
-        delivery.responsible,
-
-      dkoAssignmentDate:
-        delivery.dkoAssignmentDate,
-
-      eaimSurveyRequestDate:
-        delivery.eaimSurveyRequestDate,
-
-      installationDate:
-        delivery.installationDate,
-
-      surveyCost:
-        delivery.surveyCost,
-
-      installationBudget:
-        delivery.installationBudget,
-
-      installationCost:
-        delivery.installationCost,
-
-      email:
-        delivery.email,
-
-      contact:
-        delivery.contact,
-
-      phone:
-        delivery.phone,
-
-      observations:
-        delivery.observations,
-    });
-
-    this.editingDeliveryId.set(
-      delivery.id,
-    );
+  startEdit(_delivery: DeliveryItem): void {
+    // Editing will be enabled when the real update endpoint is integrated.
   }
 
   cancelEdit(): void {
@@ -773,134 +548,7 @@ export class Delivery {
   }
 
   saveEdit(): void {
-    this.editAttempted.set(true);
-    this.editForm.markAllAsTouched();
-
-    if (this.editForm.invalid) {
-      return;
-    }
-
-    const editingId =
-      this.editingDeliveryId();
-
-    if (editingId === null) {
-      return;
-    }
-
-    const value =
-      this.editForm.getRawValue();
-
-    this.deliveries.update(
-      (deliveries) =>
-        deliveries.map(
-          (delivery) => {
-            if (
-              delivery.id !== editingId
-            ) {
-              return delivery;
-            }
-
-            const newStatus =
-              value.status as DeliveryStatus;
-
-            const newType =
-              value.type as DeliveryType;
-
-            const newTechnology =
-              value.technology as DeliveryTechnology;
-
-            const statusHistory =
-              this.updateStatusHistory(
-                delivery,
-                newStatus,
-              );
-
-            return {
-              ...delivery,
-
-              rfsFiberChain:
-                value.rfsFiberChain,
-
-              consecutive:
-                value.consecutive,
-
-              soSap:
-                value.soSap,
-
-              clientName:
-                value.clientName,
-
-              buildingName:
-                value.buildingName,
-
-              address:
-                value.address,
-
-              city:
-                value.city,
-
-              node:
-                value.node,
-
-              revenue:
-                value.revenue,
-
-              type:
-                newType,
-
-              status:
-                newStatus,
-
-              technology:
-                newTechnology,
-
-              statusHistory,
-
-              landlord:
-                value.landlord,
-
-              eaim:
-                value.eaim,
-
-              responsible:
-                value.responsible,
-
-              dkoAssignmentDate:
-                value.dkoAssignmentDate,
-
-              eaimSurveyRequestDate:
-                value.eaimSurveyRequestDate,
-
-              installationDate:
-                value.installationDate,
-
-              surveyCost:
-                value.surveyCost,
-
-              installationBudget:
-                value.installationBudget,
-
-              installationCost:
-                value.installationCost,
-
-              email:
-                value.email,
-
-              contact:
-                value.contact,
-
-              phone:
-                value.phone,
-
-              observations:
-                value.observations,
-            };
-          },
-        ),
-    );
-
-    this.editingDeliveryId.set(null);
-    this.editAttempted.set(false);
+    // This initial summary is read-only; never pretend an in-memory edit was saved.
   }
 
   isEditing(
@@ -913,8 +561,9 @@ export class Delivery {
   }
 
   formatCurrency(
-    value: string,
+    value: string | null,
   ): string {
+    if (value == null || value.trim() === '') return '—';
     const numericValue =
       Number(value);
 
@@ -937,42 +586,16 @@ export class Delivery {
     ).format(numericValue);
   }
 
-  statusLabel(
-    status: DeliveryStatus,
-  ): string {
-    switch (status) {
-      case 'EN PROCESO':
-        return 'In Progress';
-
-      case 'DETENIDO':
-        return 'Stopped';
-
-      case 'TERMINADO':
-        return 'Completed';
-    }
+  statusLabel(status: DeliveryStatus): string {
+    return status;
   }
 
-  typeLabel(
-    type: DeliveryType,
-  ): string {
-    return type === 'PREVENTA'
-      ? 'Pre-Sale'
-      : 'Saving';
+  typeLabel(type: DeliveryType): string {
+    return type;
   }
 
-  technologyLabel(
-    technology: DeliveryTechnology,
-  ): string {
-    switch (technology) {
-      case 'TRANSPORTE':
-        return 'Transport';
-
-      case 'FIBRA OSCURA':
-        return 'Dark Fiber';
-
-      default:
-        return technology;
-    }
+  technologyLabel(technology: DeliveryTechnology): string {
+    return technology;
   }
 
   timeInCurrentStatus(
