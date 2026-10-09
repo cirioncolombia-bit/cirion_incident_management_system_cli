@@ -33,13 +33,25 @@
     <p class="delivery-field__help">If a list is empty, no active options are available.</p>
   }
 
+  @if (submitted() && form.invalid) {
+    <p role="alert">Review the required fields and complete any partially filled consecutive or cost row.</p>
+  }
+  @if (saveError()) {
+    <p role="alert">{{ saveError() }}</p>
+    <a routerLink="/login">Sign in</a>
+  }
+  @if (createdDeliveryId() !== null) {
+    <p role="status">Delivery #{{ createdDeliveryId() }} created successfully.</p>
+    <a routerLink="/delivery">Back to deliveries</a>
+  }
+
   <form
     class="delivery-new__form"
     [formGroup]="form"
     (ngSubmit)="submit()"
     novalidate
   >
-    <fieldset class="delivery-new__fields" [disabled]="optionsLoading() || !options() || !!optionsError()">
+    <fieldset class="delivery-new__fields" [disabled]="optionsLoading() || !options() || !!optionsError() || saving() || createdDeliveryId() !== null">
     <!-- ====================================================== -->
     <!-- 1. IDENTIFICATION -->
     <!-- ====================================================== -->
@@ -109,6 +121,7 @@
               id="dkoTkt"
               type="text"
               formControlName="dkoTkt"
+              maxlength="50"
               placeholder="Internal Work Order"
             />
 
@@ -136,6 +149,7 @@
               id="rfsFiberChain"
               type="text"
               formControlName="rfsFiberChain"
+              maxlength="50"
               placeholder="Circuit ID"
             />
 
@@ -166,6 +180,7 @@
               id="soSap"
               type="text"
               formControlName="soSap"
+              maxlength="10"
               placeholder="Enter the SO SAP"
             />
 
@@ -254,6 +269,7 @@
               id="clientName"
               type="text"
               formControlName="clientName"
+              maxlength="50"
               placeholder="Enter the client name"
             />
 
@@ -277,6 +293,7 @@
               id="buildingName"
               type="text"
               formControlName="buildingName"
+              maxlength="150"
               placeholder="Enter the building or site name"
             />
 
@@ -300,6 +317,7 @@
               id="address"
               type="text"
               formControlName="address"
+              maxlength="150"
               placeholder="Enter the address"
             />
 
@@ -483,6 +501,7 @@
               id="contact"
               type="text"
               formControlName="contact"
+              maxlength="50"
               autocomplete="name"
               placeholder="Enter the contact name"
             />
@@ -507,6 +526,7 @@
               id="email"
               type="email"
               formControlName="email"
+              maxlength="200"
               autocomplete="email"
               placeholder="name@example.com"
             />
@@ -745,7 +765,7 @@
 
           <small>
             Add each landlord involved in the delivery and its corresponding
-            approval number. Required when the delivery is completed.
+            approval number. Optional when creating a delivery.
           </small>
         </span>
 
@@ -811,10 +831,6 @@
                 <div class="delivery-field">
                   <label [for]="'landlord-' + index">
                     Landlord
-
-                    @if (isCompleted()) {
-                      <span aria-hidden="true">*</span>
-                    }
                   </label>
 
                   <select
@@ -827,29 +843,18 @@
                       }
             </select>
 
-                  @if (
-                    item.controls.landlord.touched
-                    && item.controls.landlord.hasError('required')
-                  ) {
-                    <p class="delivery-field__error">
-                      Landlord is required when the delivery is completed.
-                    </p>
-                  }
                 </div>
 
                 <div class="delivery-field">
                   <label [for]="'consecutive-' + index">
                     Consecutive
-
-                    @if (isCompleted()) {
-                      <span aria-hidden="true">*</span>
-                    }
                   </label>
 
                   <input
                     [id]="'consecutive-' + index"
                     type="text"
                     formControlName="consecutive"
+                    maxlength="50"
                     placeholder="Vendor Approval Number"
                   />
 
@@ -857,15 +862,31 @@
                     Approval number associated with this landlord.
                   </small>
 
-                  @if (
-                    item.controls.consecutive.touched
-                    && item.controls.consecutive.hasError('required')
-                  ) {
-                    <p class="delivery-field__error">
-                      Consecutive is required when the delivery is completed.
-                    </p>
+                </div>
+                <div class="delivery-field">
+                  <label [for]="'metersCoundiut-' + index">Conduit meters</label>
+                  <input [id]="'metersCoundiut-' + index" type="number" step="1" formControlName="metersCoundiut" />
+                  @if (item.controls.metersCoundiut.touched && item.controls.metersCoundiut.invalid) {
+                    <p class="delivery-field__error">Enter a valid whole number.</p>
                   }
                 </div>
+                <div class="delivery-field">
+                  <label [for]="'postsQuantity-' + index">Post quantity</label>
+                  <input [id]="'postsQuantity-' + index" type="number" step="1" formControlName="postsQuantity" />
+                  @if (item.controls.postsQuantity.touched && item.controls.postsQuantity.invalid) {
+                    <p class="delivery-field__error">Enter a valid whole number.</p>
+                  }
+                </div>
+                <div class="delivery-field">
+                  <label [for]="'aditionalNumber-' + index">Additional number</label>
+                  <input [id]="'aditionalNumber-' + index" type="number" step="1" formControlName="aditionalNumber" />
+                  @if (item.controls.aditionalNumber.touched && item.controls.aditionalNumber.invalid) {
+                    <p class="delivery-field__error">Enter a valid whole number.</p>
+                  }
+                </div>
+                @if (item.touched && item.hasError('incompleteConsecutive')) {
+                  <p class="delivery-field__error">Complete both landlord and consecutive, or leave the entire row empty.</p>
+                }
               </div>
             </article>
           }
@@ -1144,7 +1165,7 @@
               </strong>
 
               <small>
-                Add each installation cost and select the cause that generated it.
+                Optionally add installation costs and select their causes.
               </small>
             </div>
           </header>
@@ -1190,7 +1211,6 @@
                   <div class="delivery-field">
                     <label [for]="'installation-cost-cause-' + index">
                       Cost Cause
-                      <span aria-hidden="true">*</span>
                     </label>
 
                     <select
@@ -1202,6 +1222,10 @@
                           <option [ngValue]="option.id">{{ option.name }}</option>
                         }
             </select>
+                    @if (item.touched && item.hasError('incompleteCost')) {
+                      <p class="delivery-field__error">Complete both cause and amount, or leave the row empty.</p>
+                    }
+
 
                     <small class="delivery-field__help">
                       Select the main reason associated with this installation cost.
@@ -1222,7 +1246,6 @@
                   <div class="delivery-field">
                     <label [for]="'installation-cost-' + index">
                       Amount
-                      <span aria-hidden="true">*</span>
                     </label>
 
                     <input
@@ -1337,6 +1360,7 @@
           <textarea
             id="observations"
             formControlName="observations"
+            maxlength="500"
             rows="5"
             placeholder="Enter relevant observations about the delivery"
           ></textarea>
@@ -1366,10 +1390,11 @@
       </a>
 
       <button
+        [disabled]="saving() || createdDeliveryId() !== null"
         class="delivery-new__save"
         type="submit"
       >
-        Save Delivery
+        {{ saving() ? 'Saving…' : 'Save Delivery' }}
       </button>
     </footer>
     </fieldset>

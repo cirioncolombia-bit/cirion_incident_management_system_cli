@@ -1,3 +1,4 @@
+import { CreateDelivery } from '../../models/create-delivery';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DeliveryService } from '../../services/delivery.service';
 import { DeliveryCreateOptions } from '../../models/delivery-create-options';
@@ -36,6 +37,9 @@ type DeliverySection =
 type LandlordConsecutiveForm = FormGroup<{
   landlord: FormControl<number | null>;
   consecutive: FormControl<string>;
+  metersCoundiut: FormControl<number>;
+  postsQuantity: FormControl<number>;
+  aditionalNumber: FormControl<number>;
 }>;
 
 type InstallationCostForm = FormGroup<{
@@ -65,6 +69,21 @@ const noWhitespaceValidator: ValidatorFn = (control: AbstractControl): Validatio
     : { whitespace: true };
 };
 
+const optionalConsecutiveValidator: ValidatorFn = (control) => {
+  const value = control.value;
+  const empty = value.landlord == null && !String(value.consecutive ?? '').trim()
+    && !value.metersCoundiut && !value.postsQuantity && !value.aditionalNumber;
+  return empty || (value.landlord != null && String(value.consecutive ?? '').trim())
+    ? null : { incompleteConsecutive: true };
+};
+
+const optionalCostValidator: ValidatorFn = (control) => {
+  const value = control.value;
+  const amount = String(value.amount ?? '').trim();
+  return (value.cause == null && !amount) || (value.cause != null && amount)
+    ? null : { incompleteCost: true };
+};
+
 // ======================================================
 // COMPONENT
 // ======================================================
@@ -86,6 +105,9 @@ export class DeliveryNew {
   readonly optionsLoading = signal(false);
   readonly optionsError = signal<string | null>(null);
   readonly submitted = signal(false);
+  readonly saving = signal(false);
+  readonly saveError = signal<string | null>(null);
+  readonly createdDeliveryId = signal<number | null>(null);
 
   readonly openSection =
     signal<DeliverySection | null>('identification');
@@ -99,21 +121,21 @@ export class DeliveryNew {
     // 1. Identification
     // ==================================================
 
-    dkoTkt: ['', [Validators.required, noWhitespaceValidator]],
+    dkoTkt: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
 
-    rfsFiberChain: ['', [Validators.required, noWhitespaceValidator]],
+    rfsFiberChain: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
 
-    soSap: ['', [noWhitespaceValidator]],
+    soSap: ['', [noWhitespaceValidator, Validators.maxLength(10)]],
 
     // ==================================================
     // 2. Client & Location
     // ==================================================
 
-    clientName: ['', [Validators.required, noWhitespaceValidator]],
+    clientName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
 
-    buildingName: ['', [Validators.required, noWhitespaceValidator]],
+    buildingName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(150)]],
 
-    address: ['', [Validators.required, noWhitespaceValidator]],
+    address: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(150)]],
 
     city: this.formBuilder.control<number | null>(null, Validators.required),
 
@@ -125,9 +147,9 @@ export class DeliveryNew {
     // 3. Contact Information
     // ==================================================
 
-    contact: ['', [Validators.required, noWhitespaceValidator]],
+    contact: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
 
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(200)]],
 
     phone: [
       '',
@@ -178,7 +200,7 @@ export class DeliveryNew {
     // 8. Observations
     // ==================================================
 
-    observations: ['', [Validators.required, noWhitespaceValidator]],
+    observations: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(500)]],
   });
 
   // ====================================================
@@ -242,7 +264,7 @@ export class DeliveryNew {
   }
 
   addLandlordConsecutive(): void {
-    this.landlordConsecutives.push(this.createLandlordConsecutiveGroup(this.isCompleted()));
+    this.landlordConsecutives.push(this.createLandlordConsecutiveGroup());
 
     this.openSection.set('landlordConsecutives');
   }
@@ -297,22 +319,76 @@ export class DeliveryNew {
   // ====================================================
 
   submit(): void {
-    if (this.optionsLoading() || !this.options() || this.optionsError()) return;
+    if (this.saving() || this.createdDeliveryId() !== null
+      || this.optionsLoading() || !this.options() || this.optionsError()) return;
 
     this.submitted.set(true);
-
+    this.saveError.set(null);
     this.updateCompletionValidators(this.form.controls.status.value);
-
     this.form.markAllAsTouched();
-
     if (this.form.invalid) {
       this.openFirstInvalidSection();
       return;
     }
 
-    const delivery = this.form.getRawValue();
-
-    console.log('New Delivery:', delivery);
+    const value = this.form.getRawValue();
+    // Select controls are nullable until a choice is made; never send a placeholder ID.
+    if (value.city == null || value.node == null || value.type == null || value.status == null
+      || value.technology == null || value.eaim == null || value.responsible == null) return;
+    const request: CreateDelivery = {
+      workOrderId: value.dkoTkt.trim(),
+      rfsFiberChain: value.rfsFiberChain.trim(),
+      soSap: value.soSap.trim() || null,
+      clientName: value.clientName.trim(),
+      buildingSite: value.buildingName.trim(),
+      address: value.address.trim(),
+      cityId: value.city,
+      nodeId: value.node,
+      revenue: value.revenue === '' ? null : Number(value.revenue),
+      contactName: value.contact.trim(),
+      email: value.email.trim(),
+      mobilePhone: Number(value.phone.replace(/[^0-9]/g, '')),
+      typeId: value.type,
+      statusId: value.status,
+      technologyId: value.technology,
+      eaimId: value.eaim,
+      userId: value.responsible,
+      surveryCost: Number(value.surveyCost),
+      installationBudget: Number(value.installationBudget),
+      observation: value.observations.trim(),
+      consecutives: value.landlordConsecutives
+        .filter((row) => row.landlord != null)
+        .map((row) => ({
+          landlordId: row.landlord!, consecutive: row.consecutive.trim(),
+          metersCoundiut: row.metersCoundiut ?? 0, postsQuantity: row.postsQuantity ?? 0,
+          aditionalNumber: row.aditionalNumber ?? 0,
+        })),
+      installationCosts: value.installationCosts
+        .filter((row) => row.cause != null)
+        .map((row) => ({ causeId: row.cause!, cost: Number(row.amount) })),
+    };
+    this.saving.set(true);
+    this.deliveryService.create(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (delivery) => {
+          this.saving.set(false);
+          this.createdDeliveryId.set(delivery.id);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.saving.set(false);
+          if (error.status === 401) {
+            this.authService.clearSession();
+            this.saveError.set('Your session has expired. Sign in again to save this delivery.');
+          } else if (error.status === 400) {
+            const messages = Object.values(error.error?.errors ?? {}).flat();
+            this.saveError.set(messages.length ? messages.join(' ')
+              : error.error?.message ?? 'Review the delivery information and try again.');
+          } else {
+            this.saveError.set('Unable to confirm delivery creation. Your form is preserved. Check whether it was created before retrying.');
+          }
+        },
+      });
   }
 
   // ====================================================
@@ -339,16 +415,16 @@ export class DeliveryNew {
 
     this.updateRevenueValidators(isCompleted);
 
-    this.updateLandlordConsecutiveValidators(isCompleted);
+
   }
 
   private updateSoSapValidators(isCompleted: boolean): void {
     const control = this.form.controls.soSap;
 
     if (isCompleted) {
-      control.setValidators([Validators.required, noWhitespaceValidator]);
+      control.setValidators([Validators.required, noWhitespaceValidator, Validators.maxLength(10)]);
     } else {
-      control.setValidators([noWhitespaceValidator]);
+      control.setValidators([noWhitespaceValidator, Validators.maxLength(10)]);
     }
 
     control.updateValueAndValidity({
@@ -372,68 +448,26 @@ export class DeliveryNew {
     });
   }
 
-  private updateLandlordConsecutiveValidators(isCompleted: boolean): void {
-    for (const group of this.landlordConsecutives.controls) {
-      this.applyLandlordConsecutiveValidators(group, isCompleted);
-    }
-  }
-
-  private applyLandlordConsecutiveValidators(
-    group: LandlordConsecutiveForm,
-    isCompleted: boolean,
-  ): void {
-    const landlordControl =
-      group.controls.landlord;
-
-    const consecutiveControl =
-      group.controls.consecutive;
-
-    if (isCompleted) {
-      landlordControl.setValidators([Validators.required]);
-
-      consecutiveControl.setValidators([Validators.required, noWhitespaceValidator]);
-    } else {
-      landlordControl.clearValidators();
-
-      consecutiveControl.setValidators([noWhitespaceValidator]);
-    }
-
-    landlordControl.updateValueAndValidity({
-      emitEvent: false,
-    });
-
-    consecutiveControl.updateValueAndValidity({
-      emitEvent: false,
-    });
-  }
-
   // ====================================================
   // LANDLORD FORM FACTORY
   // ====================================================
 
-  private createLandlordConsecutiveGroup(required = false): LandlordConsecutiveForm {
+  private createLandlordConsecutiveGroup(): LandlordConsecutiveForm {
+    const integerValidators = [Validators.pattern(/^-?\d+$/), Validators.min(-2147483648), Validators.max(2147483647)];
     return this.formBuilder.nonNullable.group({
-      landlord: this.formBuilder.control<number | null>(null, required ? Validators.required : []),
-
-      consecutive: [
-        '',
-        required ? [Validators.required, noWhitespaceValidator] : [noWhitespaceValidator],
-      ],
-    });
+      landlord: this.formBuilder.control<number | null>(null),
+      consecutive: ['', [noWhitespaceValidator, Validators.maxLength(50)]],
+      metersCoundiut: [0, integerValidators],
+      postsQuantity: [0, integerValidators],
+      aditionalNumber: [0, integerValidators],
+    }, { validators: optionalConsecutiveValidator });
   }
-
-  // ====================================================
-  // INSTALLATION COST FORM FACTORY
-  // ====================================================
 
   private createInstallationCostGroup(): InstallationCostForm {
     return this.formBuilder.nonNullable.group({
-      cause: new FormControl<number | null>(null, {
-        validators: [Validators.required],
-      }),
-
-      amount: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
-    });
+      cause: new FormControl<number | null>(null),
+      amount: ['', [Validators.pattern(/^\d+$/), Validators.min(0)]],
+    }, { validators: optionalCostValidator });
   }
 
   // ====================================================
