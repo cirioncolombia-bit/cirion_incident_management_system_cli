@@ -754,3 +754,12 @@
     background: rgb(248 250 252 / 55%);
   }
 }
+.status-history-periods {
+  display: grid;
+  gap: var(--cims-space-3);
+  margin-top: var(--cims-space-4);
+  min-width: 0;
+}
+.status-history-periods strong {
+  overflow-wrap: anywhere;
+}

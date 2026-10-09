@@ -1,8 +1,9 @@
+import { currentPeriod, formatDuration, DeliveryStatusHistoryData } from '../../models/delivery-status-history';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DeliveryService } from '../../services/delivery.service';
 import { DeliverySummary } from '../../models/delivery-summary';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, effect, untracked, DestroyRef, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -190,7 +191,28 @@ export class Delivery {
   readonly loadError = signal<string | null>(null);
   readonly deliveries = signal<readonly DeliveryItem[]>([]);
 
+  private readonly histories = signal<Record<number, { data: DeliveryStatusHistoryData; receivedAt: number }>>({});
+  private readonly requestedHistories = new Set<number>();
+  private readonly now = signal(Date.now());
+
   constructor() {
+    const timer = setInterval(() => this.now.set(Date.now()), 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+    effect(() => {
+      const visible = this.pagedDeliveries();
+      untracked(() => {
+        for (const delivery of visible) {
+          if (this.requestedHistories.has(delivery.id)) continue;
+          this.requestedHistories.add(delivery.id);
+          this.deliveryService.getStatusHistory(delivery.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (data) => this.histories.update((values) => ({ ...values, [delivery.id]: { data, receivedAt: Date.now() } })),
+              error: () => {},
+            });
+        }
+      });
+    });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.searchTerm.set('');
       this.selectedStatus.set('TODOS');
@@ -204,6 +226,8 @@ export class Delivery {
     this.loading.set(true);
     this.loadError.set(null);
     this.deliveries.set([]);
+    this.histories.set({});
+    this.requestedHistories.clear();
     this.deliveryService.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -625,63 +649,11 @@ export class Delivery {
   timeInCurrentStatus(
     delivery: DeliveryItem,
   ): string {
-    const currentStatus =
-      this.currentStatusHistory(
-        delivery,
-      );
-
-    if (!currentStatus) {
-      return '—';
-    }
-
-    const start = new Date(
-      currentStatus.startedAt,
-    ).getTime();
-
-    const end =
-      currentStatus.endedAt
-        ? new Date(
-            currentStatus.endedAt,
-          ).getTime()
-        : Date.now();
-
-    if (
-      Number.isNaN(start)
-      || Number.isNaN(end)
-      || end < start
-    ) {
-      return '—';
-    }
-
-    const totalMinutes =
-      Math.floor(
-        (end - start) / 60_000,
-      );
-
-    const days =
-      Math.floor(
-        totalMinutes / 1_440,
-      );
-
-    const hours =
-      Math.floor(
-        (totalMinutes % 1_440) / 60,
-      );
-
-    const minutes =
-      totalMinutes % 60;
-
-    return (
-      `${days}d `
-      + `${String(hours).padStart(
-        2,
-        '0',
-      )}h `
-      + `${String(minutes).padStart(
-        2,
-        '0',
-      )}m`
-    );
+    const history = this.histories()[delivery.id];
+    const period = currentPeriod(history?.data);
+    return period && history
+      ? formatDuration(period.durationSeconds + Math.max(0, (this.now() - history.receivedAt) / 1000))
+      : '—';
   }
 
   private currentStatusHistory(

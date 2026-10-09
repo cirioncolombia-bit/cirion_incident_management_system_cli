@@ -89,11 +89,31 @@ describe('DeliveryDetail', () => {
   });
   afterEach(() => http.verify({ ignoreCancelled: true }));
 
+  function flushHistories() {
+    for (const request of http.match((request) => request.url.endsWith('/status-history'))) {
+      request.flush({ data: {
+        deliveryId: 42, calculatedAt: '2026-10-09T12:00:00Z',
+        trackingStartedAt: '2026-10-09T08:00:00Z', isPartialHistory: true,
+        periods: [
+          { id: 1, statusId: 2, statusDescription: 'DETENIDO', startedAt: '2026-10-09T08:00:00Z', endedAt: '2026-10-09T10:00:00Z', durationSeconds: 7200 },
+          { id: 2, statusId: 7, statusDescription: 'EN PROCESO', startedAt: '2026-10-09T10:00:00Z', endedAt: null, durationSeconds: 7200 },
+        ],
+        totalsByStatus: [
+          { statusId: 2, statusDescription: 'DETENIDO', visits: 1, durationSeconds: 7200 },
+          { statusId: 7, statusDescription: 'EN PROCESO', visits: 2, durationSeconds: 10800 },
+        ],
+      }, message: '' });
+    }
+  }
+
   async function load(data = record) {
     component = await harness.navigateByUrl('/delivery/42', DeliveryDetail);
     const request = http.expectOne(environment.apiUrl + '/api/Delivery/42/edit');
     expect(request.request.method).toBe('GET');
     request.flush({ data, message: '' });
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
   }
 
@@ -125,7 +145,11 @@ describe('DeliveryDetail', () => {
       expect(page.textContent).toContain(text);
     }
     expect(page.querySelectorAll('.detail-section').length).toBe(9);
-    expect(page.textContent).toContain('Status history is not available yet.');
+    expect(page.textContent).toContain('Partial history');
+    expect(page.textContent).toContain('0d 02h 00m');
+    expect(page.textContent).toContain('Time in Status');
+    expect(page.querySelectorAll('.status-history-card').length).toBe(2);
+    expect(component.timeInCurrentStatus()).toBe('0d 02h 00m');
     expect(page.textContent).not.toContain('Banco de la Nación');
     expect(component.formatCurrency(100.25)).toContain('100,25');
     expect(component.formatCurrency(0)).not.toBe('—');
@@ -133,12 +157,39 @@ describe('DeliveryDetail', () => {
     expect(component.totalInstallationCost(record.installationCosts)).toContain('99,75');
   });
 
+  it('keeps the latest visit separate from accumulated time and advances only the open period', async () => {
+    await load();
+    const history = component.history()!;
+    expect(component.timeInCurrentStatus()).toBe('0d 02h 00m');
+    expect(component.totalDuration(history.totalsByStatus[1])).toBe('0d 03h 00m');
+    component.elapsed.set(60_000);
+    expect(component.timeInCurrentStatus()).toBe('0d 02h 01m');
+    expect(component.totalDuration(history.totalsByStatus[1])).toBe('0d 03h 01m');
+    expect(component.periodDuration(history.periods[0])).toBe('0d 02h 00m');
+  });
+
+  it('preserves the delivery when the history endpoint fails', async () => {
+    component = await harness.navigateByUrl('/delivery/42', DeliveryDetail);
+    http.expectOne(environment.apiUrl + '/api/Delivery/42/edit').flush({ data: record, message: '' });
+    http.expectOne(environment.apiUrl + '/api/Delivery/42/status-history')
+      .flush({}, { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+    expect(component.delivery()?.id).toBe(42);
+    expect(component.timeInCurrentStatus()).toBe('—');
+    expect(harness.routeNativeElement!.textContent).toContain('Status history could not be loaded.');
+  });
+
   it('opens the selected real detail from the mobile View Details link and offers editing at the top', async () => {
     await harness.navigateByUrl('/delivery', Delivery);
     http.expectOne(environment.apiUrl + '/api/Delivery').flush({ data: [record], message: '' });
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
     const page = harness.routeNativeElement!;
     expect(page.querySelector('.delivery-card__edit')).toBeNull();
+    expect(page.querySelector('.delivery-card__time-value')?.textContent).toContain('0d 02h 00m');
+    expect(page.querySelector('.delivery-table__time strong')?.textContent).toContain('0d 02h 00m');
     const view = page.querySelector<HTMLAnchorElement>('.delivery-card__view')!;
     expect(view.textContent).toContain('View Details');
     view.click();
@@ -147,6 +198,9 @@ describe('DeliveryDetail', () => {
     http
       .expectOne(environment.apiUrl + '/api/Delivery/42/edit')
       .flush({ data: record, message: '' });
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
     const edit = harness.routeNativeElement!.querySelector<HTMLAnchorElement>(
       '.delivery-detail__header .delivery-detail__edit',
@@ -179,11 +233,17 @@ describe('DeliveryDetail', () => {
   it('shows loading and missing record states without example data', async () => {
     component = await harness.navigateByUrl('/delivery/42', DeliveryDetail);
     expect(component.loading()).toBe(true);
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('Loading delivery details');
     http
       .expectOne(environment.apiUrl + '/api/Delivery/42/edit')
       .flush({}, { status: 404, statusText: 'Not Found' });
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
     expect(component.delivery()).toBeNull();
     expect(component.loading()).toBe(false);
@@ -213,6 +273,9 @@ describe('DeliveryDetail', () => {
     http
       .expectOne(environment.apiUrl + '/api/Delivery/43/edit')
       .flush({ data: { ...record, id: 43, workOrderId: 'DKO-43' }, message: '' });
+    flushHistories();
+    harness.detectChanges();
+    flushHistories();
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('DKO-43');
   });

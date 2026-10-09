@@ -225,6 +225,11 @@
           </div>
 
           <div class="detail-field">
+            <span class="detail-field__label">Time in Status</span>
+            <strong class="detail-field__value">{{ timeInCurrentStatus() }}</strong>
+          </div>
+
+          <div class="detail-field">
             <span class="detail-field__label"> Technology </span>
 
             <strong class="detail-field__value">
@@ -249,7 +254,41 @@
           </div>
         </header>
 
-        <p class="detail-field__text">Status history is not available yet.</p>
+        @if (historyError()) {
+          <p class="detail-field__text" role="alert">{{ historyError() }}</p>
+        } @else if (history(); as history) {
+          @if (history.isPartialHistory) {
+            <p class="detail-field__text">Partial history: time is measured from the start of tracking. Earlier durations are unavailable.</p>
+          }
+          @if (history.trackingStartedAt) {
+            <p class="detail-field__text">Tracking started: {{ history.trackingStartedAt | date:'medium' }}</p>
+          }
+          <div class="detail-grid">
+            @for (total of history.totalsByStatus; track total.statusId) {
+              <div class="detail-field">
+                <span class="detail-field__label">{{ total.statusDescription }}</span>
+                <strong class="detail-field__value">{{ totalDuration(total) }}</strong>
+                <span class="detail-field__text">Visits: {{ total.visits }}</span>
+              </div>
+            }
+          </div>
+          <div class="status-history-periods">
+            @for (period of history.periods; track period.id) {
+              <article class="status-history-card">
+                <header class="status-history-card__header">
+                  <strong>{{ period.statusDescription }}</strong>
+                  <strong class="status-history-card__duration">{{ periodDuration(period) }}</strong>
+                </header>
+                <div class="status-history-card__dates">
+                  <div><span>Started</span><strong>{{ period.startedAt | date:'medium' }}</strong></div>
+                  <div><span>Ended</span><strong>{{ period.endedAt ? (period.endedAt | date:'medium') : 'Current status' }}</strong></div>
+                </div>
+              </article>
+            } @empty {
+              <p class="detail-field__text">No status history recorded.</p>
+            }
+          </div>
+        }
       </section>
 
       <!-- ================================================== -->
