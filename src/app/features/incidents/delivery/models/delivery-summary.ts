@@ -1,0 +1,31 @@
+export interface DeliverySummary {
+  id: number;
+  workOrderId: string;
+  rfsFiberChain: string;
+  soSap: string | null;
+  clientName: string;
+  buildingSite: string;
+  address: string;
+  revenue: number | null;
+  contactName: string;
+  email: string;
+  mobilePhone: number;
+  surveryCost: number;
+  installationBudget: number;
+  observation: string;
+  isActive: boolean;
+  cityId: number;
+  nodeId: number;
+  typeId: number;
+  statusId: number;
+  technologyId: number;
+  eaimId: number;
+  userId: number;
+  cityName: string | null;
+  nodeName: string | null;
+  typeDescription: string | null;
+  statusDescription: string | null;
+  technologyDescription: string | null;
+  eaimName: string | null;
+  responsibleName: string | null;
+}
