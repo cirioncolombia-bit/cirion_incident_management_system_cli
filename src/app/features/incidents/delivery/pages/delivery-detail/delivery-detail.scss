@@ -140,7 +140,9 @@
 // ======================================================
 
 .delivery-status {
-  flex: 0 0 auto;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  flex: 0 1 auto;
 
   display: inline-flex;
   align-items: center;

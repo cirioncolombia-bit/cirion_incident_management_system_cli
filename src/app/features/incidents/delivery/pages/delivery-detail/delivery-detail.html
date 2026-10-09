@@ -1,721 +1,472 @@
 <section class="delivery-detail">
-    @if (delivery(); as delivery) {
+  @if (delivery(); as delivery) {
     <header class="delivery-detail__header">
-        <div class="delivery-detail__header-main">
-            <a class="delivery-detail__back" routerLink="/delivery">
-                <span aria-hidden="true">←</span>
-                <span>Back to Delivery</span>
-            </a>
+      <div class="delivery-detail__header-main">
+        <a class="delivery-detail__back" routerLink="/delivery">
+          <span aria-hidden="true">←</span>
+          <span>Back to Delivery</span>
+        </a>
 
-            <div class="delivery-detail__title-row">
-                <div>
-                    <p class="delivery-detail__eyebrow">
-                        Delivery
-                    </p>
+        <div class="delivery-detail__title-row">
+          <div>
+            <p class="delivery-detail__eyebrow">Delivery</p>
 
-                    <h1>
-                        {{ delivery.dkoTkt }}
-                    </h1>
-                </div>
+            <h1>
+              {{ delivery.workOrderId }}
+            </h1>
+          </div>
 
-                <span class="delivery-status" [class.delivery-status--progress]="
-              delivery.status === 'EN PROCESO'
-            " [class.delivery-status--stopped]="
-              delivery.status === 'DETENIDO'
-              || delivery.status === 'DETENIDO CLIENTE'
-            " [class.delivery-status--completed]="
-              delivery.status === 'TERMINADO'
-            ">
-                    {{ statusLabel(delivery.status) }}
-                </span>
-            </div>
-
-            <p class="delivery-detail__subtitle">
-                Review the complete delivery information.
-            </p>
-
-            <div class="delivery-detail__actions">
-                <a class="delivery-detail__edit" [routerLink]="[
-              '/delivery',
-              delivery.id,
-              'edit'
-            ]">
-                    <span class="delivery-detail__edit-icon" aria-hidden="true">
-                        ✎
-                    </span>
-
-                    <span>
-                        Edit Delivery
-                    </span>
-                </a>
-            </div>
+          <span
+            class="delivery-status"
+            [class.delivery-status--progress]="delivery.statusDescription === 'EN PROCESO'"
+            [class.delivery-status--stopped]="
+              delivery.statusDescription === 'DETENIDO' ||
+              delivery.statusDescription === 'DETENIDO CLIENTE'
+            "
+            [class.delivery-status--completed]="delivery.statusDescription === 'TERMINADO'"
+          >
+            {{ displayValue(delivery.statusDescription) }}
+          </span>
         </div>
+
+        <p class="delivery-detail__subtitle">Review the complete delivery information.</p>
+
+        <div class="delivery-detail__actions">
+          <a class="delivery-detail__edit" [routerLink]="['/delivery', delivery.id, 'edit']">
+            <span class="delivery-detail__edit-icon" aria-hidden="true"> ✎ </span>
+
+            <span> Edit Delivery </span>
+          </a>
+        </div>
+      </div>
     </header>
 
     <div class="delivery-detail__content">
+      <!-- ================================================== -->
+      <!-- 1. IDENTIFICATION -->
+      <!-- ================================================== -->
 
-        <!-- ================================================== -->
-        <!-- 1. IDENTIFICATION -->
-        <!-- ================================================== -->
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 1 </span>
 
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        1
-                    </span>
+            <h2>Identification</h2>
 
-                    <h2>
-                        Identification
-                    </h2>
+            <p>Key information used to identify the delivery.</p>
+          </div>
+        </header>
 
-                    <p>
-                        Key information used to identify the delivery.
-                    </p>
-                </div>
-            </header>
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-field__label"> DKO/TKT </span>
 
-            <div class="detail-grid">
+            <strong class="detail-field__value">
+              {{ delivery.workOrderId }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> RFS Fiber Chain </span>
+
+            <strong class="detail-field__value">
+              {{ delivery.rfsFiberChain }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> SO SAP </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.soSap) }}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 2. CLIENT & LOCATION -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 2 </span>
+
+            <h2>Client & Location</h2>
+
+            <p>Client, site and commercial location information.</p>
+          </div>
+        </header>
+
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-field__label"> Client Name </span>
+
+            <strong class="detail-field__value">
+              {{ delivery.clientName }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Building / Site </span>
+
+            <strong class="detail-field__value">
+              {{ delivery.buildingSite }}
+            </strong>
+          </div>
+
+          <div class="detail-field detail-field--wide">
+            <span class="detail-field__label"> Address </span>
+
+            <strong class="detail-field__value">
+              {{ delivery.address }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> City </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.cityName) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Node </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.nodeName) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Revenue </span>
+
+            <strong class="detail-field__value">
+              {{ formatCurrency(delivery.revenue) }}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 3. CONTACT INFORMATION -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 3 </span>
+
+            <h2>Contact Information</h2>
+
+            <p>Primary contact information associated with the delivery.</p>
+          </div>
+        </header>
+
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-field__label"> Contact Name </span>
+
+            <strong class="detail-field__value">
+              {{ delivery.contactName }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Email </span>
+
+            <a class="detail-field__link" [href]="'mailto:' + delivery.email">
+              {{ delivery.email }}
+            </a>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Mobile Phone </span>
+
+            <a class="detail-field__link" [href]="'tel:' + delivery.mobilePhone">
+              {{ delivery.mobilePhone }}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 4. CLASSIFICATION -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 4 </span>
+
+            <h2>Classification</h2>
+
+            <p>Classification and current status of the delivery.</p>
+          </div>
+        </header>
+
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-field__label"> Type </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.typeDescription) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Current Status </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.statusDescription) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Technology </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.technologyDescription) }}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 5. DATES & STATUS HISTORY -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 5 </span>
+
+            <h2>Dates & Status History</h2>
+
+            <p>Status transitions and time spent in each stage of the delivery.</p>
+          </div>
+        </header>
+
+        <p class="detail-field__text">Status history is not available yet.</p>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 6. LANDLORDS & CONSECUTIVES -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 6 </span>
+
+            <h2>Landlords & Consecutives</h2>
+
+            <p>Landlords involved in the delivery and their corresponding approval numbers.</p>
+          </div>
+        </header>
+
+        <div class="detail-collection">
+          @for (item of delivery.consecutives; track item.id) {
+            <article class="detail-collection__item">
+              <header class="detail-collection__header">
+                <strong> Landlord {{ $index + 1 }} </strong>
+              </header>
+
+              <div class="detail-grid">
                 <div class="detail-field">
-                    <span class="detail-field__label">
-                        DKO/TKT
-                    </span>
+                  <span class="detail-field__label"> Landlord </span>
 
-                    <strong class="detail-field__value">
-                        {{ delivery.dkoTkt }}
-                    </strong>
+                  <strong class="detail-field__value">
+                    {{ displayValue(item.landlordName) }}
+                  </strong>
                 </div>
 
                 <div class="detail-field">
-                    <span class="detail-field__label">
-                        RFS Fiber Chain
-                    </span>
+                  <span class="detail-field__label"> Consecutive </span>
 
-                    <strong class="detail-field__value">
-                        {{ delivery.rfsFiberChain }}
-                    </strong>
+                  <strong class="detail-field__value">
+                    {{ displayValue(item.consecutive) }}
+                  </strong>
                 </div>
-
                 <div class="detail-field">
-                    <span class="detail-field__label">
-                        SO SAP
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ displayValue(delivery.soSap) }}
-                    </strong>
+                  <span class="detail-field__label">Conduit meters</span>
+                  <strong class="detail-field__value">{{ item.metersCoundiut }}</strong>
                 </div>
+                <div class="detail-field">
+                  <span class="detail-field__label">Posts quantity</span>
+                  <strong class="detail-field__value">{{ item.postsQuantity }}</strong>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-field__label">Additional number</span>
+                  <strong class="detail-field__value">{{ item.aditionalNumber }}</strong>
+                </div>
+              </div>
+            </article>
+          } @empty {
+            <p class="detail-field__text">No consecutives registered.</p>
+          }
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 7. ASSIGNMENT -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 7 </span>
+
+            <h2>Assignment</h2>
+
+            <p>Contractor and responsible engineer information.</p>
+          </div>
+        </header>
+
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-field__label"> EAIM </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.eaimName) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Responsible </span>
+
+            <strong class="detail-field__value">
+              {{ displayValue(delivery.responsibleName) }}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 8. COSTS -->
+      <!-- ================================================== -->
+
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 8 </span>
+
+            <h2>Costs</h2>
+
+            <p>Survey, budget and installation cost information.</p>
+          </div>
+        </header>
+
+        <div class="detail-grid detail-grid--cost-summary">
+          <div class="detail-field">
+            <span class="detail-field__label"> Survey Cost </span>
+
+            <strong class="detail-field__value">
+              {{ formatCurrency(delivery.surveryCost) }}
+            </strong>
+          </div>
+
+          <div class="detail-field">
+            <span class="detail-field__label"> Installation Budget </span>
+
+            <strong class="detail-field__value">
+              {{ formatCurrency(delivery.installationBudget) }}
+            </strong>
+          </div>
+
+          <div class="detail-field detail-field--total">
+            <span class="detail-field__label"> Total Installation Cost </span>
+
+            <strong class="detail-field__value">
+              {{ totalInstallationCost(delivery.installationCosts) }}
+            </strong>
+          </div>
+        </div>
+
+        <div class="detail-subsection">
+          <header class="detail-subsection__header">
+            <div>
+              <h3>Installation Costs</h3>
+
+              <p>Detailed installation costs grouped by cause.</p>
             </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 2. CLIENT & LOCATION -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        2
-                    </span>
-
-                    <h2>
-                        Client & Location
-                    </h2>
-
-                    <p>
-                        Client, site and commercial location information.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-grid">
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Client Name
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.clientName }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Building / Site
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.buildingName }}
-                    </strong>
-                </div>
-
-                <div class="detail-field detail-field--wide">
-                    <span class="detail-field__label">
-                        Address
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.address }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        City
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.city }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Node
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.node }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Revenue
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ formatCurrency(delivery.revenue) }}
-                    </strong>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 3. CONTACT INFORMATION -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        3
-                    </span>
-
-                    <h2>
-                        Contact Information
-                    </h2>
-
-                    <p>
-                        Primary contact information associated with the delivery.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-grid">
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Contact Name
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.contact }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Email
-                    </span>
-
-                    <a class="detail-field__link" [href]="'mailto:' + delivery.email">
-                        {{ delivery.email }}
-                    </a>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Mobile Phone
-                    </span>
-
-                    <a class="detail-field__link" [href]="'tel:' + delivery.phone">
-                        {{ delivery.phone }}
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 4. CLASSIFICATION -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        4
-                    </span>
-
-                    <h2>
-                        Classification
-                    </h2>
-
-                    <p>
-                        Classification and current status of the delivery.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-grid">
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Type
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ typeLabel(delivery.type) }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Current Status
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ statusLabel(delivery.status) }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Technology
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ technologyLabel(delivery.technology) }}
-                    </strong>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 5. DATES & STATUS HISTORY -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        5
-                    </span>
-
-                    <h2>
-                        Dates & Status History
-                    </h2>
-
-                    <p>
-                        Status transitions and time spent in each stage of the delivery.
-                    </p>
-                </div>
-            </header>
-
-            <div class="status-history">
-                <div class="status-history__desktop">
-                    <div class="status-history__table-wrapper">
-                        <table class="status-history__table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">
-                                        Status
-                                    </th>
-
-                                    <th scope="col">
-                                        Started
-                                    </th>
-
-                                    <th scope="col">
-                                        Ended
-                                    </th>
-
-                                    <th scope="col">
-                                        Time in Status
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @for (
-                                history of delivery.statusHistory;
-                                track history.startedAt
-                                ) {
-                                <tr>
-                                    <td>
-                                        <span class="status-history__badge" [class.status-history__badge--progress]="
-                            history.status === 'EN PROCESO'
-                          " [class.status-history__badge--stopped]="
-                            history.status === 'DETENIDO'
-                            || history.status === 'DETENIDO CLIENTE'
-                          " [class.status-history__badge--completed]="
-                            history.status === 'TERMINADO'
-                          ">
-                                            {{ statusLabel(history.status) }}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        {{ formatDateTime(history.startedAt) }}
-                                    </td>
-
-                                    <td>
-                                        @if (history.endedAt) {
-                                        {{ formatDateTime(history.endedAt) }}
-                                        } @else {
-                                        <span class="status-history__current">
-                                            Current
-                                        </span>
-                                        }
-                                    </td>
-
-                                    <td>
-                                        <strong>
-                                            {{ formatStatusDuration(history) }}
-                                        </strong>
-                                    </td>
-                                </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="status-history__mobile">
-                    @for (
-                    history of delivery.statusHistory;
-                    track history.startedAt
-                    ) {
-                    <article class="status-history-card">
-                        <header class="status-history-card__header">
-                            <span class="status-history__badge" [class.status-history__badge--progress]="
-                      history.status === 'EN PROCESO'
-                    " [class.status-history__badge--stopped]="
-                      history.status === 'DETENIDO'
-                      || history.status === 'DETENIDO CLIENTE'
-                    " [class.status-history__badge--completed]="
-                      history.status === 'TERMINADO'
-                    ">
-                                {{ statusLabel(history.status) }}
-                            </span>
-
-                            <strong class="status-history-card__duration">
-                                {{ formatStatusDuration(history) }}
-                            </strong>
-                        </header>
-
-                        <div class="status-history-card__dates">
-                            <div>
-                                <span>
-                                    Started
-                                </span>
-
-                                <strong>
-                                    {{ formatDateTime(history.startedAt) }}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span>
-                                    Ended
-                                </span>
-
-                                <strong>
-                                    @if (history.endedAt) {
-                                    {{ formatDateTime(history.endedAt) }}
-                                    } @else {
-                                    Current
-                                    }
-                                </strong>
-                            </div>
-                        </div>
-                    </article>
-                    }
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 6. LANDLORDS & CONSECUTIVES -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        6
-                    </span>
-
-                    <h2>
-                        Landlords & Consecutives
-                    </h2>
-
-                    <p>
-                        Landlords involved in the delivery and their corresponding
-                        approval numbers.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-collection">
-                @for (
-                item of delivery.landlordConsecutives;
-                track $index
-                ) {
-                <article class="detail-collection__item">
-                    <header class="detail-collection__header">
-                        <strong>
-                            Landlord {{ $index + 1 }}
-                        </strong>
-                    </header>
-
-                    <div class="detail-grid">
-                        <div class="detail-field">
-                            <span class="detail-field__label">
-                                Landlord
-                            </span>
-
-                            <strong class="detail-field__value">
-                                {{ displayValue(item.landlord) }}
-                            </strong>
-                        </div>
-
-                        <div class="detail-field">
-                            <span class="detail-field__label">
-                                Consecutive
-                            </span>
-
-                            <strong class="detail-field__value">
-                                {{ displayValue(item.consecutive) }}
-                            </strong>
-                        </div>
-                    </div>
-                </article>
-                }
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 7. ASSIGNMENT -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        7
-                    </span>
-
-                    <h2>
-                        Assignment
-                    </h2>
-
-                    <p>
-                        Contractor and responsible engineer information.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-grid">
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        EAIM
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.eaim }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Responsible
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ delivery.responsible }}
-                    </strong>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================== -->
-        <!-- 8. COSTS -->
-        <!-- ================================================== -->
-
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        8
-                    </span>
-
-                    <h2>
-                        Costs
-                    </h2>
-
-                    <p>
-                        Survey, budget and installation cost information.
-                    </p>
-                </div>
-            </header>
-
-            <div class="detail-grid detail-grid--cost-summary">
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Survey Cost
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ formatCurrency(delivery.surveyCost) }}
-                    </strong>
-                </div>
-
-                <div class="detail-field">
-                    <span class="detail-field__label">
-                        Installation Budget
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{ formatCurrency(delivery.installationBudget) }}
-                    </strong>
-                </div>
-
-                <div class="detail-field detail-field--total">
-                    <span class="detail-field__label">
-                        Total Installation Cost
-                    </span>
-
-                    <strong class="detail-field__value">
-                        {{
-                        totalInstallationCost(
-                        delivery.installationCosts
-                        )
-                        }}
-                    </strong>
-                </div>
-            </div>
-
-            <div class="detail-subsection">
-                <header class="detail-subsection__header">
-                    <div>
-                        <h3>
-                            Installation Costs
-                        </h3>
-
-                        <p>
-                            Detailed installation costs grouped by cause.
-                        </p>
-                    </div>
+          </header>
+
+          <div class="detail-collection">
+            @for (cost of delivery.installationCosts; track cost.id) {
+              <article class="detail-collection__item">
+                <header class="detail-collection__header">
+                  <strong> Installation Cost {{ $index + 1 }} </strong>
                 </header>
 
-                <div class="detail-collection">
-                    @for (
-                    cost of delivery.installationCosts;
-                    track $index
-                    ) {
-                    <article class="detail-collection__item">
-                        <header class="detail-collection__header">
-                            <strong>
-                                Installation Cost {{ $index + 1 }}
-                            </strong>
-                        </header>
+                <div class="detail-grid">
+                  <div class="detail-field">
+                    <span class="detail-field__label"> Cost Cause </span>
 
-                        <div class="detail-grid">
-                            <div class="detail-field">
-                                <span class="detail-field__label">
-                                    Cost Cause
-                                </span>
+                    <strong class="detail-field__value">
+                      {{ displayValue(cost.causeDescription) }}
+                    </strong>
+                  </div>
 
-                                <strong class="detail-field__value">
-                                    {{
-                                    installationCostCauseLabel(
-                                    cost.cause
-                                    )
-                                    }}
-                                </strong>
-                            </div>
+                  <div class="detail-field">
+                    <span class="detail-field__label"> Amount </span>
 
-                            <div class="detail-field">
-                                <span class="detail-field__label">
-                                    Amount
-                                </span>
-
-                                <strong class="detail-field__value">
-                                    {{ formatCurrency(cost.amount) }}
-                                </strong>
-                            </div>
-                        </div>
-                    </article>
-                    }
+                    <strong class="detail-field__value">
+                      {{ formatCurrency(cost.cost) }}
+                    </strong>
+                  </div>
                 </div>
-            </div>
-        </section>
+              </article>
+            } @empty {
+              <p class="detail-field__text">No additional installation costs registered.</p>
+            }
+          </div>
+        </div>
+      </section>
 
-        <!-- ================================================== -->
-        <!-- 9. OBSERVATIONS -->
-        <!-- ================================================== -->
+      <!-- ================================================== -->
+      <!-- 9. OBSERVATIONS -->
+      <!-- ================================================== -->
 
-        <section class="detail-section">
-            <header class="detail-section__header">
-                <div>
-                    <span class="detail-section__number">
-                        9
-                    </span>
+      <section class="detail-section">
+        <header class="detail-section__header">
+          <div>
+            <span class="detail-section__number"> 9 </span>
 
-                    <h2>
-                        Observations
-                    </h2>
+            <h2>Observations</h2>
 
-                    <p>
-                        Additional information and relevant delivery notes.
-                    </p>
-                </div>
-            </header>
+            <p>Additional information and relevant delivery notes.</p>
+          </div>
+        </header>
 
-            <div class="detail-field detail-field--observations">
-                <span class="detail-field__label">
-                    Observations
-                </span>
+        <div class="detail-field detail-field--observations">
+          <span class="detail-field__label"> Observations </span>
 
-                <p class="detail-field__text">
-                    {{ delivery.observations }}
-                </p>
-            </div>
-        </section>
+          <p class="detail-field__text">
+            {{ displayValue(delivery.observation) }}
+          </p>
+        </div>
+      </section>
     </div>
 
     <footer class="delivery-detail__footer">
-        <a class="delivery-detail__secondary-action" routerLink="/delivery">
-            Back to Delivery
-        </a>
+      <a class="delivery-detail__secondary-action" routerLink="/delivery"> Back to Delivery </a>
     </footer>
-    } @else {
+  } @else if (loading()) {
+    <p role="status">Loading delivery details…</p>
+  } @else {
     <section class="delivery-detail-empty">
-        <div class="delivery-detail-empty__icon" aria-hidden="true">
-            !
-        </div>
+      <div class="delivery-detail-empty__icon" aria-hidden="true">!</div>
 
-        <h1>
-            Delivery not found
-        </h1>
+      <h1>Delivery unavailable</h1>
 
-        <p>
-            The requested delivery could not be found.
-        </p>
+      <p>
+        {{ loadError() }}
+      </p>
 
-        <a class="delivery-detail-empty__action" routerLink="/delivery">
-            Back to Delivery
-        </a>
+      <a class="delivery-detail-empty__action" routerLink="/delivery"> Back to Delivery </a>
     </section>
-    }
+  }
 </section>
