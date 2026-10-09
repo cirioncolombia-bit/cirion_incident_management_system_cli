@@ -301,11 +301,11 @@
           </div>
         </div>
 
-        <button type="button" class="delivery-card__edit"
-          (click)="startEdit(delivery)" [attr.aria-label]="'Edit ' + delivery.dkoTkt">
-          <span>Edit Delivery</span>
+        <a class="delivery-card__view" [routerLink]="['/delivery', delivery.id]"
+          [attr.aria-label]="'View details for ' + delivery.dkoTkt">
+          <span>View Details</span>
           <span aria-hidden="true">→</span>
-        </button>
+        </a>
       </article>
     } @empty {
       <div class="delivery-empty">

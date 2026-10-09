@@ -182,7 +182,7 @@
 .delivery-summary {
   display: grid;
   grid-template-columns:
-    minmax(0, 1fr);
+    repeat(2, minmax(0, 1fr));
 
   gap: var(--cims-space-3);
 }
@@ -349,7 +349,8 @@
   overflow-wrap: anywhere;
 }
 
-.delivery-card__edit {
+.delivery-card__view {
+  text-decoration: none;
   width: 100%;
   min-height: 2.75rem;
   display: flex;
@@ -366,11 +367,11 @@
   font-weight: var(--cims-font-weight-semibold);
 }
 
-.delivery-card__edit:hover {
+.delivery-card__view:hover {
   background: rgb(11 99 206 / 12%);
 }
 
-.delivery-card__edit:focus-visible {
+.delivery-card__view:focus-visible {
   outline: 2px solid var(--cims-color-primary);
   outline-offset: 2px;
 }
@@ -1017,11 +1018,6 @@
       auto;
 
     align-items: center;
-  }
-
-  .delivery-summary {
-    grid-template-columns:
-      repeat(4, minmax(0, 1fr));
   }
 
   .delivery-pagination {
