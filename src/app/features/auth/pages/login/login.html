@@ -2,60 +2,92 @@
   <section class="login__brand" aria-label="Cirion">
     <div class="login__brand-content">
       <div class="login__brand-logo">
-<img src="brand/cirion-logo.png" alt="Cirion" />
+        <img src="brand/cirion-logo.png" alt="Cirion" />
 
-  <span class="login__brand-separator" aria-hidden="true"></span>
+        <span
+          class="login__brand-separator"
+          aria-hidden="true"
+        ></span>
 
-  <span class="login__brand-product">CIMS</span>
-</div>
+        <span class="login__brand-product">
+          CIMS
+        </span>
+      </div>
 
-     <div class="login__brand-message">
-  <span class="login__brand-accent" aria-hidden="true"></span>
+      <div class="login__brand-message">
+        <span
+          class="login__brand-accent"
+          aria-hidden="true"
+        ></span>
 
-  <h1>
-    Conectamos<br />
-    un mundo <span>más digital</span>
-  </h1>
+        <h1>
+          Conectamos<br />
+          un mundo <span>más digital</span>
+        </h1>
 
-  <p>
-    Gestionamos incidentes para mantener lo que más importa:
-    tu negocio en movimiento.
-  </p>
-</div>
+        <p>
+          Gestionamos incidentes para mantener lo que más importa:
+          tu negocio en movimiento.
+        </p>
+      </div>
     </div>
   </section>
 
   <section class="login__content">
     <div class="login__container">
+      <header class="login__header">
+        <span class="login__eyebrow">
+          Bienvenido a
+        </span>
 
-     <header class="login__header">
-  <span class="login__eyebrow">Bienvenido a</span>
+        <h2>CIMS</h2>
 
-  <h2>CIMS</h2>
+        <span
+          class="login__header-accent"
+          aria-hidden="true"
+        ></span>
 
-  <span class="login__header-accent" aria-hidden="true"></span>
-
-  <p>
-    Gestiona y da seguimiento a los incidentes de Cirion.
-  </p>
-</header>
+        <p>
+          Gestiona y da seguimiento a los incidentes de Cirion.
+        </p>
+      </header>
 
       <form
-  class="login__form"
-  (submit)="onSubmit($event)"
->
+        class="login__form"
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        novalidate
+      >
         <div class="login__field">
-          <label for="username">
-            Usuario o correo electrónico
+          <label for="email">
+            Correo electrónico
           </label>
 
           <input
-            id="username"
-            name="username"
-            type="text"
+            id="email"
+            type="email"
+            formControlName="email"
             autocomplete="username"
-            placeholder="Ingresa tu usuario o correo"
+            placeholder="Ingresa tu correo"
           />
+
+          @if (
+            form.controls.email.touched
+            && form.controls.email.hasError('required')
+          ) {
+            <p class="login__error">
+              El correo electrónico es obligatorio.
+            </p>
+          }
+
+          @if (
+            form.controls.email.touched
+            && form.controls.email.hasError('email')
+          ) {
+            <p class="login__error">
+              Ingresa un correo electrónico válido.
+            </p>
+          }
         </div>
 
         <div class="login__field">
@@ -65,19 +97,29 @@
 
           <input
             id="password"
-            name="password"
             type="password"
+            formControlName="password"
             autocomplete="current-password"
             placeholder="Ingresa tu contraseña"
           />
+
+          @if (
+            form.controls.password.touched
+            && form.controls.password.hasError('required')
+          ) {
+            <p class="login__error">
+              La contraseña es obligatoria.
+            </p>
+          }
         </div>
 
         <div class="login__options">
           <label>
             <input
               type="checkbox"
-              name="rememberMe"
+              formControlName="rememberMe"
             />
+
             Recordarme
           </label>
 
@@ -86,11 +128,26 @@
           </a>
         </div>
 
-        <button type="submit">
-          Iniciar sesión
+        @if (errorMessage()) {
+          <p
+            class="login__error"
+            role="alert"
+          >
+            {{ errorMessage() }}
+          </p>
+        }
+
+        <button
+          type="submit"
+          [disabled]="isLoading()"
+        >
+          @if (isLoading()) {
+            Iniciando sesión...
+          } @else {
+            Iniciar sesión
+          }
         </button>
       </form>
-
     </div>
   </section>
 </main>
