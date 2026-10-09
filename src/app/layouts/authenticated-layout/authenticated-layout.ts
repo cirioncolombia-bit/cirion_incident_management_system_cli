@@ -1,3 +1,4 @@
+import { AuthService } from '../../features/auth/services/auth.service';
 import { Component, inject, signal } from '@angular/core';
 import {
   Router,
@@ -17,6 +18,7 @@ import {
   styleUrl: './authenticated-layout.scss',
 })
 export class AuthenticatedLayout {
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly sidebarOpen = signal(false);
@@ -44,6 +46,7 @@ export class AuthenticatedLayout {
   }
 
   logout(): void {
+    this.authService.clearSession();
     this.closeSidebar();
     this.closeUserMenu();
 

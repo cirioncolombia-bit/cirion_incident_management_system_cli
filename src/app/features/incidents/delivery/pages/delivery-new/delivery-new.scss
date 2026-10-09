@@ -871,3 +871,10 @@
     padding: var(--cims-space-6);
   }
 }
+.delivery-new__fields {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}

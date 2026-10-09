@@ -44,6 +44,8 @@ export class Login {
   });
 
   onSubmit(): void {
+    if (this.isLoading()) return;
+
     this.errorMessage.set(null);
 
     if (this.form.invalid) {
@@ -64,7 +66,7 @@ export class Login {
       next: (response) => {
         this.isLoading.set(false);
 
-        console.log('Login response:', response);
+        this.authService.saveSession(response.accessToken, formValue.rememberMe);
 
         void this.router.navigate(['/dashboard']);
       },
@@ -72,7 +74,6 @@ export class Login {
       error: (error: HttpErrorResponse) => {
         this.isLoading.set(false);
 
-        console.error('Login error:', error);
 
         if (error.status === 401) {
           this.errorMessage.set(

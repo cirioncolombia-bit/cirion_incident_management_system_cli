@@ -1,10 +1,9 @@
-import {
-  Component,
-  DestroyRef,
-  inject,
-  signal,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
+import { DeliveryService } from '../../services/delivery.service';
+import { DeliveryCreateOptions } from '../../models/delivery-create-options';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormArray,
@@ -35,26 +34,12 @@ type DeliverySection =
   | 'observations';
 
 type LandlordConsecutiveForm = FormGroup<{
-  landlord: FormControl<string>;
+  landlord: FormControl<number | null>;
   consecutive: FormControl<string>;
 }>;
 
-type InstallationCostCause =
-  | 'CIVIL_WORKS'
-  | 'ADDITIONAL_MATERIALS'
-  | 'ADDITIONAL_FIBER'
-  | 'LABOR'
-  | 'TRANSPORTATION'
-  | 'PERMITS'
-  | 'EQUIPMENT'
-  | 'INFRASTRUCTURE_ADAPTATION'
-  | 'TECHNICAL_REWORK'
-  | 'CLIENT_REQUIREMENT'
-  | 'LANDLORD_REQUIREMENT'
-  | 'OTHER';
-
 type InstallationCostForm = FormGroup<{
-  cause: FormControl<InstallationCostCause | ''>;
+  cause: FormControl<number | null>;
   amount: FormControl<string>;
 }>;
 
@@ -68,9 +53,7 @@ const COMPLETED_STATUS = 'TERMINADO';
 // CUSTOM VALIDATORS
 // ======================================================
 
-const noWhitespaceValidator: ValidatorFn = (
-  control: AbstractControl,
-): ValidationErrors | null => {
+const noWhitespaceValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
   const value = String(control.value ?? '');
 
   if (value.length === 0) {
@@ -88,11 +71,7 @@ const noWhitespaceValidator: ValidatorFn = (
 
 @Component({
   selector: 'app-delivery-new',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    CurrencyInputDirective,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyInputDirective],
   templateUrl: './delivery-new.html',
   styleUrl: './delivery-new.scss',
 })
@@ -100,6 +79,12 @@ export class DeliveryNew {
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly deliveryService = inject(DeliveryService);
+  private readonly authService = inject(AuthService);
+
+  readonly options = signal<DeliveryCreateOptions | null>(null);
+  readonly optionsLoading = signal(false);
+  readonly optionsError = signal<string | null>(null);
   readonly submitted = signal(false);
 
   readonly openSection =
@@ -114,123 +99,50 @@ export class DeliveryNew {
     // 1. Identification
     // ==================================================
 
-    dkoTkt: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    dkoTkt: ['', [Validators.required, noWhitespaceValidator]],
 
-    rfsFiberChain: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    rfsFiberChain: ['', [Validators.required, noWhitespaceValidator]],
 
-    soSap: [
-      '',
-      [
-        noWhitespaceValidator,
-      ],
-    ],
+    soSap: ['', [noWhitespaceValidator]],
 
     // ==================================================
     // 2. Client & Location
     // ==================================================
 
-    clientName: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    clientName: ['', [Validators.required, noWhitespaceValidator]],
 
-    buildingName: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    buildingName: ['', [Validators.required, noWhitespaceValidator]],
 
-    address: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    address: ['', [Validators.required, noWhitespaceValidator]],
 
-    city: [
-      '',
-      Validators.required,
-    ],
+    city: this.formBuilder.control<number | null>(null, Validators.required),
 
-    node: [
-      '',
-      Validators.required,
-    ],
+    node: this.formBuilder.control<number | null>(null, Validators.required),
 
-    revenue: [
-      '',
-      [
-        Validators.pattern(/^\d+$/),
-        Validators.min(0),
-      ],
-    ],
+    revenue: ['', [Validators.pattern(/^\d+$/), Validators.min(0)]],
 
     // ==================================================
     // 3. Contact Information
     // ==================================================
 
-    contact: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    contact: ['', [Validators.required, noWhitespaceValidator]],
 
-    email: [
-      '',
-      [
-        Validators.required,
-        Validators.email,
-      ],
-    ],
+    email: ['', [Validators.required, Validators.email]],
 
     phone: [
       '',
-      [
-        Validators.required,
-        Validators.pattern(
-          /^(?:\+57[\s-]?)?3\d{2}[\s-]?\d{3}[\s-]?\d{4}$/,
-        ),
-      ],
+      [Validators.required, Validators.pattern(/^(?:\+57[\s-]?)?3\d{2}[\s-]?\d{3}[\s-]?\d{4}$/)],
     ],
 
     // ==================================================
     // 4. Classification
     // ==================================================
 
-    type: [
-      '',
-      Validators.required,
-    ],
+    type: this.formBuilder.control<number | null>(null, Validators.required),
 
-    status: [
-      '',
-      Validators.required,
-    ],
+    status: this.formBuilder.control<number | null>(null, Validators.required),
 
-    technology: [
-      '',
-      Validators.required,
-    ],
+    technology: this.formBuilder.control<number | null>(null, Validators.required),
 
     // ==================================================
     // 5. Landlords & Consecutives
@@ -245,37 +157,17 @@ export class DeliveryNew {
     // 6. Assignment
     // ==================================================
 
-    eaim: [
-      '',
-      Validators.required,
-    ],
+    eaim: this.formBuilder.control<number | null>(null, Validators.required),
 
-    responsible: [
-      '',
-      Validators.required,
-    ],
+    responsible: this.formBuilder.control<number | null>(null, Validators.required),
 
     // ==================================================
     // 7. Costs
     // ==================================================
 
-    surveyCost: [
-      '',
-      [
-        Validators.required,
-        Validators.pattern(/^\d+$/),
-        Validators.min(0),
-      ],
-    ],
+    surveyCost: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
 
-    installationBudget: [
-      '',
-      [
-        Validators.required,
-        Validators.pattern(/^\d+$/),
-        Validators.min(0),
-      ],
-    ],
+    installationBudget: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
 
     installationCosts:
       this.formBuilder.array<InstallationCostForm>([
@@ -286,31 +178,58 @@ export class DeliveryNew {
     // 8. Observations
     // ==================================================
 
-    observations: [
-      '',
-      [
-        Validators.required,
-        noWhitespaceValidator,
-      ],
-    ],
+    observations: ['', [Validators.required, noWhitespaceValidator]],
   });
 
   // ====================================================
   // CONSTRUCTOR
   // ====================================================
 
+  private readonly selectedCity = toSignal(this.form.controls.city.valueChanges, {
+    initialValue: this.form.controls.city.value,
+  });
+
+  readonly filteredNodes = computed(() =>
+    (this.options()?.nodes ?? []).filter((node) => node.cityId === this.selectedCity()),
+  );
+
   constructor() {
+    this.form.controls.city.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.form.controls.node.reset(null));
+    this.loadOptions();
     this.form.controls.status.valueChanges
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((status) => {
         this.updateCompletionValidators(status);
       });
 
-    this.updateCompletionValidators(
-      this.form.controls.status.value,
-    );
+    this.updateCompletionValidators(this.form.controls.status.value);
+  }
+
+  loadOptions(): void {
+    if (this.optionsLoading()) return;
+    this.optionsLoading.set(true);
+    this.optionsError.set(null);
+    this.deliveryService
+      .getCreateOptions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (options) => {
+          this.options.set(options);
+          this.optionsLoading.set(false);
+          this.updateCompletionValidators(this.form.controls.status.value);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.optionsLoading.set(false);
+          if (error.status === 401) {
+            this.authService.clearSession();
+            this.optionsError.set('Your session is missing or expired. Please sign in again.');
+          } else {
+            this.optionsError.set('Unable to load delivery options. Please try again.');
+          }
+        },
+      });
   }
 
   // ====================================================
@@ -323,11 +242,7 @@ export class DeliveryNew {
   }
 
   addLandlordConsecutive(): void {
-    this.landlordConsecutives.push(
-      this.createLandlordConsecutiveGroup(
-        this.isCompleted(),
-      ),
-    );
+    this.landlordConsecutives.push(this.createLandlordConsecutiveGroup(this.isCompleted()));
 
     this.openSection.set('landlordConsecutives');
   }
@@ -350,9 +265,7 @@ export class DeliveryNew {
   }
 
   addInstallationCost(): void {
-    this.installationCosts.push(
-      this.createInstallationCostGroup(),
-    );
+    this.installationCosts.push(this.createInstallationCostGroup());
 
     this.openSection.set('costs');
   }
@@ -370,12 +283,9 @@ export class DeliveryNew {
   // ====================================================
 
   toggleSection(section: DeliverySection): void {
-    this.openSection.update(
-      (currentSection) =>
-        currentSection === section
+    this.openSection.update((currentSection) => (currentSection === section
           ? null
-          : section,
-    );
+          : section));
   }
 
   isSectionOpen(section: DeliverySection): boolean {
@@ -387,11 +297,11 @@ export class DeliveryNew {
   // ====================================================
 
   submit(): void {
+    if (this.optionsLoading() || !this.options() || this.optionsError()) return;
+
     this.submitted.set(true);
 
-    this.updateCompletionValidators(
-      this.form.controls.status.value,
-    );
+    this.updateCompletionValidators(this.form.controls.status.value);
 
     this.form.markAllAsTouched();
 
@@ -409,42 +319,36 @@ export class DeliveryNew {
   // CONDITIONAL VALIDATION
   // ====================================================
 
-  private isCompleted(): boolean {
+  protected isCompleted(): boolean {
     return (
-      this.form.controls.status.value
-      === COMPLETED_STATUS
+      this.options()
+        ?.deliveryStatuses.find((option) => option.id === this.form.controls.status.value)
+        ?.name.trim()
+        .toUpperCase() === COMPLETED_STATUS
     );
   }
 
-  private updateCompletionValidators(
-    status: string,
-  ): void {
+  private updateCompletionValidators(status: number | null): void {
     const isCompleted =
-      status === COMPLETED_STATUS;
+      this.options()
+        ?.deliveryStatuses.find((option) => option.id === status)
+        ?.name.trim()
+        .toUpperCase() === COMPLETED_STATUS;
 
     this.updateSoSapValidators(isCompleted);
 
     this.updateRevenueValidators(isCompleted);
 
-    this.updateLandlordConsecutiveValidators(
-      isCompleted,
-    );
+    this.updateLandlordConsecutiveValidators(isCompleted);
   }
 
-  private updateSoSapValidators(
-    isCompleted: boolean,
-  ): void {
+  private updateSoSapValidators(isCompleted: boolean): void {
     const control = this.form.controls.soSap;
 
     if (isCompleted) {
-      control.setValidators([
-        Validators.required,
-        noWhitespaceValidator,
-      ]);
+      control.setValidators([Validators.required, noWhitespaceValidator]);
     } else {
-      control.setValidators([
-        noWhitespaceValidator,
-      ]);
+      control.setValidators([noWhitespaceValidator]);
     }
 
     control.updateValueAndValidity({
@@ -452,25 +356,15 @@ export class DeliveryNew {
     });
   }
 
-  private updateRevenueValidators(
-    isCompleted: boolean,
-  ): void {
+  private updateRevenueValidators(isCompleted: boolean): void {
     const control = this.form.controls.revenue;
 
-    const numericValidators = [
-      Validators.pattern(/^\d+$/),
-      Validators.min(0),
-    ];
+    const numericValidators = [Validators.pattern(/^\d+$/), Validators.min(0)];
 
     if (isCompleted) {
-      control.setValidators([
-        Validators.required,
-        ...numericValidators,
-      ]);
+      control.setValidators([Validators.required, ...numericValidators]);
     } else {
-      control.setValidators(
-        numericValidators,
-      );
+      control.setValidators(numericValidators);
     }
 
     control.updateValueAndValidity({
@@ -478,17 +372,9 @@ export class DeliveryNew {
     });
   }
 
-  private updateLandlordConsecutiveValidators(
-    isCompleted: boolean,
-  ): void {
-    for (
-      const group
-      of this.landlordConsecutives.controls
-    ) {
-      this.applyLandlordConsecutiveValidators(
-        group,
-        isCompleted,
-      );
+  private updateLandlordConsecutiveValidators(isCompleted: boolean): void {
+    for (const group of this.landlordConsecutives.controls) {
+      this.applyLandlordConsecutiveValidators(group, isCompleted);
     }
   }
 
@@ -503,20 +389,13 @@ export class DeliveryNew {
       group.controls.consecutive;
 
     if (isCompleted) {
-      landlordControl.setValidators([
-        Validators.required,
-      ]);
+      landlordControl.setValidators([Validators.required]);
 
-      consecutiveControl.setValidators([
-        Validators.required,
-        noWhitespaceValidator,
-      ]);
+      consecutiveControl.setValidators([Validators.required, noWhitespaceValidator]);
     } else {
       landlordControl.clearValidators();
 
-      consecutiveControl.setValidators([
-        noWhitespaceValidator,
-      ]);
+      consecutiveControl.setValidators([noWhitespaceValidator]);
     }
 
     landlordControl.updateValueAndValidity({
@@ -532,27 +411,13 @@ export class DeliveryNew {
   // LANDLORD FORM FACTORY
   // ====================================================
 
-  private createLandlordConsecutiveGroup(
-    required = false,
-  ): LandlordConsecutiveForm {
+  private createLandlordConsecutiveGroup(required = false): LandlordConsecutiveForm {
     return this.formBuilder.nonNullable.group({
-      landlord: [
-        '',
-        required
-          ? [Validators.required]
-          : [],
-      ],
+      landlord: this.formBuilder.control<number | null>(null, required ? Validators.required : []),
 
       consecutive: [
         '',
-        required
-          ? [
-              Validators.required,
-              noWhitespaceValidator,
-            ]
-          : [
-              noWhitespaceValidator,
-            ],
+        required ? [Validators.required, noWhitespaceValidator] : [noWhitespaceValidator],
       ],
     });
   }
@@ -561,29 +426,13 @@ export class DeliveryNew {
   // INSTALLATION COST FORM FACTORY
   // ====================================================
 
-  private createInstallationCostGroup():
-    InstallationCostForm {
+  private createInstallationCostGroup(): InstallationCostForm {
     return this.formBuilder.nonNullable.group({
-      cause: new FormControl<
-        InstallationCostCause | ''
-      >(
-        '',
-        {
-          nonNullable: true,
-          validators: [
-            Validators.required,
-          ],
-        },
-      ),
+      cause: new FormControl<number | null>(null, {
+        validators: [Validators.required],
+      }),
 
-      amount: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^\d+$/),
-          Validators.min(0),
-        ],
-      ],
+      amount: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.min(0)]],
     });
   }
 

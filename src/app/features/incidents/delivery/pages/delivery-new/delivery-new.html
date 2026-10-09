@@ -21,12 +21,25 @@
     </a>
   </header>
 
+  @if (optionsLoading()) {
+    <p role="status">Loading delivery options…</p>
+  }
+  @if (optionsError()) {
+    <p role="alert">{{ optionsError() }}</p>
+    <button type="button" (click)="loadOptions()">Retry</button>
+    <a routerLink="/login">Sign in</a>
+  }
+  @if (options() && !optionsLoading() && !optionsError()) {
+    <p class="delivery-field__help">If a list is empty, no active options are available.</p>
+  }
+
   <form
     class="delivery-new__form"
     [formGroup]="form"
     (ngSubmit)="submit()"
     novalidate
   >
+    <fieldset class="delivery-new__fields" [disabled]="optionsLoading() || !options() || !!optionsError()">
     <!-- ====================================================== -->
     <!-- 1. IDENTIFICATION -->
     <!-- ====================================================== -->
@@ -144,7 +157,7 @@
             <label for="soSap">
               SO SAP
 
-              @if (form.controls.status.value === 'TERMINADO') {
+              @if (isCompleted()) {
                 <span aria-hidden="true">*</span>
               }
             </label>
@@ -310,18 +323,10 @@
               id="city"
               formControlName="city"
             >
-              <option value="">
-                Select a city
-              </option>
-              <option value="bogota">
-                Bogotá
-              </option>
-              <option value="medellin">
-                Medellín
-              </option>
-              <option value="cali">
-                Cali
-              </option>
+              <option [ngValue]="null">Select a city</option>
+                @for (option of options()?.cities ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             <small class="delivery-field__help">
@@ -348,15 +353,10 @@
               id="node"
               formControlName="node"
             >
-              <option value="">
-                Select a node
-              </option>
-              <option value="node-1">
-                Node 1
-              </option>
-              <option value="node-2">
-                Node 2
-              </option>
+              <option [ngValue]="null">Select a node</option>
+                @for (option of filteredNodes() ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             <small class="delivery-field__help">
@@ -377,7 +377,7 @@
             <label for="revenue">
               Revenue
 
-              @if (form.controls.status.value === 'TERMINADO') {
+              @if (isCompleted()) {
                 <span aria-hidden="true">*</span>
               }
             </label>
@@ -639,15 +639,10 @@
               id="type"
               formControlName="type"
             >
-              <option value="">
-                Select a type
-              </option>
-              <option value="PREVENTA">
-                PREVENTA
-              </option>
-              <option value="SAVING">
-                SAVING
-              </option>
+              <option [ngValue]="null">Select a type</option>
+                @for (option of options()?.deliveryTypes ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             @if (
@@ -670,21 +665,10 @@
               id="status"
               formControlName="status"
             >
-              <option value="">
-                Select a status
-              </option>
-              <option value="EN PROCESO">
-                EN PROCESO
-              </option>
-              <option value="DETENIDO">
-                DETENIDO
-              </option>
-              <option value="DETENIDO CLIENTE">
-                DETENIDO CLIENTE
-              </option>
-              <option value="TERMINADO">
-                TERMINADO
-              </option>
+              <option [ngValue]="null">Select a status</option>
+                @for (option of options()?.deliveryStatuses ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             @if (
@@ -707,24 +691,10 @@
               id="technology"
               formControlName="technology"
             >
-              <option value="">
-                Select a technology
-              </option>
-              <option value="METRO2">
-                METRO2
-              </option>
-              <option value="METRO3">
-                METRO3
-              </option>
-              <option value="DWDM">
-                DWDM
-              </option>
-              <option value="TRANSPORTE">
-                TRANSPORTE
-              </option>
-              <option value="FIBRA OSCURA">
-                FIBRA OSCURA
-              </option>
+              <option [ngValue]="null">Select a technology</option>
+                @for (option of options()?.deliveryTechnologies ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             @if (
@@ -842,7 +812,7 @@
                   <label [for]="'landlord-' + index">
                     Landlord
 
-                    @if (form.controls.status.value === 'TERMINADO') {
+                    @if (isCompleted()) {
                       <span aria-hidden="true">*</span>
                     }
                   </label>
@@ -851,16 +821,11 @@
                     [id]="'landlord-' + index"
                     formControlName="landlord"
                   >
-                    <option value="">
-                      Select a landlord
-                    </option>
-                    <option value="vendor-1">
-                      Vendor 1
-                    </option>
-                    <option value="vendor-2">
-                      Vendor 2
-                    </option>
-                  </select>
+                    <option [ngValue]="null">Select a landlord</option>
+                      @for (option of options()?.landlords ?? []; track option.id) {
+                        <option [ngValue]="option.id">{{ option.name }}</option>
+                      }
+            </select>
 
                   @if (
                     item.controls.landlord.touched
@@ -876,7 +841,7 @@
                   <label [for]="'consecutive-' + index">
                     Consecutive
 
-                    @if (form.controls.status.value === 'TERMINADO') {
+                    @if (isCompleted()) {
                       <span aria-hidden="true">*</span>
                     }
                   </label>
@@ -984,15 +949,10 @@
               id="eaim"
               formControlName="eaim"
             >
-              <option value="">
-                Select a contractor
-              </option>
-              <option value="contractor-1">
-                Contractor 1
-              </option>
-              <option value="contractor-2">
-                Contractor 2
-              </option>
+              <option [ngValue]="null">Select a contractor</option>
+                @for (option of options()?.eaims ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             @if (
@@ -1015,15 +975,10 @@
               id="responsible"
               formControlName="responsible"
             >
-              <option value="">
-                Select a responsible engineer
-              </option>
-              <option value="engineer-1">
-                Engineer 1
-              </option>
-              <option value="engineer-2">
-                Engineer 2
-              </option>
+              <option [ngValue]="null">Select a responsible engineer</option>
+                @for (option of options()?.responsibles ?? []; track option.id) {
+                  <option [ngValue]="option.id">{{ option.name }}</option>
+                }
             </select>
 
             @if (
@@ -1242,58 +1197,11 @@
                       [id]="'installation-cost-cause-' + index"
                       formControlName="cause"
                     >
-                      <option value="">
-                        Select a cost cause
-                      </option>
-
-                      <option value="CIVIL_WORKS">
-                        Civil Works
-                      </option>
-
-                      <option value="ADDITIONAL_MATERIALS">
-                        Additional Materials
-                      </option>
-
-                      <option value="ADDITIONAL_FIBER">
-                        Additional Fiber
-                      </option>
-
-                      <option value="LABOR">
-                        Labor
-                      </option>
-
-                      <option value="TRANSPORTATION">
-                        Transportation
-                      </option>
-
-                      <option value="PERMITS">
-                        Permits
-                      </option>
-
-                      <option value="EQUIPMENT">
-                        Equipment
-                      </option>
-
-                      <option value="INFRASTRUCTURE_ADAPTATION">
-                        Infrastructure Adaptation
-                      </option>
-
-                      <option value="TECHNICAL_REWORK">
-                        Technical Rework
-                      </option>
-
-                      <option value="CLIENT_REQUIREMENT">
-                        Client Requirement
-                      </option>
-
-                      <option value="LANDLORD_REQUIREMENT">
-                        Landlord Requirement
-                      </option>
-
-                      <option value="OTHER">
-                        Other
-                      </option>
-                    </select>
+                      <option [ngValue]="null">Select a cost cause</option>
+                        @for (option of options()?.deliveryCauses ?? []; track option.id) {
+                          <option [ngValue]="option.id">{{ option.name }}</option>
+                        }
+            </select>
 
                     <small class="delivery-field__help">
                       Select the main reason associated with this installation cost.
@@ -1464,5 +1372,6 @@
         Save Delivery
       </button>
     </footer>
+    </fieldset>
   </form>
 </section>
