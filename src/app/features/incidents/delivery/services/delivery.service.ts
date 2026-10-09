@@ -1,3 +1,4 @@
+import { DeliveryEditData, UpdateDeliveryEdit } from '../models/delivery-edit';
 import { DeliverySummary } from '../models/delivery-summary';
 import { CreateDelivery, CreatedDelivery } from '../models/create-delivery';
 import { inject, Injectable } from '@angular/core';
@@ -9,6 +10,18 @@ import { ApiResponse, DeliveryCreateOptions } from '../models/delivery-create-op
 @Injectable({ providedIn: 'root' })
 export class DeliveryService {
   private readonly http = inject(HttpClient);
+
+  getEdit(id: number) {
+    return this.http
+      .get<ApiResponse<DeliveryEditData>>(`${environment.apiUrl}/api/Delivery/${id}/edit`)
+      .pipe(map((response) => response.data));
+  }
+
+  updateEdit(id: number, request: UpdateDeliveryEdit) {
+    return this.http
+      .put<ApiResponse<CreatedDelivery>>(`${environment.apiUrl}/api/Delivery/${id}/edit`, request)
+      .pipe(map((response) => response.data));
+  }
 
   getAll() {
     return this.http

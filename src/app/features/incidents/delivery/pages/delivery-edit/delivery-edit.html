@@ -3,38 +3,31 @@
     <header class="delivery-edit__header">
       <a
         class="delivery-edit__back"
-        [routerLink]="['/delivery', delivery.id]"
+        [routerLink]="saving() ? null : '/delivery'"
+        [attr.aria-disabled]="saving()"
+        [queryParams]="{ deliveryId: delivery.id }"
       >
         <span aria-hidden="true">←</span>
-        <span>Back to Delivery Details</span>
+        <span>Back to Delivery</span>
       </a>
 
       <div class="delivery-edit__heading">
         <div>
-          <p class="delivery-edit__eyebrow">
-            Delivery
-          </p>
+          <p class="delivery-edit__eyebrow">Delivery</p>
 
           <h1>Edit Delivery</h1>
 
-          <p class="delivery-edit__subtitle">
-            Update the delivery information below.
-          </p>
+          <p class="delivery-edit__subtitle">Update the delivery information below.</p>
         </div>
 
         <div class="delivery-edit__reference">
           <span>DKO/TKT</span>
-          <strong>{{ delivery.dkoTkt }}</strong>
+          <strong>{{ delivery.workOrderId }}</strong>
         </div>
       </div>
     </header>
 
-    <form
-      class="delivery-edit__form"
-      [formGroup]="editForm"
-      (ngSubmit)="save()"
-      novalidate
-    >
+    <form class="delivery-edit__form" [formGroup]="editForm" (ngSubmit)="save()" novalidate>
       <!-- ================================================= -->
       <!-- 1. IDENTIFICATION -->
       <!-- ================================================= -->
@@ -63,23 +56,15 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('identification')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('identification')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
               <label>DKO/TKT</label>
 
-              <input
-                type="text"
-                [value]="delivery.dkoTkt"
-                readonly
-              />
+              <input type="text" [value]="delivery.workOrderId" readonly />
 
-              <small class="delivery-field__help">
-                This value cannot be changed.
-              </small>
+              <small class="delivery-field__help"> This value cannot be changed. </small>
             </div>
 
             <div class="delivery-field">
@@ -92,46 +77,27 @@
                 id="rfsFiberChain"
                 type="text"
                 formControlName="rfsFiberChain"
+                maxlength="50"
               />
 
               @if (
-                editForm.controls.rfsFiberChain.touched
-                && editForm.controls.rfsFiberChain.invalid
+                editForm.controls.rfsFiberChain.touched && editForm.controls.rfsFiberChain.invalid
               ) {
-                <p class="delivery-field__error">
-                  RFS Fiber Chain is required.
-                </p>
+                <p class="delivery-field__error">RFS Fiber Chain is required.</p>
               }
             </div>
 
             <div class="delivery-field">
-              <label for="soSap">
-                SO SAP
+              <label for="soSap"> SO SAP </label>
 
-                @if (
-                  editForm.controls.status.value === 'TERMINADO'
-                ) {
-                  <span>*</span>
-                }
-              </label>
+              <input id="soSap" type="text" formControlName="soSap" maxlength="10" />
 
-              <input
-                id="soSap"
-                type="text"
-                formControlName="soSap"
-              />
-
-              <small class="delivery-field__help">
-                Required when the delivery is completed.
-              </small>
+              <small class="delivery-field__help"> Optional. </small>
 
               @if (
-                editForm.controls.soSap.touched
-                && editForm.controls.soSap.hasError('required')
+                editForm.controls.soSap.touched && editForm.controls.soSap.hasError('required')
               ) {
-                <p class="delivery-field__error">
-                  SO SAP is required to complete the delivery.
-                </p>
+                <p class="delivery-field__error">SO SAP is required to complete the delivery.</p>
               }
             </div>
           </div>
@@ -166,125 +132,91 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('clientLocation')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('clientLocation')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="clientName">
-                Client Name <span>*</span>
-              </label>
+              <label for="clientName"> Client Name <span>*</span> </label>
 
-              <input
-                id="clientName"
-                type="text"
-                formControlName="clientName"
-              />
+              <input id="clientName" type="text" formControlName="clientName" maxlength="50" />
             </div>
 
             <div class="delivery-field">
-              <label for="buildingName">
-                Building / Site <span>*</span>
-              </label>
+              <label for="buildingName"> Building / Site <span>*</span> </label>
 
-              <input
-                id="buildingName"
-                type="text"
-                formControlName="buildingName"
-              />
+              <input id="buildingName" type="text" formControlName="buildingName" maxlength="150" />
             </div>
 
             <div class="delivery-field delivery-field--wide">
-              <label for="address">
-                Address <span>*</span>
-              </label>
+              <label for="address"> Address <span>*</span> </label>
 
-              <input
-                id="address"
-                type="text"
-                formControlName="address"
-              />
+              <input id="address" type="text" formControlName="address" maxlength="150" />
             </div>
 
             <div class="delivery-field">
-              <label for="city">
-                City <span>*</span>
-              </label>
+              <label for="city"> City <span>*</span> </label>
 
-              <select
-                id="city"
-                formControlName="city"
-              >
-                <option value="">Select a city</option>
-
-                @for (city of cities; track city) {
-                  <option [value]="city">
-                    {{ city }}
-                  </option>
-                }
-              </select>
-            </div>
-
-            <div class="delivery-field">
-              <label for="node">
-                Node <span>*</span>
-              </label>
-
-              <select
-                id="node"
-                formControlName="node"
-              >
-                <option value="">Select a node</option>
-
-                @for (node of nodes; track node) {
-                  <option [value]="node">
-                    {{ node }}
-                  </option>
-                }
-              </select>
-            </div>
-
-            <div class="delivery-field">
-              <label for="revenue">
-                Revenue
+              <select id="city" formControlName="city">
+                <option [ngValue]="null">Select a city</option>
 
                 @if (
-                  editForm.controls.status.value === 'TERMINADO'
+                  editForm.controls.city.value !== null &&
+                  !hasOption(cities, editForm.controls.city.value)
                 ) {
-                  <span>*</span>
+                  <option [ngValue]="editForm.controls.city.value" disabled>
+                    Current option unavailable — select an active option
+                  </option>
                 }
-              </label>
+                @for (city of cities; track city.id) {
+                  <option [ngValue]="city.id">{{ city.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="node"> Node <span>*</span> </label>
+
+              <select id="node" formControlName="node">
+                <option [ngValue]="null">Select a node</option>
+
+                @if (
+                  editForm.controls.node.value !== null &&
+                  !hasOption(nodes, editForm.controls.node.value)
+                ) {
+                  <option [ngValue]="editForm.controls.node.value" disabled>
+                    Current option unavailable — select an active option
+                  </option>
+                }
+                @for (node of nodes; track node.id) {
+                  <option [ngValue]="node.id">{{ node.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="revenue"> Revenue </label>
 
               <input
                 id="revenue"
-                cimsCurrencyInput
-                type="text"
-                inputmode="numeric"
+                type="number"
+                step="any"
+                inputmode="decimal"
                 formControlName="revenue"
                 placeholder="$ 0"
               />
 
-              <small class="delivery-field__help">
-                Required when the delivery is completed.
-              </small>
+              <small class="delivery-field__help"> Optional. </small>
 
               @if (
-                editForm.controls.revenue.touched
-                && editForm.controls.revenue.hasError('required')
+                editForm.controls.revenue.touched && editForm.controls.revenue.hasError('required')
               ) {
-                <p class="delivery-field__error">
-                  Revenue is required to complete the delivery.
-                </p>
+                <p class="delivery-field__error">Revenue is required to complete the delivery.</p>
               }
 
               @if (
-                editForm.controls.revenue.touched
-                && editForm.controls.revenue.hasError('pattern')
+                editForm.controls.revenue.touched && editForm.controls.revenue.hasError('pattern')
               ) {
-                <p class="delivery-field__error">
-                  Revenue must contain numbers only.
-                </p>
+                <p class="delivery-field__error">Revenue must contain numbers only.</p>
               }
             </div>
           </div>
@@ -319,62 +251,32 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('contact')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('contact')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="contact">
-                Contact Name <span>*</span>
-              </label>
+              <label for="contact"> Contact Name <span>*</span> </label>
 
-              <input
-                id="contact"
-                type="text"
-                formControlName="contact"
-              />
+              <input id="contact" type="text" formControlName="contact" maxlength="50" />
             </div>
 
             <div class="delivery-field">
-              <label for="email">
-                Email <span>*</span>
-              </label>
+              <label for="email"> Email <span>*</span> </label>
 
-              <input
-                id="email"
-                type="email"
-                formControlName="email"
-              />
+              <input id="email" type="email" formControlName="email" maxlength="200" />
 
-              @if (
-                editForm.controls.email.touched
-                && editForm.controls.email.invalid
-              ) {
-                <p class="delivery-field__error">
-                  Enter a valid email address.
-                </p>
+              @if (editForm.controls.email.touched && editForm.controls.email.invalid) {
+                <p class="delivery-field__error">Enter a valid email address.</p>
               }
             </div>
 
             <div class="delivery-field">
-              <label for="phone">
-                Mobile Phone <span>*</span>
-              </label>
+              <label for="phone"> Mobile Phone <span>*</span> </label>
 
-              <input
-                id="phone"
-                type="tel"
-                formControlName="phone"
-              />
+              <input id="phone" type="tel" formControlName="phone" />
 
-              @if (
-                editForm.controls.phone.touched
-                && editForm.controls.phone.invalid
-              ) {
-                <p class="delivery-field__error">
-                  Enter a valid Colombian mobile number.
-                </p>
+              @if (editForm.controls.phone.touched && editForm.controls.phone.invalid) {
+                <p class="delivery-field__error">Enter a valid numeric phone number.</p>
               }
             </div>
           </div>
@@ -409,97 +311,71 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('classification')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('classification')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="type">
-                Type <span>*</span>
-              </label>
+              <label for="type"> Type <span>*</span> </label>
 
-              <select
-                id="type"
-                formControlName="type"
-              >
-                <option value="">Select a type</option>
+              <select id="type" formControlName="type">
+                <option [ngValue]="null">Select a type</option>
 
-                @for (type of types; track type) {
-                  <option [value]="type">
-                    {{ typeLabel(type) }}
-                  </option>
-                }
-              </select>
-            </div>
-
-            <div class="delivery-field">
-              <label for="status">
-                Status <span>*</span>
-              </label>
-
-              <select
-                id="status"
-                formControlName="status"
-              >
-                <option value="">
-                  Select a status
-                </option>
-
-                @for (status of statuses; track status) {
-                  <option [value]="status">
-                    {{ statusLabel(status) }}
-                  </option>
-                }
-              </select>
-
-              <small class="delivery-field__help">
-                Changing the status automatically creates a
-                status-history entry.
-              </small>
-            </div>
-
-            <div class="delivery-field">
-              <label for="technology">
-                Technology <span>*</span>
-              </label>
-
-              <select
-                id="technology"
-                formControlName="technology"
-              >
-                <option value="">
-                  Select a technology
-                </option>
-
-                @for (
-                  technology of technologies;
-                  track technology
+                @if (
+                  editForm.controls.type.value !== null &&
+                  !hasOption(types, editForm.controls.type.value)
                 ) {
-                  <option [value]="technology">
-                    {{ technologyLabel(technology) }}
+                  <option [ngValue]="editForm.controls.type.value" disabled>
+                    Current option unavailable — select an active option
                   </option>
+                }
+                @for (type of types; track type.id) {
+                  <option [ngValue]="type.id">{{ type.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="delivery-field">
+              <label for="status"> Status <span>*</span> </label>
+
+              <select id="status" formControlName="status">
+                <option [ngValue]="null">Select a status</option>
+
+                @if (
+                  editForm.controls.status.value !== null &&
+                  !hasOption(statuses, editForm.controls.status.value)
+                ) {
+                  <option [ngValue]="editForm.controls.status.value" disabled>
+                    Current option unavailable — select an active option
+                  </option>
+                }
+                @for (status of statuses; track status.id) {
+                  <option [ngValue]="status.id">{{ status.name }}</option>
+                }
+              </select>
+
+              <small class="delivery-field__help"> Select the current delivery status. </small>
+            </div>
+
+            <div class="delivery-field">
+              <label for="technology"> Technology <span>*</span> </label>
+
+              <select id="technology" formControlName="technology">
+                <option [ngValue]="null">Select a technology</option>
+
+                @if (
+                  editForm.controls.technology.value !== null &&
+                  !hasOption(technologies, editForm.controls.technology.value)
+                ) {
+                  <option [ngValue]="editForm.controls.technology.value" disabled>
+                    Current option unavailable — select an active option
+                  </option>
+                }
+                @for (technology of technologies; track technology.id) {
+                  <option [ngValue]="technology.id">{{ technology.name }}</option>
                 }
               </select>
             </div>
           </div>
-
-          @if (
-            editForm.controls.status.value === 'TERMINADO'
-            && editForm.invalid
-          ) {
-            <div class="completion-warning">
-              <strong>
-                Complete Delivery
-              </strong>
-
-              <p>
-                All required delivery information must be
-                completed before the status can be saved as
-                Completed.
-              </p>
-            </div>
-          }
         </div>
       </section>
 
@@ -519,9 +395,7 @@
 
             <h2>Dates & Status History</h2>
 
-            <p>
-              Status transitions and time spent in each stage.
-            </p>
+            <p>Status transitions and time spent in each stage.</p>
           </div>
 
           <span class="delivery-section__chevron">
@@ -535,141 +409,9 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('dates')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('dates')"
         >
-          <div class="history-notice">
-            <span
-              class="history-notice__icon"
-              aria-hidden="true"
-            >
-              🔒
-            </span>
-
-            <div>
-              <strong>System-managed information</strong>
-
-              <p>
-                Status dates and elapsed times are generated
-                automatically and cannot be edited.
-              </p>
-            </div>
-          </div>
-
-          <div class="status-history__desktop">
-            <div class="status-history__table-wrapper">
-              <table class="status-history__table">
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>Started</th>
-                    <th>Ended</th>
-                    <th>Time in Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  @for (
-                    history of delivery.statusHistory;
-                    track history.startedAt
-                  ) {
-                    <tr>
-                      <td>
-                        <span
-                          class="status-history__badge"
-                          [class.status-history__badge--progress]="
-                            history.status === 'EN PROCESO'
-                          "
-                          [class.status-history__badge--stopped]="
-                            history.status === 'DETENIDO'
-                            || history.status === 'DETENIDO CLIENTE'
-                          "
-                          [class.status-history__badge--completed]="
-                            history.status === 'TERMINADO'
-                          "
-                        >
-                          {{ statusLabel(history.status) }}
-                        </span>
-                      </td>
-
-                      <td>
-                        {{ formatDateTime(history.startedAt) }}
-                      </td>
-
-                      <td>
-                        @if (history.endedAt) {
-                          {{ formatDateTime(history.endedAt) }}
-                        } @else {
-                          <span class="status-history__current">
-                            Current
-                          </span>
-                        }
-                      </td>
-
-                      <td>
-                        <strong>
-                          {{ formatStatusDuration(history) }}
-                        </strong>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="status-history__mobile">
-            @for (
-              history of delivery.statusHistory;
-              track history.startedAt
-            ) {
-              <article class="status-history-card">
-                <header class="status-history-card__header">
-                  <span
-                    class="status-history__badge"
-                    [class.status-history__badge--progress]="
-                      history.status === 'EN PROCESO'
-                    "
-                    [class.status-history__badge--stopped]="
-                      history.status === 'DETENIDO'
-                      || history.status === 'DETENIDO CLIENTE'
-                    "
-                    [class.status-history__badge--completed]="
-                      history.status === 'TERMINADO'
-                    "
-                  >
-                    {{ statusLabel(history.status) }}
-                  </span>
-
-                  <strong>
-                    {{ formatStatusDuration(history) }}
-                  </strong>
-                </header>
-
-                <div class="status-history-card__dates">
-                  <div>
-                    <span>Started</span>
-                    <strong>
-                      {{ formatDateTime(history.startedAt) }}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span>Ended</span>
-
-                    <strong>
-                      @if (history.endedAt) {
-                        {{ formatDateTime(history.endedAt) }}
-                      } @else {
-                        Current
-                      }
-                    </strong>
-                  </div>
-                </div>
-              </article>
-            }
-          </div>
+          <p class="delivery-field__help">Status history is not available yet.</p>
         </div>
       </section>
 
@@ -681,19 +423,14 @@
         <button
           type="button"
           class="delivery-section__header"
-          [attr.aria-expanded]="
-            isSectionOpen('landlordConsecutives')
-          "
+          [attr.aria-expanded]="isSectionOpen('landlordConsecutives')"
           (click)="toggleSection('landlordConsecutives')"
         >
           <div>
             <span class="delivery-section__number">6</span>
             <h2>Landlords & Consecutives</h2>
 
-            <p>
-              Associate each landlord with its corresponding
-              approval consecutive.
-            </p>
+            <p>Associate each landlord with its corresponding approval consecutive.</p>
           </div>
 
           <span class="delivery-section__chevron">
@@ -707,39 +444,24 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('landlordConsecutives')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('landlordConsecutives')"
         >
-          <div
-            class="landlord-list"
-            formArrayName="landlordConsecutives"
-          >
-            @for (
-              item of landlordConsecutives.controls;
-              track item;
-              let index = $index
-            ) {
-              <article
-                class="landlord-item"
-                [formGroupName]="index"
-              >
+          <div class="landlord-list" formArrayName="landlordConsecutives">
+            @for (item of landlordConsecutives.controls; track item; let index = $index) {
+              <article class="landlord-item" [formGroupName]="index">
                 <header class="landlord-item__header">
                   <div>
-                    <strong>
-                      Landlord {{ index + 1 }}
-                    </strong>
+                    <strong> Landlord {{ index + 1 }} </strong>
 
-                    <small>
-                      One consecutive belongs to one landlord.
-                    </small>
+                    <small> One consecutive belongs to one landlord. </small>
                   </div>
 
-                  @if (landlordConsecutives.length > 1) {
+                  @if (landlordConsecutives.length > 0) {
                     <button
                       type="button"
                       class="item-remove"
                       (click)="removeLandlordConsecutive(index)"
+                      [disabled]="saving() || saved()"
                     >
                       Remove
                     </button>
@@ -748,52 +470,60 @@
 
                 <div class="repeatable-grid">
                   <div class="delivery-field">
-                    <label [for]="'landlord-' + index">
-                      Landlord
+                    <label [for]="'landlord-' + index"> Landlord </label>
+
+                    <select [id]="'landlord-' + index" formControlName="landlord">
+                      <option [ngValue]="null">Select a landlord</option>
 
                       @if (
-                        editForm.controls.status.value
-                          === 'TERMINADO'
+                        item.controls.landlord.value !== null &&
+                        !hasOption(landlords, item.controls.landlord.value)
                       ) {
-                        <span>*</span>
-                      }
-                    </label>
-
-                    <select
-                      [id]="'landlord-' + index"
-                      formControlName="landlord"
-                    >
-                      <option value="">
-                        Select a landlord
-                      </option>
-
-                      @for (
-                        landlord of landlords;
-                        track landlord
-                      ) {
-                        <option [value]="landlord">
-                          {{ landlord }}
+                        <option [ngValue]="item.controls.landlord.value" disabled>
+                          Current option unavailable — select an active option
                         </option>
+                      }
+                      @for (landlord of landlords; track landlord.id) {
+                        <option [ngValue]="landlord.id">{{ landlord.name }}</option>
                       }
                     </select>
                   </div>
 
                   <div class="delivery-field">
-                    <label [for]="'consecutive-' + index">
-                      Consecutive
-
-                      @if (
-                        editForm.controls.status.value
-                          === 'TERMINADO'
-                      ) {
-                        <span>*</span>
-                      }
-                    </label>
+                    <label [for]="'consecutive-' + index"> Consecutive </label>
 
                     <input
                       [id]="'consecutive-' + index"
                       type="text"
                       formControlName="consecutive"
+                      maxlength="50"
+                    />
+                  </div>
+                  <div class="delivery-field">
+                    <label [for]="'metersCoundiut-' + index">Conduit meters</label>
+                    <input
+                      [id]="'metersCoundiut-' + index"
+                      type="number"
+                      step="1"
+                      formControlName="metersCoundiut"
+                    />
+                  </div>
+                  <div class="delivery-field">
+                    <label [for]="'postsQuantity-' + index">Posts quantity</label>
+                    <input
+                      [id]="'postsQuantity-' + index"
+                      type="number"
+                      step="1"
+                      formControlName="postsQuantity"
+                    />
+                  </div>
+                  <div class="delivery-field">
+                    <label [for]="'aditionalNumber-' + index">Additional number</label>
+                    <input
+                      [id]="'aditionalNumber-' + index"
+                      type="number"
+                      step="1"
+                      formControlName="aditionalNumber"
                     />
                   </div>
                 </div>
@@ -805,6 +535,7 @@
             type="button"
             class="repeatable-add"
             (click)="addLandlordConsecutive()"
+            [disabled]="saving() || saved()"
           >
             <span aria-hidden="true">+</span>
             Add Landlord & Consecutive
@@ -840,55 +571,45 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('assignment')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('assignment')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="eaim">
-                EAIM <span>*</span>
-              </label>
+              <label for="eaim"> EAIM <span>*</span> </label>
 
-              <select
-                id="eaim"
-                formControlName="eaim"
-              >
-                <option value="">
-                  Select a contractor
-                </option>
+              <select id="eaim" formControlName="eaim">
+                <option [ngValue]="null">Select a contractor</option>
 
-                @for (
-                  contractor of contractors;
-                  track contractor
+                @if (
+                  editForm.controls.eaim.value !== null &&
+                  !hasOption(contractors, editForm.controls.eaim.value)
                 ) {
-                  <option [value]="contractor">
-                    {{ contractor }}
+                  <option [ngValue]="editForm.controls.eaim.value" disabled>
+                    Current option unavailable — select an active option
                   </option>
+                }
+                @for (contractor of contractors; track contractor.id) {
+                  <option [ngValue]="contractor.id">{{ contractor.name }}</option>
                 }
               </select>
             </div>
 
             <div class="delivery-field">
-              <label for="responsible">
-                Responsible <span>*</span>
-              </label>
+              <label for="responsible"> Responsible <span>*</span> </label>
 
-              <select
-                id="responsible"
-                formControlName="responsible"
-              >
-                <option value="">
-                  Select an engineer
-                </option>
+              <select id="responsible" formControlName="responsible">
+                <option [ngValue]="null">Select an engineer</option>
 
-                @for (
-                  responsible of responsibles;
-                  track responsible
+                @if (
+                  editForm.controls.responsible.value !== null &&
+                  !hasOption(responsibles, editForm.controls.responsible.value)
                 ) {
-                  <option [value]="responsible">
-                    {{ responsible }}
+                  <option [ngValue]="editForm.controls.responsible.value" disabled>
+                    Current option unavailable — select an active option
                   </option>
+                }
+                @for (responsible of responsibles; track responsible.id) {
+                  <option [ngValue]="responsible.id">{{ responsible.name }}</option>
                 }
               </select>
             </div>
@@ -911,9 +632,7 @@
             <span class="delivery-section__number">8</span>
             <h2>Costs</h2>
 
-            <p>
-              Survey, budget and installation cost information.
-            </p>
+            <p>Survey, budget and installation cost information.</p>
           </div>
 
           <span class="delivery-section__chevron">
@@ -927,82 +646,61 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('costs')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('costs')"
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="surveyCost">
-                Survey Cost <span>*</span>
-              </label>
+              <label for="surveyCost"> Survey Cost <span>*</span> </label>
 
               <input
                 id="surveyCost"
-                cimsCurrencyInput
-                type="text"
-                inputmode="numeric"
+                type="number"
+                step="any"
+                inputmode="decimal"
                 formControlName="surveyCost"
                 placeholder="$ 0"
               />
             </div>
 
             <div class="delivery-field">
-              <label for="installationBudget">
-                Installation Budget <span>*</span>
-              </label>
+              <label for="installationBudget"> Installation Budget <span>*</span> </label>
 
               <input
                 id="installationBudget"
-                cimsCurrencyInput
-                type="text"
-                inputmode="numeric"
+                type="number"
+                step="any"
+                inputmode="decimal"
                 formControlName="installationBudget"
                 placeholder="$ 0"
               />
             </div>
           </div>
 
-          <div
-            class="installation-costs"
-            formArrayName="installationCosts"
-          >
+          <div class="installation-costs" formArrayName="installationCosts">
             <header class="repeatable-heading">
               <div>
                 <strong>Installation Costs</strong>
 
-                <small>
-                  Each additional cost must have a measurable cause.
-                </small>
+                <small> Each additional cost must have a measurable cause. </small>
               </div>
             </header>
 
             <div class="installation-costs__list">
-              @for (
-                item of installationCosts.controls;
-                track item;
-                let index = $index
-              ) {
-                <article
-                  class="installation-cost-item"
-                  [formGroupName]="index"
-                >
+              @for (item of installationCosts.controls; track item; let index = $index) {
+                <article class="installation-cost-item" [formGroupName]="index">
                   <header class="landlord-item__header">
                     <div>
-                      <strong>
-                        Installation Cost {{ index + 1 }}
-                      </strong>
+                      <strong> Installation Cost {{ index + 1 }} </strong>
 
-                      <small>
-                        Identify why this cost was generated.
-                      </small>
+                      <small> Identify why this cost was generated. </small>
                     </div>
 
-                    @if (installationCosts.length > 1) {
+                    @if (installationCosts.length > 0) {
                       <button
                         type="button"
                         class="item-remove"
                         (click)="removeInstallationCost(index)"
+                        [disabled]="saving() || saved()"
                       >
                         Remove
                       </button>
@@ -1011,43 +709,33 @@
 
                   <div class="repeatable-grid">
                     <div class="delivery-field">
-                      <label [for]="'cost-cause-' + index">
-                        Cost Cause <span>*</span>
-                      </label>
+                      <label [for]="'cost-cause-' + index"> Cost Cause <span>*</span> </label>
 
-                      <select
-                        [id]="'cost-cause-' + index"
-                        formControlName="cause"
-                      >
-                        <option value="">
-                          Select a cost cause
-                        </option>
+                      <select [id]="'cost-cause-' + index" formControlName="cause">
+                        <option [ngValue]="null">Select a cost cause</option>
 
-                        @for (
-                          cause of installationCostCauses;
-                          track cause
+                        @if (
+                          item.controls.cause.value !== null &&
+                          !hasOption(installationCostCauses, item.controls.cause.value)
                         ) {
-                          <option [value]="cause">
-                            {{
-                              installationCostCauseLabel(
-                                cause
-                              )
-                            }}
+                          <option [ngValue]="item.controls.cause.value" disabled>
+                            Current option unavailable — select an active option
                           </option>
+                        }
+                        @for (cause of installationCostCauses; track cause.id) {
+                          <option [ngValue]="cause.id">{{ cause.name }}</option>
                         }
                       </select>
                     </div>
 
                     <div class="delivery-field">
-                      <label [for]="'cost-amount-' + index">
-                        Amount <span>*</span>
-                      </label>
+                      <label [for]="'cost-amount-' + index"> Amount <span>*</span> </label>
 
                       <input
                         [id]="'cost-amount-' + index"
-                        cimsCurrencyInput
-                        type="text"
-                        inputmode="numeric"
+                        type="number"
+                        step="any"
+                        inputmode="decimal"
                         formControlName="amount"
                         placeholder="$ 0"
                       />
@@ -1061,6 +749,7 @@
               type="button"
               class="repeatable-add"
               (click)="addInstallationCost()"
+              [disabled]="saving() || saved()"
             >
               <span aria-hidden="true">+</span>
               Add Installation Cost
@@ -1097,55 +786,58 @@
 
         <div
           class="delivery-section__content"
-          [class.delivery-section__content--closed]="
-            !isSectionOpen('observations')
-          "
+          [class.delivery-section__content--closed]="!isSectionOpen('observations')"
         >
           <div class="delivery-field">
-            <label for="observations">
-              Observations <span>*</span>
-            </label>
+            <label for="observations"> Observations </label>
 
             <textarea
               id="observations"
               rows="5"
               formControlName="observations"
+              maxlength="500"
             ></textarea>
           </div>
         </div>
       </section>
 
+      @if (submitted() && editForm.invalid) {
+        <p class="delivery-field__error" role="alert">
+          Review required fields and select active options. Each added row must be complete.
+        </p>
+      }
+      @if (saveError()) {
+        <p class="delivery-field__error" role="alert">{{ saveError() }}</p>
+      }
+      @if (saved()) {
+        <p role="status">Delivery updated successfully.</p>
+      }
       <footer class="delivery-edit__footer">
         <button
           type="button"
           class="delivery-edit__cancel"
           (click)="cancel()"
+          [disabled]="saving()"
         >
           Cancel
         </button>
 
-        <button
-          type="submit"
-          class="delivery-edit__save"
-        >
-          Save Changes
+        <button type="submit" class="delivery-edit__save" [disabled]="saving() || saved()">
+          {{ saving() ? 'Saving…' : 'Save Changes' }}
         </button>
       </footer>
     </form>
+  } @else if (loading()) {
+    <p role="status">Loading delivery…</p>
   } @else {
     <section class="delivery-edit-empty">
-      <h1>Delivery not found</h1>
+      <h1>Delivery unavailable</h1>
 
       <p>
-        The requested delivery could not be found.
+        {{ loadError() }}
       </p>
 
-      <a
-        routerLink="/delivery"
-        class="delivery-edit-empty__action"
-      >
-        Back to Delivery
-      </a>
+      <a routerLink="/delivery" class="delivery-edit-empty__action"> Back to Delivery </a>
     </section>
   }
 </section>
