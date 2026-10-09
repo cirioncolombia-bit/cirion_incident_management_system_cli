@@ -561,8 +561,8 @@ export class Delivery {
     this.currentPage.set(page);
   }
 
-  startEdit(_delivery: DeliveryItem): void {
-    // Editing will be enabled when the real update endpoint is integrated.
+  startEdit(delivery: DeliveryItem): void {
+    void this.router.navigate(['/delivery', delivery.id, 'edit']);
   }
 
   cancelEdit(): void {
