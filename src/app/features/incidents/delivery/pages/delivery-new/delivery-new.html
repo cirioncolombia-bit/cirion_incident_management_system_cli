@@ -42,7 +42,7 @@
   }
   @if (createdDeliveryId() !== null) {
     <p role="status">Delivery #{{ createdDeliveryId() }} created successfully.</p>
-    <a routerLink="/delivery">Back to deliveries</a>
+    <button type="button" (click)="acceptCreation()" [disabled]="navigatingToDelivery()">Aceptar</button>
   }
 
   <form
@@ -1400,3 +1400,14 @@
     </fieldset>
   </form>
 </section>
+<dialog #creationDialog class="delivery-success-dialog" aria-labelledby="delivery-success-title"
+  aria-describedby="delivery-success-message">
+  <h2 id="delivery-success-title">Delivery creado exitosamente</h2>
+  <p id="delivery-success-message">El Delivery #{{ createdDeliveryId() }} se creó exitosamente.</p>
+  @if (saveError()) {
+    <p role="alert">{{ saveError() }}</p>
+  }
+  <button class="delivery-new__save" type="button" autofocus (click)="acceptCreation()" [disabled]="navigatingToDelivery()">
+    {{ navigatingToDelivery() ? 'Abriendo Delivery…' : 'Aceptar' }}
+  </button>
+</dialog>

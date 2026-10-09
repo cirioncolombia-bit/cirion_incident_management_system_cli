@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DeliveryService } from '../../services/delivery.service';
 import { DeliverySummary } from '../../models/delivery-summary';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
@@ -11,7 +11,7 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 type DeliveryStatus = string;
 type DeliveryTechnology = string;
@@ -92,6 +92,21 @@ const noWhitespaceValidator: ValidatorFn = (
   styleUrl: './delivery.scss',
 })
 export class Delivery {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  readonly filteredDeliveryId = computed(() => {
+    const raw = this.queryParams().get('deliveryId');
+    if (raw === null || !/^\d+$/.test(raw)) return null;
+    const id = Number(raw);
+    return Number.isInteger(id) && id > 0 && id <= 2147483647 ? id : null;
+  });
+  readonly invalidDeliveryIdFilter = computed(() =>
+    this.queryParams().has('deliveryId') && this.filteredDeliveryId() === null,
+  );
+
   private readonly formBuilder =
     inject(FormBuilder);
 
@@ -176,6 +191,11 @@ export class Delivery {
   readonly deliveries = signal<readonly DeliveryItem[]>([]);
 
   constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.searchTerm.set('');
+      this.selectedStatus.set('TODOS');
+      this.currentPage.set(1);
+    });
     this.loadDeliveries();
   }
 
@@ -444,10 +464,9 @@ export class Delivery {
               .toLocaleLowerCase()
               .includes(search);
 
-          return (
-            matchesStatus
-            && matchesSearch
-          );
+          const matchesId = !this.invalidDeliveryIdFilter()
+            && (this.filteredDeliveryId() === null || delivery.id === this.filteredDeliveryId());
+          return matchesId && matchesStatus && matchesSearch;
         },
       );
     });
@@ -524,6 +543,11 @@ export class Delivery {
   }
 
   clearFilters(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { deliveryId: null },
+      queryParamsHandling: 'merge',
+    });
     this.searchTerm.set('');
     this.selectedStatus.set('TODOS');
     this.currentPage.set(1);

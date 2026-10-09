@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DeliveryService } from '../../services/delivery.service';
 import { DeliveryCreateOptions } from '../../models/delivery-create-options';
 import { AuthService } from '../../../../auth/services/auth.service';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -16,7 +16,7 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { CurrencyInputDirective } from './currency-input.directive';
 
@@ -95,6 +95,9 @@ const optionalCostValidator: ValidatorFn = (control) => {
   styleUrl: './delivery-new.scss',
 })
 export class DeliveryNew {
+  private readonly router = inject(Router);
+  private readonly creationDialog = viewChild.required<ElementRef<HTMLDialogElement>>('creationDialog');
+  readonly navigatingToDelivery = signal(false);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -374,6 +377,7 @@ export class DeliveryNew {
         next: (delivery) => {
           this.saving.set(false);
           this.createdDeliveryId.set(delivery.id);
+          this.creationDialog().nativeElement.showModal();
         },
         error: (error: HttpErrorResponse) => {
           this.saving.set(false);
@@ -389,6 +393,22 @@ export class DeliveryNew {
           }
         },
       });
+  }
+
+  async acceptCreation(): Promise<void> {
+    const id = this.createdDeliveryId();
+    if (id === null || this.navigatingToDelivery()) return;
+    this.navigatingToDelivery.set(true);
+    try {
+      const navigated = await this.router.navigate(['/delivery'], { queryParams: { deliveryId: id } });
+      if (!navigated) {
+        this.saveError.set('El Delivery fue creado, pero no se pudo abrir el listado. Intenta aceptar nuevamente.');
+      }
+    } catch {
+      this.saveError.set('El Delivery fue creado, pero no se pudo abrir el listado. Intenta aceptar nuevamente.');
+    } finally {
+      this.navigatingToDelivery.set(false);
+    }
   }
 
   // ====================================================
