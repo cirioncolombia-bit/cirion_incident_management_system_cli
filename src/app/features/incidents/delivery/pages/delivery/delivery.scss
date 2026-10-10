@@ -1050,3 +1050,21 @@
     font-size: 2rem;
   }
 }
+.delivery-table__view-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.delivery-table__icon-action {
+  width: 2.25rem;
+  padding: 0;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.delivery-table__icon-action:focus-visible {
+  outline: 2px solid var(--cims-color-primary);
+  outline-offset: 2px;
+}
