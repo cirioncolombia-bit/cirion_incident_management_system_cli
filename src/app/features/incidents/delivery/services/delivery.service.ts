@@ -1,3 +1,4 @@
+import { DeliveryStatusHistoryData } from '../models/delivery-status-history';
 import { DeliveryEditData, UpdateDeliveryEdit } from '../models/delivery-edit';
 import { DeliverySummary } from '../models/delivery-summary';
 import { CreateDelivery, CreatedDelivery } from '../models/create-delivery';
@@ -10,6 +11,12 @@ import { ApiResponse, DeliveryCreateOptions } from '../models/delivery-create-op
 @Injectable({ providedIn: 'root' })
 export class DeliveryService {
   private readonly http = inject(HttpClient);
+
+  getStatusHistory(id: number) {
+    return this.http
+      .get<ApiResponse<DeliveryStatusHistoryData>>(`${environment.apiUrl}/api/Delivery/${id}/status-history`)
+      .pipe(map((response) => response.data));
+  }
 
   getEdit(id: number) {
     return this.http
