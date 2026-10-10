@@ -488,13 +488,13 @@
 }
 
 .delivery-status--progress {
-  color: #075985;
-  background: #e0f2fe;
+  color: #9a3412;
+  background: #ffedd5;
 }
 
 .delivery-status--stopped {
-  color: #92400e;
-  background: #fef3c7;
+  color: #991b1b;
+  background: #fee2e2;
 }
 
 .delivery-status--completed {
@@ -1067,4 +1067,40 @@
 .delivery-table__icon-action:focus-visible {
   outline: 2px solid var(--cims-color-primary);
   outline-offset: 2px;
+}
+
+.delivery-card__time-value.delivery-duration,
+.delivery-table__time strong.delivery-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.5rem;
+  color: #475569;
+  background: #f1f5f9;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+
+  &.delivery-duration--progress {
+    color: #9a3412;
+    background: #ffedd5;
+  }
+
+  &.delivery-duration--stopped {
+    color: #991b1b;
+    background: #fee2e2;
+  }
+
+  &.delivery-duration--completed {
+    color: #166534;
+    background: #dcfce7;
+  }
+}
+
+.delivery-duration__clock {
+  flex-shrink: 0;
 }
