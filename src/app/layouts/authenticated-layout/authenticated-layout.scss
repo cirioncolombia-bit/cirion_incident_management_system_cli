@@ -672,3 +672,5 @@
     }
   }
 }
+.app-header__user-info, .app-sidebar__user-info { min-width: 0; overflow-wrap: anywhere; }
+.app-header__user-info { max-width: 18rem; }

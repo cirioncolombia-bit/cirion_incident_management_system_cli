@@ -1,1 +1,210 @@
-<p>profile works!</p>
+<section class="profile" aria-labelledby="profile-title">
+  <header>
+    <p class="eyebrow">Mi cuenta</p>
+    <h1 id="profile-title">Mi perfil</h1>
+    <p>Consulta tu información y mantén actualizados tus datos personales.</p>
+  </header>
+  @if (loading()) {
+    <p role="status" class="panel">Cargando perfil…</p>
+  }
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" (click)="load()" [disabled]="saving() || loading()">Reintentar</button>
+    </div>
+  }
+  @if (notice()) {
+    <p role="status" class="alert success">{{ notice() }}</p>
+  }
+  @if (user(); as u) {
+    <div class="summary panel">
+      <div>
+        <h2>{{ u.fullName }}</h2>
+        <p>{{ u.email }}</p>
+      </div>
+      <span class="badge">{{ u.isActive ? 'Cuenta activa' : 'Cuenta inactiva' }}</span>
+    </div>
+    <div class="profile-grid">
+      <section class="panel personal" aria-labelledby="personal-title">
+        <h2 id="personal-title">Datos personales</h2>
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <fieldset [disabled]="saving() || loading() || !optionsReady()">
+            <legend class="visually-hidden">Editar datos personales</legend>
+            <div class="form-grid">
+              <label
+                >Primer nombre *<input
+                  formControlName="firstName"
+                  maxlength="100"
+                  autocomplete="given-name"
+                  required /></label
+              ><label
+                >Segundo nombre<input
+                  formControlName="secondName"
+                  maxlength="100"
+                  autocomplete="additional-name"
+              /></label>
+              <label
+                >Primer apellido *<input
+                  formControlName="firstSurname"
+                  maxlength="100"
+                  autocomplete="family-name"
+                  required /></label
+              ><label
+                >Segundo apellido<input formControlName="secondSurname" maxlength="100"
+              /></label>
+              <label
+                >Correo electrónico *<input
+                  type="email"
+                  formControlName="email"
+                  maxlength="255"
+                  autocomplete="email"
+                  required /></label
+              ><label
+                >Área *<select formControlName="areaId" required>
+                  <option value="">Selecciona un área</option>
+                  @for (area of areas(); track area.id) {
+                    <option [value]="area.id">{{ area.name }}</option>
+                  }
+                  @if (!hasArea(u.areaId)) {
+                    <option [value]="u.areaId">
+                      {{ u.areaName || 'Área actual' }} (inactiva; selecciona otra)
+                    </option>
+                  }
+                </select></label
+              >
+            </div>
+          </fieldset>
+          <p class="help">
+            Si cambias el correo, deberás iniciar sesión nuevamente con el nuevo correo.
+          </p>
+          <button
+            class="primary"
+            type="submit"
+            [disabled]="saving() || loading() || !optionsReady()"
+          >
+            {{ saving() ? 'Guardando…' : 'Guardar perfil' }}
+          </button>
+        </form>
+      </section>
+      <section class="panel access" aria-labelledby="access-title">
+        <h2 id="access-title">Información de acceso</h2>
+        <p class="help">Información administrada desde la sección Usuarios.</p>
+        <dl>
+          <div>
+            <dt>Identificador</dt>
+            <dd>#{{ u.id }}</dd>
+          </div>
+          <div>
+            <dt>Tipo de usuario</dt>
+            <dd>
+              {{ u.userType === 1 ? 'Interno' : u.userType === 2 ? 'Externo' : 'Sin clasificar' }}
+            </dd>
+          </div>
+          <div>
+            <dt>Compañía EAIM</dt>
+            <dd>{{ u.eaimName || 'Sin EAIM asociado' }}</dd>
+          </div>
+          @if (u.eaimId) {
+            <div>
+              <dt>Estado del EAIM</dt>
+              <dd>{{ u.eaimIsActive ? 'Activo' : 'Inactivo' }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Roles</dt>
+            <dd>
+              @for (role of u.roles; track role.id) {
+                <span class="tag" [attr.title]="role.description">{{ role.name }}</span>
+              } @empty {
+                Sin roles asignados
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Permisos efectivos</dt>
+            <dd>
+              @for (permission of u.permissions; track permission) {
+                <span class="tag">{{ permission }}</span>
+              } @empty {
+                Sin permisos asignados
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
+      <section class="panel security" aria-labelledby="security-title">
+        <h2 id="security-title">Cambiar contraseña</h2>
+        <form [formGroup]="password" (ngSubmit)="changePassword()">
+          <fieldset [disabled]="saving() || loading()">
+            <legend class="visually-hidden">Nueva contraseña</legend>
+            <label
+              >Contraseña actual *<input
+                type="password"
+                formControlName="currentPassword"
+                autocomplete="current-password"
+                required /></label
+            ><label
+              >Nueva contraseña *<input
+                type="password"
+                formControlName="newPassword"
+                autocomplete="new-password"
+                required /></label
+            ><label
+              >Confirmar nueva contraseña *<input
+                type="password"
+                formControlName="confirmPassword"
+                autocomplete="new-password"
+                required
+            /></label>
+          </fieldset>
+          @if (passwordError()) {
+            <p class="alert error" role="alert">{{ passwordError() }}</p>
+          }
+          <p class="help">
+            Al guardar, se cerrarán tus sesiones anteriores. Deberás iniciar sesión nuevamente.
+          </p>
+          <button type="submit" class="primary" [disabled]="saving() || loading()">
+            {{ saving() ? 'Procesando…' : 'Actualizar contraseña' }}
+          </button>
+        </form>
+      </section>
+      <section class="panel activity" aria-labelledby="activity-title">
+        <h2 id="activity-title">Datos de la cuenta</h2>
+        <dl>
+          <div>
+            <dt>Creación</dt>
+            <dd>{{ u.createAt | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Creado por</dt>
+            <dd>#{{ u.createdBy }}</dd>
+          </div>
+          <div>
+            <dt>Última actualización</dt>
+            <dd>{{ (u.updatedAt | date: 'medium') || 'Sin actualizaciones' }}</dd>
+          </div>
+          <div>
+            <dt>Actualizado por</dt>
+            <dd>{{ u.updatedBy === null ? 'Sin actualizaciones' : '#' + u.updatedBy }}</dd>
+          </div>
+          <div>
+            <dt>Último ingreso</dt>
+            <dd>{{ (u.lastLoginAt | date: 'medium') || 'Sin ingresos registrados' }}</dd>
+          </div>
+          <div>
+            <dt>Intentos fallidos consecutivos</dt>
+            <dd>{{ u.failedLoginAttempts ?? 0 }}</dd>
+          </div>
+          <div>
+            <dt>Bloqueo administrativo</dt>
+            <dd>{{ u.isLocked ? 'Sí' : 'No' }}</dd>
+          </div>
+          <div>
+            <dt>Bloqueo temporal hasta</dt>
+            <dd>{{ (u.lockedUntil | date: 'medium') || 'Sin bloqueo' }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+  }
+</section>
