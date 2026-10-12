@@ -176,12 +176,12 @@
     <div class="app-sidebar__account">
       <div class="app-sidebar__user">
         <span class="app-sidebar__avatar">
-          PG
+          {{ initials() }}
         </span>
 
         <div class="app-sidebar__user-info">
-          <strong>Pedro García</strong>
-          <span>Administrador</span>
+          <strong>{{ displayName() }}</strong>
+          <span>{{ roleNames() }}</span>
         </div>
       </div>
 
@@ -226,7 +226,7 @@
       </button>
 
       <div class="app-header__welcome">
-        <h1>Hola, Pedro 👋</h1>
+        <h1>{{ greeting() ? 'Hola, ' + greeting() + ' 👋' : 'Bienvenido a CIMS' }}</h1>
         <p>Bienvenido a CIMS</p>
       </div>
 
@@ -240,12 +240,12 @@
           (click)="toggleUserMenu()"
         >
           <span class="app-header__avatar">
-            PG
+            {{ initials() }}
           </span>
 
           <span class="app-header__user-info">
-            <strong>Pedro García</strong>
-            <span>Administrador</span>
+            <strong>{{ displayName() }}</strong>
+            <span>{{ roleNames() }}</span>
           </span>
 
           <span
@@ -284,6 +284,9 @@
     </header>
 
     <main class="app-content">
+      @if (accountError() && !currentUser()) {
+        <p role="alert">{{ accountError() }} <button type="button" (click)="loadAccount()">Reintentar</button></p>
+      }
       <router-outlet />
     </main>
   </div>

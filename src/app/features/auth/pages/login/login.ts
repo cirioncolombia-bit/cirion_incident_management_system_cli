@@ -21,6 +21,8 @@ export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  readonly notice = typeof history.state?.notice === 'string' ? history.state.notice : '';
+
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 

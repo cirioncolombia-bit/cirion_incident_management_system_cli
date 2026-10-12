@@ -52,6 +52,8 @@
         </p>
       </header>
 
+      @if (notice) { <p class="login__notice" role="status">{{ notice }}</p> }
+
       <form
         class="login__form"
         [formGroup]="form"
