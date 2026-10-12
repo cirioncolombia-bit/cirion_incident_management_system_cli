@@ -1,1 +1,437 @@
-<p>incidents works!</p>
+<section class="incidents" aria-labelledby="page-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Gestión de solicitudes</p>
+      <h1 id="page-title">{{ detailId() ? 'Detalle del incidente' : 'Incidentes' }}</h1>
+      <p>
+        {{
+          detailId()
+            ? 'Consulta la información, las observaciones y los archivos del incidente.'
+            : 'Registra incidentes y sigue sus actualizaciones en un solo lugar.'
+        }}
+      </p>
+    </div>
+    @if (detailId() || invalidId()) {
+      <button type="button" (click)="back()" [disabled]="saving()">← Volver al listado</button>
+    } @else if (canRead() && canWrite()) {
+      <button
+        type="button"
+        class="primary"
+        (click)="openCreate()"
+        [disabled]="!optionsReady() || loading()"
+      >
+        + Crear incidente
+      </button>
+    }
+  </header>
+  @if (checking()) {
+    <p class="panel" role="status">Verificando acceso…</p>
+  }
+  @if (notice()) {
+    <p class="alert success" role="status">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      @if (!invalidId()) {
+        <button type="button" (click)="retry()" [disabled]="loading()">Reintentar</button>
+      }
+    </div>
+  }
+  @if (!checking() && !canRead() && !error()) {
+    <p class="panel">Tu cuenta no tiene permiso para consultar incidentes.</p>
+  }
+  @if (canRead() && !invalidId()) {
+    @if (!detailId()) {
+      <form class="filters panel" [formGroup]="filters" (ngSubmit)="search()">
+        <label class="search"
+          >Buscar<input
+            type="search"
+            formControlName="search"
+            maxlength="200"
+            placeholder="Título o descripción"
+        /></label>
+        <label
+          >Tipo<select formControlName="typeId">
+            <option value="">Todos los tipos</option>
+            @for (o of options().types; track o.id) {
+              <option [value]="o.id">{{ o.name }}</option>
+            }
+          </select></label
+        >
+        <label
+          >Estado<select formControlName="statusId">
+            <option value="">Todos los estados</option>
+            @for (o of options().statuses; track o.id) {
+              <option [value]="o.id">{{ o.name }}</option>
+            }
+          </select></label
+        >
+        <label
+          >Responsable<select formControlName="assigneeId">
+            <option value="">Todos los responsables</option>
+            @for (o of options().users; track o.id) {
+              <option [value]="o.id">{{ o.name }}</option>
+            }
+          </select></label
+        >
+        <div class="filter-actions">
+          <button type="submit" [disabled]="loading()">Buscar</button
+          ><button type="button" class="quiet" (click)="clearFilters()" [disabled]="loading()">
+            Limpiar filtros
+          </button>
+        </div>
+      </form>
+      @if (loading()) {
+        <p role="status" class="panel">Cargando incidentes…</p>
+      } @else if (!error()) {
+        <p class="count">{{ total() }} incidentes</p>
+        <div class="records">
+          @for (incident of rows(); track incident.id) {
+            <article class="record">
+              <div class="record-top">
+                <span class="reference">#{{ incident.id }}</span
+                ><span class="badge">{{ incident.statusName }}</span>
+              </div>
+              <h2>{{ incident.title }}</h2>
+              <p class="preview">{{ incident.description }}</p>
+              <dl>
+                <div>
+                  <dt>Tipo</dt>
+                  <dd>{{ incident.typeName }}</dd>
+                </div>
+                <div>
+                  <dt>Responsable</dt>
+                  <dd>{{ incident.assigneeName || 'Sin asignar' }}</dd>
+                </div>
+                <div>
+                  <dt>Creado por</dt>
+                  <dd>{{ incident.creatorName }}</dd>
+                </div>
+                <div>
+                  <dt>Fecha de creación</dt>
+                  <dd>{{ incident.createAt | date: 'mediumDate' }}</dd>
+                </div>
+              </dl>
+              <button type="button" class="full" (click)="openDetail(incident.id)">
+                Ver detalle →
+              </button>
+            </article>
+          } @empty {
+            <div class="empty panel">
+              <h2>No hay incidentes para mostrar</h2>
+              <p>Prueba otros filtros o registra un nuevo incidente.</p>
+            </div>
+          }
+        </div>
+        @if (totalPages() > 0) {
+          <nav class="pagination" aria-label="Paginación de incidentes">
+            <button (click)="paginate(-1)" [disabled]="page() <= 1">Anterior</button
+            ><span>{{ page() }} / {{ totalPages() }}</span
+            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Siguiente</button>
+          </nav>
+        }
+      }
+    } @else {
+      @if (loading()) {
+        <p role="status" class="panel">Cargando información…</p>
+      }
+      @if (detail(); as data) {
+        <div class="detail-grid">
+          <section class="panel information" aria-labelledby="information-title">
+            <div class="record-top">
+              <span class="reference">#{{ data.incident.id }}</span
+              ><span class="badge">{{ data.incident.statusName }}</span>
+            </div>
+            <h2 id="information-title">{{ data.incident.title }}</h2>
+            <dl>
+              <div>
+                <dt>Tipo</dt>
+                <dd>{{ data.incident.typeName }}</dd>
+              </div>
+              <div>
+                <dt>Estado</dt>
+                <dd>{{ data.incident.statusName }}</dd>
+              </div>
+              <div>
+                <dt>Creado por</dt>
+                <dd>{{ data.incident.creatorName }}</dd>
+              </div>
+              <div>
+                <dt>Creación</dt>
+                <dd>{{ data.incident.createAt | date: 'medium' }}</dd>
+              </div>
+              <div>
+                <dt>Última actualización</dt>
+                <dd>{{ (data.incident.updatedAt | date: 'medium') || 'Sin actualizaciones' }}</dd>
+              </div>
+            </dl>
+            <h3>Descripción</h3>
+            <p class="multiline">{{ data.incident.description }}</p>
+            <div class="actions">
+              <button type="button" (click)="loadDetail()" [disabled]="loading() || saving()">
+                Actualizar detalle
+              </button>
+              @if (canWrite()) {
+                <button
+                  type="button"
+                  class="primary"
+                  (click)="openEdit('edit')"
+                  [disabled]="loading() || saving() || !optionsReady()"
+                >
+                  Editar incidente</button
+                ><button
+                  type="button"
+                  class="danger"
+                  (click)="confirmDeactivate()"
+                  [disabled]="saving() || loading()"
+                >
+                  Desactivar
+                </button>
+              }
+            </div>
+          </section>
+          <section class="panel responsibility" aria-labelledby="responsibility-title">
+            <h2 id="responsibility-title">Responsable</h2>
+            <p class="assignee">{{ data.incident.assigneeName || 'Sin asignar' }}</p>
+            <p class="help">Persona asignada para atender el incidente.</p>
+            @if (canWrite()) {
+              <button
+                type="button"
+                (click)="openEdit('assign')"
+                [disabled]="loading() || saving() || !optionsReady()"
+              >
+                {{ data.incident.assigneeId ? 'Cambiar responsable' : 'Asignar responsable' }}
+              </button>
+            }
+          </section>
+          <section class="panel observations" aria-labelledby="observations-title">
+            <h2 id="observations-title">
+              Observaciones <span class="count">({{ data.observations.length }})</span>
+            </h2>
+            <p class="help">Actualizaciones registradas por los usuarios del módulo.</p>
+            <ol class="timeline">
+              @for (item of data.observations; track item.id) {
+                <li>
+                  <div class="timeline-heading">
+                    <strong>{{ item.authorName }}</strong
+                    ><time [attr.datetime]="item.createAt">{{
+                      item.createAt | date: 'medium'
+                    }}</time>
+                  </div>
+                  <p class="multiline">{{ item.text }}</p>
+                </li>
+              } @empty {
+                <li class="empty">Todavía no hay observaciones.</li>
+              }
+            </ol>
+            @if (canWrite()) {
+              <form [formGroup]="observation" (ngSubmit)="addObservation()">
+                <label
+                  >Nueva observación<textarea
+                    formControlName="text"
+                    maxlength="10000"
+                    rows="4"
+                    placeholder="Describe el avance o la información que deseas compartir"
+                  ></textarea>
+                </label>
+                @if (observationError()) {
+                  <p class="alert error" role="alert">{{ observationError() }}</p>
+                }
+                <button class="primary" type="submit" [disabled]="saving() || loading()">
+                  {{ saving() ? 'Procesando…' : 'Agregar observación' }}
+                </button>
+              </form>
+            }
+          </section>
+          <section class="panel attachments" aria-labelledby="attachments-title">
+            <h2 id="attachments-title">
+              Archivos adjuntos <span class="count">({{ data.attachments.length }})</span>
+            </h2>
+            <ul class="files">
+              @for (file of data.attachments; track file.id) {
+                <li>
+                  <div>
+                    <strong>{{ file.fileName }}</strong
+                    ><span>{{ bytes(file.size) }} · {{ file.authorName }}</span
+                    ><time [attr.datetime]="file.createAt">{{
+                      file.createAt | date: 'medium'
+                    }}</time>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="download(file)"
+                    [disabled]="downloading() !== null"
+                  >
+                    {{ downloading() === file.id ? 'Descargando…' : 'Descargar' }}
+                  </button>
+                </li>
+              } @empty {
+                <li class="empty">No hay archivos adjuntos.</li>
+              }
+            </ul>
+            @if (fileError()) {
+              <p class="alert error" role="alert">{{ fileError() }}</p>
+            }
+            @if (canWrite()) {
+              <div class="upload">
+                <label
+                  >Adjuntar un archivo<input
+                    #fileInput
+                    type="file"
+                    (change)="chooseFile($event)"
+                    [disabled]="saving() || loading()"
+                /></label>
+                <p class="help">
+                  El servidor valida el tamaño permitido. Se adjunta un archivo por operación.
+                </p>
+                @if (selectedFile(); as file) {
+                  <p class="selected-file">{{ file.name }} · {{ bytes(file.size) }}</p>
+                }
+                <button
+                  type="button"
+                  (click)="upload()"
+                  [disabled]="!selectedFile() || saving() || loading()"
+                >
+                  {{ saving() ? 'Procesando…' : 'Subir archivo' }}
+                </button>
+              </div>
+            }
+          </section>
+        </div>
+      }
+    }
+  }
+</section>
+<dialog #editor aria-labelledby="editor-title" (cancel)="saving() ? $event.preventDefault() : null">
+  <header class="dialog-header">
+    <h2 id="editor-title">
+      {{
+        mode() === 'create'
+          ? 'Crear incidente'
+          : mode() === 'assign'
+            ? 'Asignar responsable'
+            : 'Editar incidente'
+      }}
+    </h2>
+    <button type="button" aria-label="Cerrar formulario" (click)="close()" [disabled]="saving()">
+      ×
+    </button>
+  </header>
+  @if (formError()) {
+    <p class="alert error" role="alert">{{ formError() }}</p>
+  }
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <fieldset [disabled]="saving()">
+      <legend class="visually-hidden">Datos del incidente</legend>
+      @if (mode() === 'assign') {
+        <label
+          >Usuario responsable<select formControlName="assigneeId">
+            <option value="">Sin asignar</option>
+            @for (o of options().users; track o.id) {
+              <option [value]="o.id">{{ o.name }}</option>
+            }
+            @if (detail(); as d) {
+              @if (d.incident.assigneeId && !hasOption('users', d.incident.assigneeId)) {
+                <option [value]="d.incident.assigneeId">
+                  {{ d.incident.assigneeName }} (inactivo; selecciona otro)
+                </option>
+              }
+            }
+          </select></label
+        >
+        <p class="help">Selecciona un usuario activo o retira la asignación.</p>
+      } @else {
+        <label
+          >Título *<input
+            formControlName="title"
+            maxlength="200"
+            required
+            [attr.aria-invalid]="form.controls.title.touched && form.controls.title.invalid"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Tipo de incidente *<select formControlName="typeId" required>
+              <option value="">Selecciona un tipo</option>
+              @for (o of options().types; track o.id) {
+                <option [value]="o.id">{{ o.name }}</option>
+              }
+              @if (detail(); as d) {
+                @if (mode() === 'edit' && !hasOption('types', d.incident.typeId)) {
+                  <option [value]="d.incident.typeId">
+                    {{ d.incident.typeName }} (inactivo; selecciona otro)
+                  </option>
+                }
+              }
+            </select></label
+          >
+          <label
+            >Estado<select formControlName="statusId">
+              <option value="">
+                {{
+                  mode() === 'create'
+                    ? 'Usar el estado inicial configurado'
+                    : 'Selecciona un estado'
+                }}
+              </option>
+              @for (o of options().statuses; track o.id) {
+                <option [value]="o.id">{{ o.name }}</option>
+              }
+              @if (detail(); as d) {
+                @if (mode() === 'edit' && !hasOption('statuses', d.incident.statusId)) {
+                  <option [value]="d.incident.statusId">
+                    {{ d.incident.statusName }} (inactivo; selecciona otro)
+                  </option>
+                }
+              }
+            </select></label
+          >
+        </div>
+        <label
+          >Descripción *<textarea
+            formControlName="description"
+            rows="6"
+            maxlength="10000"
+            required
+            [attr.aria-invalid]="
+              form.controls.description.touched && form.controls.description.invalid
+            "
+          ></textarea>
+        </label>
+        <p class="help">
+          Después de crear el incidente podrás asignar un responsable, agregar observaciones y
+          adjuntar archivos.
+        </p>
+      }
+    </fieldset>
+    <footer class="dialog-actions">
+      <button type="button" (click)="close()" [disabled]="saving()">Cancelar</button
+      ><button type="submit" class="primary" [disabled]="saving() || !optionsReady()">
+        {{ saving() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </footer>
+  </form>
+</dialog>
+<dialog
+  #confirmation
+  aria-labelledby="confirmation-title"
+  (cancel)="saving() ? $event.preventDefault() : null"
+>
+  <h2 id="confirmation-title">¿Desactivar el incidente?</h2>
+  <p>
+    <strong>{{ detail()?.incident?.title }}</strong>
+  </p>
+  <p>
+    Dejará de aparecer en el listado. Las observaciones, los archivos y las relaciones históricas se
+    conservarán.
+  </p>
+  @if (formError()) {
+    <p class="alert error" role="alert">{{ formError() }}</p>
+  }
+  <footer class="dialog-actions">
+    <button type="button" (click)="cancelDeactivate()" [disabled]="saving()">Cancelar</button
+    ><button type="button" class="danger" (click)="deactivate()" [disabled]="saving()">
+      {{ saving() ? 'Desactivando…' : 'Desactivar' }}
+    </button>
+  </footer>
+</dialog>
