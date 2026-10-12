@@ -1,1 +1,456 @@
-<p>users-list works!</p>
+<section class="admin" aria-labelledby="admin-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Administración</p>
+      <h1 id="admin-title">Usuarios y acceso</h1>
+      <p>Gestiona personas, roles, permisos y compañías desde un solo lugar.</p>
+    </div>
+  </header>
+  @if (checking()) {
+    <p role="status" class="panel">Verificando acceso…</p>
+  }
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" (click)="retry()" [disabled]="loading()">Reintentar</button>
+    </div>
+  }
+  @if (notice()) {
+    <p class="alert success" role="status">{{ notice() }}</p>
+  }
+  @if (!checking() && me()) {
+    <nav class="tabs" aria-label="Secciones de administración">
+      @for (tab of tabs; track tab.key) {
+        @if (allowed(tab.key)) {
+          <button
+            type="button"
+            [class.active]="section() === tab.key"
+            [attr.aria-pressed]="section() === tab.key"
+            (click)="switchSection(tab.key)"
+            [disabled]="loading()"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      }
+    </nav>
+    @if (allowed(section())) {
+      <div class="section-heading">
+        <div>
+          <h2>{{ title().label }}</h2>
+          <p>{{ title().description }}</p>
+        </div>
+        <button
+          class="primary"
+          type="button"
+          (click)="openNew()"
+          [disabled]="loading() || (section() === 'users' && !optionsReady())"
+        >
+          + Crear
+          {{
+            section() === 'users'
+              ? 'usuario'
+              : section() === 'roles'
+                ? 'rol'
+                : section() === 'permissions'
+                  ? 'permiso'
+                  : 'EAIM'
+          }}
+        </button>
+      </div>
+      <form class="filters panel" [formGroup]="filters" (ngSubmit)="search()">
+        <label class="search"
+          >Buscar<input
+            formControlName="search"
+            maxlength="200"
+            placeholder="Nombre, correo o descripción"
+            type="search"
+        /></label>
+        @if (section() === 'users') {
+          <label
+            >Compañía<select formControlName="eaimId">
+              <option value="">Todas</option>
+              @for (o of options().eaims; track o.id) {
+                <option [value]="o.id">{{ o.name }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Rol<select formControlName="roleId">
+              <option value="">Todos</option>
+              @for (o of options().roles; track o.id) {
+                <option [value]="o.id">{{ o.name }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Tipo<select formControlName="userType">
+              <option value="">Todos</option>
+              <option value="1">Interno</option>
+              <option value="2">Externo</option>
+            </select></label
+          >
+          <label class="check"
+            ><input type="checkbox" formControlName="includeInactive" />Incluir inactivos</label
+          >
+        }
+        <button type="submit" [disabled]="loading()">Buscar</button>
+      </form>
+      @if (loading()) {
+        <p role="status">Cargando registros…</p>
+      } @else if (!error()) {
+        <p class="count">{{ total() }} registros</p>
+        <div class="records">
+          @if (section() === 'users') {
+            @for (u of users(); track u.id) {
+              <article class="record">
+                <div class="record-top">
+                  <h3>{{ fullName(u) }}</h3>
+                  <span class="badge" [class.inactive]="!u.isActive">{{
+                    u.isActive ? 'Activo' : 'Inactivo'
+                  }}</span>
+                </div>
+                <p>{{ u.email }}</p>
+                <dl>
+                  <div>
+                    <dt>Área</dt>
+                    <dd>{{ u.areaName || 'Sin área' }}</dd>
+                  </div>
+                  <div>
+                    <dt>EAIM</dt>
+                    <dd>{{ u.eaimName || 'Sin EAIM' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Tipo</dt>
+                    <dd>
+                      {{
+                        u.userType === 1
+                          ? 'Interno'
+                          : u.userType === 2
+                            ? 'Externo'
+                            : 'Sin clasificar'
+                      }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Roles</dt>
+                    <dd>
+                      @for (r of u.roles; track r.id) {
+                        <span class="tag">{{ r.name }}</span>
+                      } @empty {
+                        Sin roles
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <div class="actions">
+                  <button (click)="openUser(u, 'detail')">Ver detalle</button>
+                  @if (u.isActive) {
+                    <button (click)="openUser(u, 'edit')">Editar</button
+                    ><button (click)="openUser(u, 'roles')">Roles</button
+                    ><button class="danger" (click)="confirmDelete(u.id, fullName(u))">
+                      Desactivar
+                    </button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <p class="empty panel">No hay usuarios con los filtros seleccionados.</p>
+            }
+          } @else {
+            @for (c of filteredCatalogs(); track c.id) {
+              <article class="record">
+                <h3>{{ c.name || c.code }}</h3>
+                <p>{{ c.description }}</p>
+                @if (section() === 'roles') {
+                  <p class="count">{{ c.permissionIds?.length || 0 }} permisos asignados</p>
+                }
+                <div class="actions">
+                  <button (click)="open(c)">Ver y editar</button
+                  ><button class="danger" (click)="confirmDelete(c.id, c.name || c.code || '')">
+                    Desactivar
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <p class="empty panel">No hay registros para mostrar.</p>
+            }
+          }
+        </div>
+        @if (section() === 'users' && totalPages() > 0) {
+          <nav class="pagination" aria-label="Paginación">
+            <button (click)="paginate(-1)" [disabled]="page() <= 1">Anterior</button
+            ><span>{{ page() }} / {{ totalPages() }}</span
+            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Siguiente</button>
+          </nav>
+        }
+      }
+    } @else {
+      <p class="panel">Tu cuenta no tiene permisos para administrar estos registros.</p>
+    }
+  }
+</section>
+<dialog #editor aria-labelledby="editor-title" (cancel)="saving() ? $event.preventDefault() : null">
+  <header class="dialog-header">
+    <h2 id="editor-title">
+      {{
+        mode() === 'detail'
+          ? 'Detalle del usuario'
+          : mode() === 'roles'
+            ? 'Asignar roles'
+            : mode() === 'new'
+              ? 'Crear registro'
+              : 'Editar registro'
+      }}
+    </h2>
+    <button type="button" aria-label="Cerrar formulario" (click)="close()" [disabled]="saving()">
+      ×
+    </button>
+  </header>
+  @if (formError()) {
+    <p class="alert error" role="alert">{{ formError() }}</p>
+  }
+  @if (loading()) {
+    <p role="status">Cargando información…</p>
+  }
+  @if (mode() === 'detail') {
+    @if (selected(); as u) {
+      <h3>{{ fullName(u) }}</h3>
+      <dl class="detail">
+        <div>
+          <dt>Correo</dt>
+          <dd>{{ u.email }}</dd>
+        </div>
+        <div>
+          <dt>Área</dt>
+          <dd>{{ u.areaName || 'Sin área' }}</dd>
+        </div>
+        <div>
+          <dt>EAIM</dt>
+          <dd>{{ u.eaimName || 'Sin EAIM' }}</dd>
+        </div>
+        <div>
+          <dt>Tipo</dt>
+          <dd>
+            {{ u.userType === 1 ? 'Interno' : u.userType === 2 ? 'Externo' : 'Sin clasificar' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Estado</dt>
+          <dd>{{ u.isActive ? 'Activo' : 'Inactivo' }}</dd>
+        </div>
+        <div>
+          <dt>Roles</dt>
+          <dd>
+            @for (r of u.roles; track r.id) {
+              <span class="tag">{{ r.name }}</span>
+            } @empty {
+              Sin roles
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Intentos fallidos</dt>
+          <dd>{{ u.failedLoginAttempts ?? 0 }}</dd>
+        </div>
+        <div>
+          <dt>Bloqueo administrativo</dt>
+          <dd>{{ u.isLocked ? 'Sí' : 'No' }}</dd>
+        </div>
+        <div>
+          <dt>Bloqueo temporal hasta</dt>
+          <dd>{{ (u.lockedUntil | date: 'medium') || 'Sin bloqueo' }}</dd>
+        </div>
+        <div>
+          <dt>Último ingreso</dt>
+          <dd>{{ (u.lastLoginAt | date: 'medium') || 'Sin ingresos registrados' }}</dd>
+        </div>
+        <div>
+          <dt>Creado</dt>
+          <dd>{{ u.createAt | date: 'medium' }}</dd>
+        </div>
+      </dl>
+    }
+    <button type="button" (click)="close()">Cerrar</button>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <fieldset [disabled]="saving() || loading()">
+        <legend class="visually-hidden">Datos del registro</legend>
+        @if (section() === 'users' && mode() !== 'roles') {
+          <h3>Información personal</h3>
+          <div class="form-grid">
+            <label
+              >Primer nombre *<input
+                formControlName="firstName"
+                maxlength="100"
+                autocomplete="given-name"
+                required /></label
+            ><label>Segundo nombre<input formControlName="secondName" maxlength="100" /></label>
+            <label
+              >Primer apellido *<input
+                formControlName="firstSurname"
+                maxlength="100"
+                autocomplete="family-name"
+                required /></label
+            ><label
+              >Segundo apellido<input formControlName="secondSurname" maxlength="100"
+            /></label>
+            <label
+              >Correo *<input
+                formControlName="email"
+                type="email"
+                maxlength="255"
+                autocomplete="email"
+                required
+            /></label>
+            @if (mode() === 'new') {
+              <label
+                >Contraseña inicial *<input
+                  formControlName="password"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+              /></label>
+            }
+          </div>
+          <h3>Compañía y clasificación</h3>
+          <div class="form-grid">
+            <label
+              >Área *<select formControlName="areaId" required>
+                <option value="">Selecciona un área</option>
+                @for (o of options().areas; track o.id) {
+                  <option [value]="o.id">{{ o.name }}</option>
+                }
+                @if (selected(); as u) {
+                  @if (!hasOption('areas', u.areaId)) {
+                    <option [value]="u.areaId">{{ u.areaName }} (inactiva; selecciona otra)</option>
+                  }
+                }
+              </select></label
+            >
+            <label
+              >Tipo de usuario *<select formControlName="userType" required>
+                <option value="">Selecciona el tipo</option>
+                <option value="1">Interno</option>
+                <option value="2">Externo</option>
+              </select></label
+            >
+            <label
+              >EAIM (opcional)<select formControlName="eaimId">
+                <option value="">Sin EAIM</option>
+                @for (o of options().eaims; track o.id) {
+                  <option [value]="o.id">{{ o.name }}</option>
+                }
+                @if (selected(); as u) {
+                  @if (u.eaimId && !hasOption('eaims', u.eaimId)) {
+                    <option [value]="u.eaimId">{{ u.eaimName }} (inactivo; selecciona otro)</option>
+                  }
+                }
+              </select></label
+            >
+          </div>
+          <p class="help">
+            Un usuario vinculado a EAIM solo podrá acceder a esa compañía. Un externo sin EAIM no
+            tendrá acceso a sus registros.
+          </p>
+        }
+        @if (section() === 'users' && (mode() === 'new' || mode() === 'roles')) {
+          <fieldset class="choices">
+            <legend>Roles del usuario</legend>
+            <p class="help">Puedes seleccionar varios. Sin roles, el usuario no tendrá permisos.</p>
+            @for (r of options().roles; track r.id) {
+              <label class="check"
+                ><input
+                  type="checkbox"
+                  [checked]="selectedIds().includes(r.id)"
+                  (change)="toggle(r.id, $any($event.target).checked)"
+                /><span
+                  ><strong>{{ r.name }}</strong
+                  ><small>{{ r.description }}</small></span
+                ></label
+              >
+            } @empty {
+              <p>No hay roles activos disponibles.</p>
+            }
+          </fieldset>
+        }
+        @if (section() !== 'users') {
+          @if (section() === 'permissions') {
+            <label
+              >Código del permiso *<input formControlName="code" maxlength="100" required
+            /></label>
+            <p class="help">
+              Los códigos utilizados por los endpoints deben conservarse para mantener el acceso.
+              Crear un código no crea una nueva función.
+            </p>
+          } @else {
+            <label>Nombre *<input formControlName="name" maxlength="100" required /></label>
+          }
+          @if (section() !== 'eaims') {
+            <label
+              >Descripción{{ section() === 'permissions' ? ' *' : ''
+              }}<textarea formControlName="description" maxlength="500" rows="3"></textarea>
+            </label>
+          }
+          @if (section() === 'roles') {
+            <fieldset class="choices">
+              <legend>Permisos del rol</legend>
+              @for (p of permissions(); track p.id) {
+                <label class="check"
+                  ><input
+                    type="checkbox"
+                    [checked]="selectedIds().includes(p.id)"
+                    (change)="toggle(p.id, $any($event.target).checked)"
+                  /><span
+                    ><strong>{{ p.code }}</strong
+                    ><small>{{ p.description }}</small></span
+                  ></label
+                >
+              } @empty {
+                <p>No hay permisos activos disponibles.</p>
+              }
+            </fieldset>
+          }
+        }
+      </fieldset>
+      <footer class="dialog-actions">
+        <button type="button" (click)="close()" [disabled]="saving()">Cancelar</button
+        ><button
+          class="primary"
+          type="submit"
+          [disabled]="
+            saving() || loading() || !formReady() || (section() === 'users' && !optionsReady())
+          "
+        >
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </footer>
+    </form>
+  }
+</dialog>
+<dialog
+  #confirmation
+  aria-labelledby="confirmation-title"
+  (cancel)="saving() ? $event.preventDefault() : null"
+>
+  <h2 id="confirmation-title">¿Desactivar este registro?</h2>
+  <p>
+    <strong>{{ deletion()?.name }}</strong>
+  </p>
+  <p>
+    Dejará de estar disponible para nuevas operaciones. Su información y relaciones históricas se
+    conservarán.
+  </p>
+  @if (section() === 'roles' || section() === 'permissions') {
+    <p class="help">Los usuarios que dependan de este registro pueden perder permisos de acceso.</p>
+  }
+  @if (formError()) {
+    <p class="alert error" role="alert">{{ formError() }}</p>
+  }
+  <footer class="dialog-actions">
+    <button (click)="cancelDelete()" [disabled]="saving()">Cancelar</button
+    ><button class="danger" (click)="deactivate()" [disabled]="saving()">
+      {{ saving() ? 'Desactivando…' : 'Desactivar' }}
+    </button>
+  </footer>
+</dialog>
