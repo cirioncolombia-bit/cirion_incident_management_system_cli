@@ -634,6 +634,12 @@ export class Delivery {
     ).format(numericValue);
   }
 
+  installationOverBudget(delivery: DeliveryItem): boolean {
+    if (delivery.installationCost == null || delivery.installationBudget == null) return false;
+    const cost = Number(delivery.installationCost), budget = Number(delivery.installationBudget);
+    return Number.isFinite(cost) && Number.isFinite(budget) && cost > budget;
+  }
+
   statusTone(status: DeliveryStatus): string {
     const normalized = status.trim().toUpperCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
     if (/CLIENT|CUSTOMER/.test(normalized) && /DETENID|STOP|HOLD|PAUS/.test(normalized)) return 'client-stopped';
