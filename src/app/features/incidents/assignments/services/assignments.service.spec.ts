@@ -19,11 +19,17 @@ describe('Assignments API contracts', () => {
     http.expectOne(`${base}/deliveries/128`).flush({ data: {} });
   });
   it('loads a paginated port list scoped to Delivery and GCO', () => {
-    api.ports(128, 3, 2, 'equipo').subscribe();
+    api.ports(128, 3, 2, 'equipo', 4, 6).subscribe();
     const r = http.expectOne((req) => req.url === `${base}/deliveries/128/gcos/3/ports`);
     expect(r.request.params.get('Page')).toBe('2');
     expect(r.request.params.get('Search')).toBe('equipo');
+    expect(r.request.params.get('FiberTrayId')).toBe('4');
+    expect(r.request.params.get('StatusId')).toBe('6');
     r.flush({ rows: [] });
+  });
+  it('loads FiberTrays scoped to Delivery and GCO', () => {
+    api.fiberTrays(128, 3).subscribe();
+    http.expectOne(`${base}/deliveries/128/gcos/3/fiber-trays`).flush({ data: [] });
   });
   it('sends both concurrency versions when editing', () => {
     const body = {

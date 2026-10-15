@@ -249,7 +249,44 @@
                   </section>
                   @if (form.controls.gcoId.value) {
                     <section class="panel">
+                      <h2>FiberTray</h2>
+                      @if (traysBusy()) {
+                        <p role="status">Cargando FiberTrays…</p>
+                      }
+                      @if (trayError()) {
+                        <p class="alert error" role="alert">{{ trayError() }}</p>
+                        <button type="button" (click)="loadTrays()">Reintentar</button>
+                      }
+                      <label
+                        >FiberTray disponible<select
+                          formControlName="fiberTrayId"
+                          (change)="trayChanged()"
+                        >
+                          <option value="">Selecciona un FiberTray</option>
+                          @for (tray of fiberTrays(); track tray.id) {
+                            <option [value]="tray.id">{{ tray.name }}</option>
+                          }
+                        </select></label
+                      >
+                      @if (!traysBusy() && !trayError() && fiberTrays().length === 0) {
+                        <p>No hay FiberTrays activos disponibles para esta GCO.</p>
+                      }
+                    </section>
+                  }
+                  @if (form.controls.fiberTrayId.value) {
+                    <section class="panel">
                       <h2>Seleccionar puerto</h2>
+                      <label
+                        >Filtrar por estado<select
+                          [formControl]="statusFilter"
+                          (change)="statusChanged()"
+                        >
+                          <option value="">Todos los estados</option>
+                          @for (status of statuses(); track status.id) {
+                            <option [value]="status.id">{{ status.name }}</option>
+                          }
+                        </select></label
+                      >
                       <p class="help">Revisa el FiberTray, equipo y estado de cada puerto.</p>
                       <div class="port-search">
                         <label
@@ -386,6 +423,7 @@
                       loading() ||
                       lookupBusy() ||
                       portsBusy() ||
+                      traysBusy() ||
                       !selectedPort() ||
                       !delivery() ||
                       statuses().length === 0
