@@ -14,3 +14,9 @@
 `npm test -- --watch=false --include='src/app/features/incidents/assignments/**/*.spec.ts'`
 
 Se verificó el CRUD en Chromium con API simulada a 320, 375, 768 y 1440 px. La validación contra SQL Server requiere aplicar primero la migración del backend.
+
+## Selección por FiberTray y estado
+
+El formulario sigue Delivery → GCO → FiberTray → puertos. El catálogo de FiberTrays activos de la GCO se obtiene mediante `GET /api/Assignment/deliveries/{deliveryId}/gcos/{gcoId}/fiber-trays`, conservando el alcance del Delivery y su nodo. No se filtran las bandejas por ocupación de sus puertos.
+
+El endpoint de puertos acepta `FiberTrayId` y `StatusId` opcionales. Los filtros se aplican conjuntamente con la GCO y la búsqueda antes del conteo y de la paginación; omitir StatusId muestra todos los estados. El frontend exige seleccionar FiberTray antes de consultar puertos, limpia la selección previa al cambiar filtros y restaura el FiberTray al editar. Los estados provienen del catálogo existente. No requiere cambios de esquema ni otra migración.

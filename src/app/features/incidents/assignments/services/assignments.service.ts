@@ -80,10 +80,25 @@ export class AssignmentsService {
       .get<{ data: DeliveryLookup }>(`${this.base}/deliveries/${id}`)
       .pipe(map((r) => r.data));
   }
-  ports(deliveryId: number, gcoId: number, page: number, search: string) {
+  fiberTrays(deliveryId: number, gcoId: number) {
+    return this.http
+      .get<{ data: Option[] }>(`${this.base}/deliveries/${deliveryId}/gcos/${gcoId}/fiber-trays`)
+      .pipe(map((r) => r.data));
+  }
+  ports(
+    deliveryId: number,
+    gcoId: number,
+    page: number,
+    search: string,
+    fiberTrayId?: number,
+    statusId?: number,
+  ) {
+    let params = new HttpParams().set('Page', page).set('PageSize', 20).set('Search', search);
+    if (fiberTrayId) params = params.set('FiberTrayId', fiberTrayId);
+    if (statusId) params = params.set('StatusId', statusId);
     return this.http.get<Page<PortOption>>(
       `${this.base}/deliveries/${deliveryId}/gcos/${gcoId}/ports`,
-      { params: new HttpParams().set('Page', page).set('PageSize', 20).set('Search', search) },
+      { params },
     );
   }
   options() {

@@ -44,6 +44,12 @@ describe('Assignments workflow', () => {
       list: vi.fn(() => of({ rows: [], totalCount: 0, totalPages: 0, page: 1 })),
       detail: vi.fn(),
       delivery: vi.fn(() => of(delivery)),
+      fiberTrays: vi.fn(() =>
+        of([
+          { id: 4, name: 'FIBER TRAY 156' },
+          { id: 8, name: 'FIBER TRAY 157' },
+        ]),
+      ),
       ports: vi.fn(() => of({ rows: [port], totalPages: 1, page: 1, totalCount: 1 })),
       save: vi.fn(() => of(7)),
       deactivate: vi.fn(() => of<void>(void 0)),
@@ -69,6 +75,8 @@ describe('Assignments workflow', () => {
     component.lookup();
     component.form.controls.gcoId.setValue('3');
     component.gcoChanged();
+    component.form.controls.fiberTrayId.setValue('4');
+    component.trayChanged();
     component.selectPort(port);
   }
   it('does not load assignments without permission', () => {
@@ -84,14 +92,18 @@ describe('Assignments workflow', () => {
     expect(component.delivery()?.nodeName).toBe('SUBA');
     expect(component.delivery()?.gcos.map((g) => g.id)).toEqual([3]);
   });
-  it('queries ports only after selecting a GCO', () => {
+  it('queries ports only after selecting a GCO and FiberTray', () => {
     const { component, api } = setup();
     component.form.controls.deliveryId.setValue('128');
     component.lookup();
     expect(api.ports).not.toHaveBeenCalled();
     component.form.controls.gcoId.setValue('3');
     component.gcoChanged();
-    expect(api.ports).toHaveBeenCalledWith(128, 3, 1, '');
+    expect(api.fiberTrays).toHaveBeenCalledWith(128, 3);
+    expect(api.ports).not.toHaveBeenCalled();
+    component.form.controls.fiberTrayId.setValue('4');
+    component.trayChanged();
+    expect(api.ports).toHaveBeenCalledWith(128, 3, 1, '', 4, undefined);
   });
   it('clears port and equipment when the Delivery or GCO changes', () => {
     const { component } = setup();
@@ -156,6 +168,50 @@ describe('Assignments workflow', () => {
     pending.complete();
     expect(component.delivery()).toBeNull();
     expect(component.lookupBusy()).toBe(false);
+  });
+  it('filters by state before pagination and clears the previous port', () => {
+    const { component, api } = setup();
+    choose(component);
+    component.portPage.set(3);
+    component.statusFilter.setValue('6');
+    component.statusChanged();
+    expect(component.selectedPort()).toBeNull();
+    expect(api.ports).toHaveBeenLastCalledWith(128, 3, 1, '', 4, 6);
+    component.statusFilter.setValue('');
+    component.statusChanged();
+    expect(api.ports).toHaveBeenLastCalledWith(128, 3, 1, '', 4, undefined);
+  });
+  it('clears downstream filters when the FiberTray or GCO changes', () => {
+    const { component } = setup();
+    choose(component);
+    component.statusFilter.setValue('6');
+    component.form.controls.fiberTrayId.setValue('8');
+    component.trayChanged();
+    expect(component.selectedPort()).toBeNull();
+    expect(component.statusFilter.value).toBe('');
+    component.gcoChanged();
+    expect(component.form.controls.fiberTrayId.value).toBe('');
+  });
+  it('ignores a stale FiberTray response after changing Delivery', () => {
+    const { component, api } = setup();
+    const pending = new Subject<{ id: number; name: string }[]>();
+    api.fiberTrays.mockReturnValue(pending);
+    component.form.controls.deliveryId.setValue('128');
+    component.lookup();
+    component.form.controls.gcoId.setValue('3');
+    component.gcoChanged();
+    component.deliveryChanged();
+    pending.next([{ id: 4, name: 'Old tray' }]);
+    pending.complete();
+    expect(component.fiberTrays()).toEqual([]);
+    expect(component.traysBusy()).toBe(false);
+  });
+  it('restores the selected FiberTray and port when editing', () => {
+    const { component } = setup();
+    component.form.controls.deliveryId.setValue('128');
+    component.lookup({ id: 7, deliveryId: 128, gcoId: 3, port } as any);
+    expect(component.form.controls.fiberTrayId.value).toBe('4');
+    expect(component.selectedPort()?.id).toBe(10);
   });
   it('does not allow a readonly user to save', () => {
     const { component, api } = setup(['assignments.read']);

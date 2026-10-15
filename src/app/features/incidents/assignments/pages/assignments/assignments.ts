@@ -43,6 +43,11 @@ export class Assignments {
   readonly detail = signal<Assignment | null>(null);
   readonly delivery = signal<DeliveryLookup | null>(null);
   readonly statuses = signal<Option[]>([]);
+  readonly fiberTrays = signal<Option[]>([]);
+  readonly traysBusy = signal(false);
+  readonly trayError = signal('');
+  private traysVersion = 0;
+  readonly statusFilter = this.fb.nonNullable.control('');
   readonly ports = signal<PortOption[]>([]);
   readonly selectedPort = signal<PortOption | null>(null);
   readonly page = signal(1);
@@ -59,6 +64,7 @@ export class Assignments {
   readonly form = this.fb.nonNullable.group({
     deliveryId: ['', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]],
     gcoId: ['', Validators.required],
+    fiberTrayId: ['', Validators.required],
     statusId: ['', Validators.required],
     equipmentName: ['', Validators.maxLength(100)],
   });
@@ -78,6 +84,7 @@ export class Assignments {
       this.detail.set(null);
       this.selectedPort.set(null);
       this.ports.set([]);
+      this.clearTrays();
       this.form.reset();
       const raw = p.get('id'),
         id = raw === null ? null : Number(raw);
@@ -220,7 +227,8 @@ export class Assignments {
     this.delivery.set(null);
     this.selectedPort.set(null);
     this.ports.set([]);
-    this.form.patchValue({ gcoId: '', statusId: '', equipmentName: '' });
+    this.clearTrays();
+    this.form.patchValue({ gcoId: '', fiberTrayId: '', statusId: '', equipmentName: '' });
   }
   lookup(existing?: Assignment) {
     if (this.saving() || this.form.controls.deliveryId.invalid) {
@@ -251,8 +259,7 @@ export class Assignments {
           if (existing && existing.deliveryId === d.id) {
             this.form.controls.gcoId.setValue(String(existing.gcoId));
             this.selectedGco.set(existing.gcoId);
-            this.selectPort(existing.port);
-            this.loadPorts();
+            this.loadTrays(existing.port);
           }
         },
         error: (e) => {
@@ -260,26 +267,88 @@ export class Assignments {
         },
       });
   }
-  gcoChanged() {
+  private clearTrays() {
+    this.traysVersion++;
+    this.traysBusy.set(false);
+    this.fiberTrays.set([]);
+    this.trayError.set('');
+    this.statusFilter.reset();
+  }
+  private clearPorts() {
     this.portsVersion++;
     this.portsBusy.set(false);
     this.selectedPort.set(null);
     this.ports.set([]);
+    this.portPages.set(0);
+    this.portError.set('');
     this.form.patchValue({ statusId: '', equipmentName: '' });
-    this.selectedGco.set(Number(this.form.controls.gcoId.value) || null);
     this.portPage.set(1);
+  }
+  loadTrays(existing?: PortOption) {
+    const d = this.delivery(),
+      gco = Number(this.form.controls.gcoId.value);
+    if (!d || !gco) return;
+    const v = ++this.traysVersion;
+    this.traysBusy.set(true);
+    this.trayError.set('');
+    this.api
+      .fiberTrays(d.id, gco)
+      .pipe(
+        takeUntilDestroyed(this.destroy),
+        finalize(() => {
+          if (v === this.traysVersion) this.traysBusy.set(false);
+        }),
+      )
+      .subscribe({
+        next: (trays) => {
+          if (v !== this.traysVersion) return;
+          this.fiberTrays.set(trays);
+          if (existing && trays.some((t) => t.id === existing.fiberTrayId)) {
+            this.form.controls.fiberTrayId.setValue(String(existing.fiberTrayId));
+            this.selectPort(existing);
+            this.loadPorts();
+          }
+        },
+        error: (e) => {
+          if (v === this.traysVersion) this.trayError.set(this.message(e));
+        },
+      });
+  }
+  trayChanged() {
+    this.clearPorts();
+    this.statusFilter.reset();
     this.portFilter.reset();
-    if (this.selectedGco()) this.loadPorts();
+    this.loadPorts();
+  }
+  statusChanged() {
+    this.clearPorts();
+    this.loadPorts();
+  }
+  gcoChanged() {
+    this.clearTrays();
+    this.clearPorts();
+    this.form.controls.fiberTrayId.reset();
+    this.selectedGco.set(Number(this.form.controls.gcoId.value) || null);
+    this.portFilter.reset();
+    if (this.selectedGco()) this.loadTrays();
   }
   loadPorts() {
     const d = this.delivery(),
       gco = Number(this.form.controls.gcoId.value);
-    if (!d || !gco) return;
+    const tray = Number(this.form.controls.fiberTrayId.value);
+    if (!d || !gco || !tray) return;
     const v = ++this.portsVersion;
     this.portsBusy.set(true);
     this.portError.set('');
     this.api
-      .ports(d.id, gco, this.portPage(), this.portFilter.value.trim())
+      .ports(
+        d.id,
+        gco,
+        this.portPage(),
+        this.portFilter.value.trim(),
+        tray,
+        Number(this.statusFilter.value) || undefined,
+      )
       .pipe(
         takeUntilDestroyed(this.destroy),
         finalize(() => {
@@ -322,6 +391,7 @@ export class Assignments {
       this.loading() ||
       this.lookupBusy() ||
       this.portsBusy() ||
+      this.traysBusy() ||
       !this.canWrite()
     )
       return;
@@ -335,9 +405,12 @@ export class Assignments {
       !d ||
       d.id !== Number(value.deliveryId) ||
       !port ||
-      port.gcoId !== Number(value.gcoId)
+      port.gcoId !== Number(value.gcoId) ||
+      port.fiberTrayId !== Number(value.fiberTrayId)
     ) {
-      this.error.set('Consulta un Delivery y selecciona GCO, puerto y estado antes de guardar.');
+      this.error.set(
+        'Consulta un Delivery y selecciona GCO, FiberTray, puerto y estado antes de guardar.',
+      );
       return;
     }
     const body: AssignmentWrite = {
