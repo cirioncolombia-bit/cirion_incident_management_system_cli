@@ -79,7 +79,7 @@ export class Login {
 
         if (error.status === 401) {
           this.errorMessage.set(
-            'El correo electrónico o la contraseña son incorrectos.',
+            'The email or password is incorrect.',
           );
           return;
         }
@@ -92,7 +92,7 @@ export class Login {
         }
 
         this.errorMessage.set(
-          'Ocurrió un error al iniciar sesión. Intenta nuevamente.',
+          'An error occurred while signing in. Please try again.',
         );
       },
     });

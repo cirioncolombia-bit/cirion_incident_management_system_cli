@@ -33,10 +33,10 @@
     <p role="status">No active deliveries are available.</p>
   }
   @if (filteredDeliveryId() !== null) {
-    <p role="status">Mostrando únicamente el Delivery #{{ filteredDeliveryId() }}.</p>
+    <p role="status">Showing only Delivery #{{ filteredDeliveryId() }}.</p>
   }
   @if (invalidDeliveryIdFilter()) {
-    <p role="alert">El filtro de Delivery contiene un ID inválido. Limpia los filtros para ver todas las entregas.</p>
+    <p role="alert">The Delivery filter contains an invalid ID. Clear the filters to see all deliveries.</p>
   }
   <section
     class="delivery-filters"

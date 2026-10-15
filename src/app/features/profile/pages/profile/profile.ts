@@ -82,7 +82,7 @@ export class Profile {
     this.notice.set('');
     const v = this.form.getRawValue();
     if (this.form.invalid || !v.firstName.trim() || !v.firstSurname.trim()) {
-      this.error.set('Completa los datos obligatorios y revisa el formato del correo.');
+      this.error.set('Complete the required fields and check the email format.');
       return;
     }
     const body: OwnProfileWrite = {
@@ -105,12 +105,12 @@ export class Profile {
         next: (u) => {
           if (emailChanged) {
             this.auth.signInAgain(
-              'Tu correo se actualizó correctamente. Inicia sesión con el nuevo correo.',
+              'Your email was updated successfully. Sign in using your new email.',
             );
             return;
           }
           this.fill(u);
-          this.notice.set('Tu perfil se actualizó correctamente.');
+          this.notice.set('Your profile was updated successfully.');
         },
         error: (e) => this.error.set(this.message(e)),
       });
@@ -121,11 +121,11 @@ export class Profile {
     this.passwordError.set('');
     const v = this.password.getRawValue();
     if (this.password.invalid || !v.newPassword.trim()) {
-      this.passwordError.set('Completa la contraseña actual, la nueva y su confirmación.');
+      this.passwordError.set('Enter your current password, new password and confirmation.');
       return;
     }
     if (v.newPassword !== v.confirmPassword) {
-      this.passwordError.set('La nueva contraseña y su confirmación no coinciden.');
+      this.passwordError.set('The new password and confirmation do not match.');
       return;
     }
     this.saving.set(true);
@@ -139,32 +139,32 @@ export class Profile {
         next: () => {
           this.password.reset();
           this.auth.signInAgain(
-            'Tu contraseña se actualizó correctamente. Inicia sesión nuevamente.',
+            'Your password was updated successfully. Please sign in again.',
           );
         },
         error: (e) =>
           this.passwordError.set(
             e instanceof HttpErrorResponse && e.status === 400
-              ? 'La contraseña actual no es correcta o los datos no son válidos.'
+              ? 'The current password is incorrect or the information is invalid.'
               : this.message(e),
           ),
       });
   }
   private message(e: unknown) {
     if (!(e instanceof HttpErrorResponse))
-      return 'No se pudo completar la operación. Inténtalo nuevamente.';
-    if (e.status === 0) return 'No se pudo conectar con el servidor.';
+      return 'The operation could not be completed. Please try again.';
+    if (e.status === 0) return 'Could not connect to the server.';
     if (e.status === 409)
-      return 'El correo ya está registrado o hubo un cambio simultáneo. Revisa los datos.';
-    if (e.status === 403) return 'No tienes permiso para realizar esta operación.';
+      return 'The email is already registered or another update occurred. Review the information.';
+    if (e.status === 403) return 'You do not have permission to perform this operation.';
     if (e.status === 400)
       return (
         e.error?.message ||
         Object.values(e.error?.errors ?? {})
           .flat()
           .join(' ') ||
-        'Revisa los datos del formulario.'
+        'Review the form information.'
       );
-    return 'No se pudo completar la operación. Inténtalo nuevamente.';
+    return 'The operation could not be completed. Please try again.';
   }
 }

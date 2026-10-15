@@ -124,7 +124,7 @@ describe('Loading progress presentation', () => {
     vi.advanceTimersByTime(150);
     fixture.detectChanges();
     expect(dialog.showModal).toHaveBeenCalledTimes(1);
-    expect(dialog.textContent).toContain('Procesando solicitud');
+    expect(dialog.textContent).toContain('Processing request');
     finish();
     fixture.detectChanges();
     expect(dialog.close).toHaveBeenCalledTimes(1);

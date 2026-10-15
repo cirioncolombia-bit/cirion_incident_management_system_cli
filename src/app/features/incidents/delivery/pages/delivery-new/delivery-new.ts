@@ -402,10 +402,10 @@ export class DeliveryNew {
     try {
       const navigated = await this.router.navigate(['/delivery'], { queryParams: { deliveryId: id } });
       if (!navigated) {
-        this.saveError.set('El Delivery fue creado, pero no se pudo abrir el listado. Intenta aceptar nuevamente.');
+        this.saveError.set('The Delivery was created, but the list could not be opened. Try confirming again.');
       }
     } catch {
-      this.saveError.set('El Delivery fue creado, pero no se pudo abrir el listado. Intenta aceptar nuevamente.');
+      this.saveError.set('The Delivery was created, but the list could not be opened. Try confirming again.');
     } finally {
       this.navigatingToDelivery.set(false);
     }

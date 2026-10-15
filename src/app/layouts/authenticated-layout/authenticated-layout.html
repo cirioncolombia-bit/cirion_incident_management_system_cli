@@ -24,7 +24,7 @@
 
     <nav
       class="app-sidebar__nav"
-      aria-label="Navegación principal"
+      aria-label="Main navigation"
     >
       <a
         class="app-sidebar__link"
@@ -154,13 +154,13 @@
         type="button"
         [attr.aria-label]="
           sidebarCollapsed()
-            ? 'Expandir menú'
-            : 'Contraer menú'
+            ? 'Expand menu'
+            : 'Collapse menu'
         "
         [attr.title]="
           sidebarCollapsed()
-            ? 'Expandir menú'
-            : 'Contraer menú'
+            ? 'Expand menu'
+            : 'Collapse menu'
         "
         (click)="toggleSidebarCollapsed()"
       >
@@ -209,7 +209,7 @@
     <button
       class="app-overlay"
       type="button"
-      aria-label="Cerrar menú de navegación"
+      aria-label="Close navigation menu"
       (click)="closeSidebar()"
     ></button>
   }
@@ -219,22 +219,22 @@
       <button
         class="app-header__menu"
         type="button"
-        aria-label="Abrir menú de navegación"
+        aria-label="Open navigation menu"
         (click)="openSidebar()"
       >
         ☰
       </button>
 
       <div class="app-header__welcome">
-        <h1>{{ greeting() ? 'Hola, ' + greeting() + ' 👋' : 'Bienvenido a CIMS' }}</h1>
-        <p>Bienvenido a CIMS</p>
+        <h1>{{ greeting() ? 'Hello, ' + greeting() + ' 👋' : 'Welcome to CIMS' }}</h1>
+        <p>Welcome to CIMS</p>
       </div>
 
       <div class="app-header__account">
         <button
           class="app-header__user"
           type="button"
-          aria-label="Abrir menú de usuario"
+          aria-label="Open user menu"
           aria-haspopup="menu"
           [attr.aria-expanded]="userMenuOpen()"
           (click)="toggleUserMenu()"
@@ -285,7 +285,7 @@
 
     <main class="app-content">
       @if (accountError() && !currentUser()) {
-        <p role="alert">{{ accountError() }} <button type="button" (click)="loadAccount()">Reintentar</button></p>
+        <p role="alert">{{ accountError() }} <button type="button" (click)="loadAccount()">Retry</button></p>
       }
       <router-outlet />
     </main>
