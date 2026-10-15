@@ -12,6 +12,7 @@ export interface DeliverySummary {
   mobilePhone: number;
   surveryCost: number;
   installationBudget: number;
+  totalInstallationCost?: number;
   observation: string;
   isActive: boolean;
   cityId: number;

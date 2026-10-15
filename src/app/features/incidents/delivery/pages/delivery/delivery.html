@@ -184,7 +184,7 @@
         <header class="delivery-card__header">
           <div>
             <strong>
-              {{ delivery.dkoTkt }}
+              {{ delivery.dkoTkt }} <span class="delivery-reference-id">#{{ delivery.id }}</span>
             </strong>
 
             <p>
@@ -198,19 +198,7 @@
 
           <div class="delivery-card__status">
             <span
-              class="delivery-status"
-              [class.delivery-status--progress]="
-                delivery.status
-                === 'EN PROCESO'
-              "
-              [class.delivery-status--stopped]="
-                delivery.status
-                === 'DETENIDO'
-              "
-              [class.delivery-status--completed]="
-                delivery.status
-                === 'TERMINADO'
-              "
+              [class]="'delivery-status delivery-status--' + statusTone(delivery.status)"
             >
               {{
                 statusLabel(
@@ -359,6 +347,9 @@
             <th>Building / Site</th>
             <th>Address</th>
             <th>Revenue</th>
+            <th>Email</th>
+            <th>Contact Name</th>
+            <th>Mobile Phone</th>
             <th>Node</th>
             <th>Type</th>
             <th>Status</th>
@@ -371,8 +362,6 @@
               Time in Status
             </th>
 
-            <th>Landlord</th>
-            <th>Consecutive</th>
             <th>City</th>
             <th>EAIM</th>
             <th>Responsible</th>
@@ -384,9 +373,6 @@
             <th>Installation Budget</th>
             <th>Installation Cost</th>
             <th>SO SAP</th>
-            <th>Email</th>
-            <th>Contact Name</th>
-            <th>Mobile Phone</th>
             <th>Observations</th>
           </tr>
         </thead>
@@ -485,7 +471,7 @@
                 "
               >
                 <strong>
-                  {{ delivery.dkoTkt }}
+                  {{ delivery.dkoTkt }} <span class="delivery-reference-id">#{{ delivery.id }}</span>
                 </strong>
               </td>
 
@@ -600,6 +586,64 @@
                 }
               </td>
 
+              <!-- EMAIL -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                      delivery-table__input--wide
+                    "
+                    type="email"
+                    formControlName="email"
+                  />
+                } @else {
+                  {{ delivery.email }}
+                }
+              </td>
+
+              <!-- CONTACT -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="text"
+                    formControlName="
+                      contact
+                    "
+                  />
+                } @else {
+                  {{ delivery.contact }}
+                }
+              </td>
+
+              <!-- PHONE -->
+
+              <td>
+                @if (
+                  isEditing(delivery.id)
+                ) {
+                  <input
+                    class="
+                      delivery-table__input
+                    "
+                    type="tel"
+                    inputmode="tel"
+                    formControlName="phone"
+                  />
+                } @else {
+                  {{ delivery.phone }}
+                }
+              </td>
+
               <!-- NODE -->
 
               <td>
@@ -692,19 +736,7 @@
                   </select>
                 } @else {
                   <span
-                    class="delivery-status"
-                    [class.delivery-status--progress]="
-                      delivery.status
-                      === 'EN PROCESO'
-                    "
-                    [class.delivery-status--stopped]="
-                      delivery.status
-                      === 'DETENIDO'
-                    "
-                    [class.delivery-status--completed]="
-                      delivery.status
-                      === 'TERMINADO'
-                    "
+                    [class]="'delivery-status delivery-status--' + statusTone(delivery.status)"
                   >
                     {{
                       statusLabel(
@@ -743,59 +775,6 @@
                     Current status
                   </span>
                 </div>
-              </td>
-
-              <!-- LANDLORD -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <select
-                    class="
-                      delivery-table__select
-                    "
-                    formControlName="
-                      landlord
-                    "
-                  >
-                    @for (
-                      landlord
-                        of landlords;
-                      track landlord
-                    ) {
-                      <option
-                        [value]="landlord"
-                      >
-                        {{ landlord }}
-                      </option>
-                    }
-                  </select>
-                } @else {
-                  {{ delivery.landlord }}
-                }
-              </td>
-
-              <!-- CONSECUTIVE -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <input
-                    class="
-                      delivery-table__input
-                    "
-                    type="text"
-                    formControlName="
-                      consecutive
-                    "
-                  />
-                } @else {
-                  {{
-                    delivery.consecutive
-                  }}
-                }
               </td>
 
               <!-- CITY -->
@@ -1057,31 +1036,7 @@
               </td>
 
               <!-- INSTALLATION COST -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <input
-                    class="
-                      delivery-table__input
-                      delivery-table__input--money
-                    "
-                    type="text"
-                    inputmode="numeric"
-                    formControlName="
-                      installationCost
-                    "
-                  />
-                } @else {
-                  {{
-                    formatCurrency(
-                      delivery
-                        .installationCost
-                    )
-                  }}
-                }
-              </td>
+              <td>{{ formatCurrency(delivery.installationCost) }}</td>
 
               <!-- SO SAP -->
 
@@ -1098,64 +1053,6 @@
                   />
                 } @else {
                   {{ delivery.soSap }}
-                }
-              </td>
-
-              <!-- EMAIL -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <input
-                    class="
-                      delivery-table__input
-                      delivery-table__input--wide
-                    "
-                    type="email"
-                    formControlName="email"
-                  />
-                } @else {
-                  {{ delivery.email }}
-                }
-              </td>
-
-              <!-- CONTACT -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <input
-                    class="
-                      delivery-table__input
-                    "
-                    type="text"
-                    formControlName="
-                      contact
-                    "
-                  />
-                } @else {
-                  {{ delivery.contact }}
-                }
-              </td>
-
-              <!-- PHONE -->
-
-              <td>
-                @if (
-                  isEditing(delivery.id)
-                ) {
-                  <input
-                    class="
-                      delivery-table__input
-                    "
-                    type="tel"
-                    inputmode="tel"
-                    formControlName="phone"
-                  />
-                } @else {
-                  {{ delivery.phone }}
                 }
               </td>
 

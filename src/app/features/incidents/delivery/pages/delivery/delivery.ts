@@ -269,7 +269,7 @@ export class Delivery {
       contact: delivery.contactName,
       phone: String(delivery.mobilePhone),
       observations: delivery.observation,
-      consecutive: '—', landlord: '—', installationCost: null,
+      consecutive: '—', landlord: '—', installationCost: delivery.totalInstallationCost == null ? null : String(delivery.totalInstallationCost),
       dkoAssignmentDate: '—', eaimSurveyRequestDate: '—', installationDate: '—',
       statusHistory: [],
     };
@@ -632,6 +632,15 @@ export class Delivery {
         maximumFractionDigits: 0,
       },
     ).format(numericValue);
+  }
+
+  statusTone(status: DeliveryStatus): string {
+    const normalized = status.trim().toUpperCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    if (/CLIENT|CUSTOMER/.test(normalized) && /DETENID|STOP|HOLD|PAUS/.test(normalized)) return 'client-stopped';
+    if (/DETENID|STOP|HOLD|PAUS/.test(normalized)) return 'stopped';
+    if (/TERMINAD|COMPLET|FINALIZ/.test(normalized)) return 'completed';
+    if (/PROCES|PROGRESS/.test(normalized)) return 'progress';
+    return 'neutral';
   }
 
   statusLabel(status: DeliveryStatus): string {
