@@ -1,1 +1,427 @@
-<p>assignments works!</p>
+<section class="assignments" aria-labelledby="page-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Red y servicios</p>
+      <h1 id="page-title">
+        {{
+          mode() === 'list'
+            ? 'Asignaciones'
+            : mode() === 'detail'
+              ? 'Detalle de la asignación'
+              : id()
+                ? 'Editar asignación'
+                : 'Nueva asignación'
+        }}
+      </h1>
+      <p>
+        {{
+          mode() === 'list'
+            ? 'Consulta y administra los puertos vinculados a tus deliveries.'
+            : 'Vincula el servicio con el puerto y revisa su configuración.'
+        }}
+      </p>
+    </div>
+    @if (mode() !== 'list') {
+      <button type="button" (click)="go()" [disabled]="saving()">← Volver al listado</button>
+    } @else if (canRead() && canWrite()) {
+      <button type="button" class="primary" (click)="go({ new: 1 })">+ Nueva asignación</button>
+    }
+  </header>
+  @if (checking()) {
+    <p role="status" class="panel">Verificando acceso…</p>
+  }
+  @if (notice()) {
+    <p class="alert success" role="status">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      @if (mode() === 'list' || !saving()) {
+        <button type="button" (click)="reload()">Actualizar información</button>
+      }
+    </div>
+  }
+  @if (!checking() && !canRead() && !error()) {
+    <p class="panel">Tu cuenta no tiene permisos para consultar asignaciones.</p>
+  }
+  @if (canRead()) {
+    @if (loading()) {
+      <p class="panel" role="status">Cargando información…</p>
+    }
+    @if (mode() === 'list') {
+      <form class="filters panel" [formGroup]="filters" (ngSubmit)="search()">
+        <label
+          >Buscar<input
+            type="search"
+            formControlName="search"
+            maxlength="200"
+            placeholder="Workorder / DKO, cliente, nodo o GCO" /></label
+        ><button type="submit" [disabled]="loading()">Buscar</button>
+      </form>
+      @if (!loading() && !error()) {
+        <p class="count">{{ total() }} asignaciones</p>
+        <div class="records">
+          @for (a of rows(); track a.id) {
+            <article class="record">
+              <span class="reference">Asignación #{{ a.id }}</span>
+              <h2>{{ a.workOrderId || 'Sin Delivery vinculado' }}</h2>
+              <p>{{ a.clientName }}</p>
+              <dl>
+                <div>
+                  <dt>Nodo</dt>
+                  <dd>{{ a.nodeName }}</dd>
+                </div>
+                <div>
+                  <dt>GCO</dt>
+                  <dd>{{ a.gcoName }}</dd>
+                </div>
+                <div>
+                  <dt>FiberTray</dt>
+                  <dd>{{ a.fiberTrayName }}</dd>
+                </div>
+                <div>
+                  <dt>Puerto</dt>
+                  <dd>{{ a.port.portNumber }}</dd>
+                </div>
+                <div>
+                  <dt>Equipo</dt>
+                  <dd>{{ a.port.equipmentName || 'Sin equipo' }}</dd>
+                </div>
+                <div>
+                  <dt>Estado actual del puerto</dt>
+                  <dd>
+                    <span class="badge">{{ a.port.statusName }}</span>
+                  </dd>
+                </div>
+              </dl>
+              <button type="button" class="full" (click)="go({ id: a.id })">Ver detalle →</button>
+            </article>
+          } @empty {
+            <div class="panel empty">No hay asignaciones para mostrar.</div>
+          }
+        </div>
+        @if (totalPages() > 0) {
+          <nav class="pagination" aria-label="Paginación de asignaciones">
+            <button (click)="paginate(-1)" [disabled]="page() <= 1">Anterior</button
+            ><span>{{ page() }} / {{ totalPages() }}</span
+            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Siguiente</button>
+          </nav>
+        }
+      }
+    }
+    @if (mode() === 'detail') {
+      @if (detail(); as a) {
+        <section class="panel">
+          <h2>{{ a.workOrderId || 'Sin Delivery vinculado' }}</h2>
+          <dl>
+            <div>
+              <dt>Delivery</dt>
+              <dd>{{ a.deliveryId ? '#' + a.deliveryId : 'Sin vincular' }}</dd>
+            </div>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{{ a.clientName || 'Sin información' }}</dd>
+            </div>
+            <div>
+              <dt>Ciudad</dt>
+              <dd>{{ a.cityName }}</dd>
+            </div>
+            <div>
+              <dt>Nodo</dt>
+              <dd>{{ a.nodeName }}</dd>
+            </div>
+            <div>
+              <dt>GCO</dt>
+              <dd>{{ a.gcoName }}</dd>
+            </div>
+            <div>
+              <dt>FiberTray</dt>
+              <dd>{{ a.fiberTrayName }}</dd>
+            </div>
+            <div>
+              <dt>Puerto</dt>
+              <dd>{{ a.port.portNumber }}</dd>
+            </div>
+            <div>
+              <dt>Equipo actual</dt>
+              <dd>{{ a.port.equipmentName || 'Sin equipo' }}</dd>
+            </div>
+            <div>
+              <dt>Estado actual del puerto</dt>
+              <dd>{{ a.port.statusName }}</dd>
+            </div>
+            <div>
+              <dt>Creación</dt>
+              <dd>{{ a.createAt | date: 'medium' }}</dd>
+            </div>
+            <div>
+              <dt>Actualización</dt>
+              <dd>{{ (a.updatedAt | date: 'medium') || 'Sin actualizaciones' }}</dd>
+            </div>
+          </dl>
+          @if (canWrite()) {
+            <div class="actions">
+              <button class="primary" type="button" (click)="go({ id: a.id, edit: 1 })">
+                Editar asignación</button
+              ><button class="danger" type="button" (click)="confirmDelete()">Desactivar</button>
+            </div>
+          }
+        </section>
+      }
+    }
+    @if (mode() === 'form') {
+      @if (!canWrite()) {
+        <p class="panel">Tu cuenta solo puede consultar las asignaciones.</p>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="save()" class="assignment-form">
+          <fieldset [disabled]="saving()">
+            <legend class="visually-hidden">Formulario de asignación</legend>
+            <div class="form-layout">
+              <div class="form-main">
+                <section class="panel">
+                  <h2>Delivery</h2>
+                  <label
+                    >ID del Delivery<input
+                      type="number"
+                      min="1"
+                      step="1"
+                      formControlName="deliveryId"
+                      (input)="deliveryChanged()"
+                      (keydown.enter)="$event.preventDefault(); lookup()"
+                      placeholder="Ingresa el identificador" /></label
+                  ><button
+                    type="button"
+                    class="primary full"
+                    (click)="lookup()"
+                    [disabled]="lookupBusy() || saving()"
+                  >
+                    {{ lookupBusy() ? 'Consultando…' : 'Consultar' }}
+                  </button>
+                  @if (lookupError()) {
+                    <p class="alert error" role="alert">{{ lookupError() }}</p>
+                  }
+                </section>
+                @if (delivery(); as d) {
+                  <section class="panel">
+                    <h2>Datos del servicio</h2>
+                    <p class="help">Cargados desde el Delivery #{{ d.id }}</p>
+                    <dl>
+                      <div>
+                        <dt>Workorder / DKO</dt>
+                        <dd>{{ d.workOrderId }}</dd>
+                      </div>
+                      <div>
+                        <dt>Cliente</dt>
+                        <dd>{{ d.clientName }}</dd>
+                      </div>
+                      <div>
+                        <dt>Ciudad</dt>
+                        <dd>{{ d.cityName }}</dd>
+                      </div>
+                      <div>
+                        <dt>Nodo</dt>
+                        <dd>{{ d.nodeName }}</dd>
+                      </div>
+                      <div>
+                        <dt>Sede</dt>
+                        <dd>{{ d.buildingSite }}</dd>
+                      </div>
+                      <div>
+                        <dt>Dirección</dt>
+                        <dd>{{ d.address }}</dd>
+                      </div>
+                    </dl>
+                  </section>
+                  <section class="panel">
+                    <h2>Ubicación de la asignación</h2>
+                    <label
+                      >GCO<select formControlName="gcoId" (change)="gcoChanged()">
+                        <option value="">Selecciona una GCO</option>
+                        @for (gco of d.gcos; track gco.id) {
+                          <option [value]="gco.id">{{ gco.name }}</option>
+                        }
+                      </select></label
+                    >
+                    <p class="help">Opciones disponibles del nodo {{ d.nodeName }}.</p>
+                    @if (d.gcos.length === 0) {
+                      <p>No hay GCO activas disponibles para este nodo.</p>
+                    }
+                  </section>
+                  @if (form.controls.gcoId.value) {
+                    <section class="panel">
+                      <h2>Seleccionar puerto</h2>
+                      <p class="help">Revisa el FiberTray, equipo y estado de cada puerto.</p>
+                      <div class="port-search">
+                        <label
+                          >Buscar puerto o equipo<input
+                            type="search"
+                            [formControl]="portFilter"
+                            (keydown.enter)="$event.preventDefault(); searchPorts()"
+                            maxlength="200"
+                            placeholder="Puerto, equipo o FiberTray" /></label
+                        ><button type="button" (click)="searchPorts()" [disabled]="portsBusy()">
+                          Buscar
+                        </button>
+                      </div>
+                      @if (portsBusy()) {
+                        <p role="status">Cargando puertos…</p>
+                      }
+                      @if (portError()) {
+                        <p class="alert error" role="alert">{{ portError() }}</p>
+                      }
+                      <div class="port-list" role="radiogroup" aria-label="Puerto de la asignación">
+                        @for (port of ports(); track port.id) {
+                          <label class="port-card" [class.selected]="selectedPort()?.id === port.id"
+                            ><input
+                              type="radio"
+                              name="selected-port"
+                              [checked]="selectedPort()?.id === port.id"
+                              (change)="selectPort(port)"
+                            /><span
+                              ><strong>Puerto {{ port.portNumber }}</strong
+                              ><span>FiberTray: {{ port.fiberTrayName }}</span
+                              ><span>Equipo: {{ port.equipmentName || 'Sin equipo' }}</span
+                              ><span class="badge">{{ port.statusName }}</span></span
+                            ></label
+                          >
+                        } @empty {
+                          @if (!portsBusy() && !portError()) {
+                            <p>No hay puertos disponibles con esta búsqueda.</p>
+                          }
+                        }
+                      </div>
+                      @if (portPages() > 0) {
+                        <nav class="pagination" aria-label="Paginación de puertos">
+                          <button
+                            type="button"
+                            (click)="paginatePorts(-1)"
+                            [disabled]="portsBusy() || portPage() <= 1"
+                          >
+                            Anterior</button
+                          ><span>{{ portPage() }} / {{ portPages() }}</span
+                          ><button
+                            type="button"
+                            (click)="paginatePorts(1)"
+                            [disabled]="portsBusy() || portPage() >= portPages()"
+                          >
+                            Siguiente
+                          </button>
+                        </nav>
+                      }
+                    </section>
+                  }
+                }
+              </div>
+              <div class="form-summary">
+                @if (selectedPort(); as port) {
+                  <section class="panel">
+                    <h2>Puerto seleccionado</h2>
+                    <dl>
+                      <div>
+                        <dt>Nodo</dt>
+                        <dd>{{ delivery()?.nodeName }}</dd>
+                      </div>
+                      <div>
+                        <dt>GCO</dt>
+                        <dd>
+                          @for (g of delivery()?.gcos; track g.id) {
+                            @if (g.id === port.gcoId) {
+                              {{ g.name }}
+                            }
+                          }
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>FiberTray</dt>
+                        <dd>{{ port.fiberTrayName }}</dd>
+                      </div>
+                      <div>
+                        <dt>Puerto</dt>
+                        <dd>{{ port.portNumber }}</dd>
+                      </div>
+                      <div>
+                        <dt>Estado actual</dt>
+                        <dd>
+                          <span class="badge">{{ port.statusName }}</span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
+                  <section class="panel">
+                    <h2>Actualizar puerto</h2>
+                    <label
+                      >Nuevo estado del puerto<select formControlName="statusId">
+                        <option value="">Selecciona el estado</option>
+                        @for (s of statuses(); track s.id) {
+                          <option [value]="s.id">{{ s.name }}</option>
+                        }
+                        @if (!hasStatus(port.statusId)) {
+                          <option [value]="port.statusId">
+                            {{ port.statusName }} (inactivo; selecciona otro)
+                          </option>
+                        }
+                      </select></label
+                    ><label
+                      >Nombre del equipo<input
+                        formControlName="equipmentName"
+                        maxlength="100"
+                        placeholder="Nombre del equipo (opcional)"
+                    /></label>
+                    <p class="help">
+                      El estado y el equipo del puerto seleccionado se actualizarán al guardar. Un
+                      nombre vacío deja el puerto sin equipo.
+                    </p>
+                  </section>
+                  <section class="panel summary">
+                    <strong>Asignación vinculada al Delivery #{{ delivery()?.id }}</strong>
+                    <p>{{ delivery()?.workOrderId }}</p>
+                  </section>
+                }
+                <div class="form-actions">
+                  <button
+                    class="primary"
+                    type="submit"
+                    [disabled]="
+                      saving() ||
+                      loading() ||
+                      lookupBusy() ||
+                      portsBusy() ||
+                      !selectedPort() ||
+                      !delivery() ||
+                      statuses().length === 0
+                    "
+                  >
+                    {{ saving() ? 'Guardando…' : 'Guardar asignación' }}</button
+                  ><button
+                    type="button"
+                    (click)="go(id() ? { id: id() } : {})"
+                    [disabled]="saving()"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      }
+    }
+  }
+</section>
+<dialog
+  #confirmation
+  aria-labelledby="confirmation-title"
+  (cancel)="saving() ? $event.preventDefault() : null"
+>
+  <h2 id="confirmation-title">¿Desactivar la asignación?</h2>
+  <p>La asignación dejará de aparecer en el listado. Su información histórica se conservará.</p>
+  @if (error()) {
+    <p class="alert error" role="alert">{{ error() }}</p>
+  }
+  <div class="actions">
+    <button type="button" (click)="cancelDelete()" [disabled]="saving()">Cancelar</button
+    ><button type="button" class="danger" (click)="deactivate()" [disabled]="saving()">
+      Desactivar
+    </button>
+  </div>
+</dialog>
