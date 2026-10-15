@@ -32,8 +32,8 @@ export class AuthenticatedLayout {
     this.currentUser()
       ? this.currentUser()!
           .roles.map((r) => r.name)
-          .join(', ') || 'Sin roles asignados'
-      : 'Cargando cuenta…',
+          .join(', ') || 'No roles assigned'
+      : 'Loading account…',
   );
   private readonly destroy = inject(DestroyRef);
 
@@ -47,7 +47,7 @@ export class AuthenticatedLayout {
       .loadCurrentUser()
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
-        error: () => this.accountError.set('No se pudo cargar la información de tu cuenta.'),
+        error: () => this.accountError.set('Your account information could not be loaded.'),
       });
   }
 

@@ -80,7 +80,7 @@ export class Incidents {
       this.invalidId.set(id !== null && (!Number.isSafeInteger(id) || id <= 0));
       this.detailId.set(this.invalidId() ? null : id);
       if (this.invalidId()) {
-        this.error.set('El identificador del incidente no es válido.');
+        this.error.set('The incident ID is invalid.');
         this.loading.set(false);
         return;
       }
@@ -190,12 +190,12 @@ export class Incidents {
     this.notice.set('');
     void this.router
       .navigate([], { relativeTo: this.route, queryParams: { id } })
-      .catch(() => this.error.set('No se pudo abrir el detalle.'));
+      .catch(() => this.error.set('Could not open the details.'));
   }
   back() {
     void this.router
       .navigate([], { relativeTo: this.route, queryParams: {} })
-      .catch(() => this.error.set('No se pudo volver al listado.'));
+      .catch(() => this.error.set('Could not return to the list.'));
   }
   search() {
     if (this.filters.invalid || this.loading()) return;
@@ -255,7 +255,7 @@ export class Incidents {
     } else {
       this.form.markAllAsTouched();
       if (this.form.invalid || !v.title.trim() || !v.description.trim()) {
-        this.formError.set('Completa tipo, título y descripción. Revisa los campos marcados.');
+        this.formError.set('Enter the type, title and description. Review the highlighted fields.');
         return;
       }
       const body: IncidentWrite = {
@@ -279,8 +279,8 @@ export class Incidents {
           this.editor.nativeElement.close();
           this.notice.set(
             mode === 'create'
-              ? 'El incidente se creó correctamente.'
-              : 'Los cambios se guardaron correctamente.',
+              ? 'The incident was created successfully.'
+              : 'Changes saved successfully.',
           );
           if (mode === 'create')
             void this.router
@@ -288,12 +288,12 @@ export class Incidents {
               .then((ok) => {
                 if (!ok)
                   this.error.set(
-                    'El incidente se creó, pero no se pudo abrir su detalle. Actualiza el listado.',
+                    'The incident was created, but its details could not be opened. Refresh the list.',
                   );
               })
               .catch(() =>
                 this.error.set(
-                  'El incidente se creó, pero no se pudo abrir su detalle. Actualiza el listado.',
+                  'The incident was created, but its details could not be opened. Refresh the list.',
                 ),
               );
           else if (this.detailId() === id) this.loadDetail();
@@ -307,7 +307,7 @@ export class Incidents {
     this.observation.markAllAsTouched();
     const text = this.observation.controls.text.value.trim();
     if (this.observation.invalid || !text) {
-      this.observationError.set('Escribe una observación de hasta 10.000 caracteres.');
+      this.observationError.set('Enter an observation of up to 10,000 characters.');
       return;
     }
     this.saving.set(true);
@@ -322,7 +322,7 @@ export class Incidents {
         next: () => {
           if (this.detailId() !== id) return;
           this.observation.reset();
-          this.notice.set('La observación se agregó correctamente.');
+          this.notice.set('The observation was added successfully.');
           this.loadDetail();
         },
         error: (e) => {
@@ -339,7 +339,7 @@ export class Incidents {
       file = this.selectedFile();
     if (id === null || this.saving() || this.loading() || !this.canWrite() || !file) return;
     if (file.size === 0) {
-      this.fileError.set('El archivo está vacío. Selecciona otro.');
+      this.fileError.set('The file is empty. Select another file.');
       return;
     }
     this.saving.set(true);
@@ -355,7 +355,7 @@ export class Incidents {
           if (this.detailId() !== id) return;
           this.selectedFile.set(null);
           if (this.fileInput) this.fileInput.nativeElement.value = '';
-          this.notice.set('El archivo se adjuntó correctamente.');
+          this.notice.set('The file was attached successfully.');
           this.loadDetail();
         },
         error: (e) => {
@@ -419,7 +419,7 @@ export class Incidents {
       .subscribe({
         next: () => {
           this.confirmation.nativeElement.close();
-          this.notice.set('El incidente se desactivó. Su historial se conserva.');
+          this.notice.set('The incident was deactivated. Its history is preserved.');
           this.back();
         },
         error: (e) => this.formError.set(this.message(e)),
@@ -427,22 +427,22 @@ export class Incidents {
   }
   private message(error: unknown): string {
     if (!(error instanceof HttpErrorResponse))
-      return 'No se pudo completar la operación. Inténtalo nuevamente.';
-    if (error.status === 0) return 'No se pudo conectar con el servidor. Revisa la conexión.';
-    if (error.status === 403) return 'No tienes permiso para realizar esta operación.';
-    if (error.status === 404) return 'El incidente o archivo ya no está disponible.';
+      return 'The operation could not be completed. Please try again.';
+    if (error.status === 0) return 'Could not connect to the server. Check your connection.';
+    if (error.status === 403) return 'You do not have permission to perform this operation.';
+    if (error.status === 404) return 'The incident or file is no longer available.';
     if (error.status === 413)
-      return 'El archivo supera el tamaño permitido por el servidor. Selecciona uno más pequeño.';
+      return 'The file exceeds the server size limit. Select a smaller file.';
     if (error.status === 409)
-      return 'El incidente cambió mientras lo editabas. Actualiza el detalle y vuelve a intentarlo.';
+      return 'The incident changed while you were editing it. Refresh the details and try again.';
     if (error.status === 400)
       return (
         error.error?.message ||
         Object.values(error.error?.errors ?? {})
           .flat()
           .join(' ') ||
-        'Revisa los datos del formulario.'
+        'Review the form information.'
       );
-    return 'No se pudo completar la operación. Inténtalo nuevamente.';
+    return 'The operation could not be completed. Please try again.';
   }
 }

@@ -82,13 +82,13 @@ describe('Own profile', () => {
     component.form.controls.firstName.setValue('Nombre nuevo');
     component.save();
     expect(auth.signInAgain).not.toHaveBeenCalled();
-    expect(component.notice()).toContain('actualizó');
+    expect(component.notice()).toContain('updated');
   });
   it('returns to login after email changes invalidate existing sessions', () => {
     const { component, auth } = setup();
     component.form.controls.email.setValue('new@example.com');
     component.save();
-    expect(auth.signInAgain).toHaveBeenCalledWith(expect.stringContaining('nuevo correo'));
+    expect(auth.signInAgain).toHaveBeenCalledWith(expect.stringContaining('new email'));
   });
   it('blocks repeated profile saves while pending', () => {
     const { component, auth } = setup();
@@ -106,7 +106,7 @@ describe('Own profile', () => {
     });
     component.changePassword();
     expect(auth.changePassword).not.toHaveBeenCalled();
-    expect(component.passwordError()).toContain('no coinciden');
+    expect(component.passwordError()).toContain('do not match');
   });
   it('uses existing password endpoint and clears session only after success', () => {
     const { component, auth } = setup();
@@ -117,7 +117,7 @@ describe('Own profile', () => {
     });
     component.changePassword();
     expect(auth.changePassword).toHaveBeenCalledWith('current', 'new');
-    expect(auth.signInAgain).toHaveBeenCalledWith(expect.stringContaining('contraseña'));
+    expect(auth.signInAgain).toHaveBeenCalledWith(expect.stringContaining('password'));
     expect(component.password.controls.newPassword.value).toBe('');
   });
   it('preserves session when current password is incorrect', () => {
@@ -130,7 +130,7 @@ describe('Own profile', () => {
     });
     component.changePassword();
     expect(auth.signInAgain).not.toHaveBeenCalled();
-    expect(component.passwordError()).toContain('actual');
+    expect(component.passwordError()).toContain('current');
   });
   it('keeps entered personal data on save failure', () => {
     const { component, auth } = setup();

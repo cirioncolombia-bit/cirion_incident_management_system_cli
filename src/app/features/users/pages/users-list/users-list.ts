@@ -28,23 +28,23 @@ export class UsersList {
   readonly tabs: { key: Section; label: string; description: string }[] = [
     {
       key: 'users',
-      label: 'Usuarios',
-      description: 'Administra las personas, su compañía y sus roles de acceso.',
+      label: 'Users',
+      description: 'Manage people, their company and access roles.',
     },
     {
       key: 'roles',
       label: 'Roles',
-      description: 'Agrupa permisos para asignarlos a los usuarios.',
+      description: 'Group permissions into roles for users.',
     },
     {
       key: 'permissions',
-      label: 'Permisos',
-      description: 'Administra el catálogo de permisos utilizados por la aplicación.',
+      label: 'Permissions',
+      description: 'Manage the permissions used by the application.',
     },
     {
       key: 'eaims',
       label: 'EAIM',
-      description: 'Administra las compañías externas vinculadas a usuarios y deliveries.',
+      description: 'Manage external companies linked to users and deliveries.',
     },
   ];
   readonly section = signal<Section>('users');
@@ -326,7 +326,7 @@ export class UsersList {
     else {
       this.form.markAllAsTouched();
       if (this.form.invalid) {
-        this.formError.set('Revisa los campos obligatorios y el formato del correo.');
+        this.formError.set('Review the required fields and email format.');
         return;
       }
       if (this.section() === 'users') {
@@ -335,7 +335,7 @@ export class UsersList {
           !v.firstSurname.trim() ||
           (this.mode() === 'new' && !v.password.trim())
         ) {
-          this.formError.set('Los nombres y la contraseña no pueden estar vacíos.');
+          this.formError.set('Names and password cannot be blank.');
           return;
         }
         const body: UserWrite = {
@@ -358,7 +358,7 @@ export class UsersList {
           !(this.section() === 'permissions' ? v.code : v.name).trim() ||
           (this.section() === 'permissions' && !v.description.trim())
         ) {
-          this.formError.set('Completa los campos sin usar solo espacios.');
+          this.formError.set('Complete the fields without using only spaces.');
           return;
         }
         const body =
@@ -384,7 +384,7 @@ export class UsersList {
         next: () => {
           this.editor.nativeElement.close();
           this.form.controls.password.reset('');
-          this.notice.set('Los cambios se guardaron correctamente.');
+          this.notice.set('Changes saved successfully.');
           this.reload();
         },
         error: (e) => this.formError.set(this.message(e)),
@@ -411,7 +411,7 @@ export class UsersList {
       .subscribe({
         next: () => {
           this.confirmation.nativeElement.close();
-          this.notice.set('El registro se desactivó. Su información histórica se conserva.');
+          this.notice.set('The record was deactivated. Its history is preserved.');
           this.reload();
         },
         error: (e) => this.formError.set(this.message(e)),
@@ -419,15 +419,15 @@ export class UsersList {
   }
   message(error: unknown) {
     if (!(error instanceof HttpErrorResponse))
-      return 'No se pudo completar la operación. Inténtalo nuevamente.';
-    if (error.status === 0) return 'No se pudo conectar con el servidor. Revisa la conexión.';
-    if (error.status === 403) return 'No tienes permiso para realizar esta operación.';
-    if (error.status === 404) return 'El registro ya no está disponible. Actualiza la lista.';
+      return 'The operation could not be completed. Please try again.';
+    if (error.status === 0) return 'Could not connect to the server. Check your connection.';
+    if (error.status === 403) return 'You do not have permission to perform this operation.';
+    if (error.status === 404) return 'The record is no longer available. Refresh the list.';
     if (error.status === 409)
       return (
         error.error?.message ??
         error.error?.error ??
-        'Ya existe un registro con esos datos o hubo un cambio simultáneo.'
+        'A record with these details already exists or another update occurred.'
       );
     if (error.status === 400)
       return (
@@ -435,8 +435,8 @@ export class UsersList {
         Object.values(error.error?.errors ?? {})
           .flat()
           .join(' ') ||
-        'Revisa los datos del formulario.'
+        'Review the form information.'
       );
-    return 'No se pudo completar la operación. Inténtalo nuevamente.';
+    return 'The operation could not be completed. Please try again.';
   }
 }

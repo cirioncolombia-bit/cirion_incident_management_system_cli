@@ -1,18 +1,18 @@
 <section class="incidents" aria-labelledby="page-title">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Gestión de solicitudes</p>
-      <h1 id="page-title">{{ detailId() ? 'Detalle del incidente' : 'Incidentes' }}</h1>
+      <p class="eyebrow">Request management</p>
+      <h1 id="page-title">{{ detailId() ? 'Incident details' : 'Incidents' }}</h1>
       <p>
         {{
           detailId()
-            ? 'Consulta la información, las observaciones y los archivos del incidente.'
-            : 'Registra incidentes y sigue sus actualizaciones en un solo lugar.'
+            ? 'View the incident information, observations and files.'
+            : 'Record incidents and follow their updates in one place.'
         }}
       </p>
     </div>
     @if (detailId() || invalidId()) {
-      <button type="button" (click)="back()" [disabled]="saving()">← Volver al listado</button>
+      <button type="button" (click)="back()" [disabled]="saving()">← Back to list</button>
     } @else if (canRead() && canWrite()) {
       <button
         type="button"
@@ -20,12 +20,12 @@
         (click)="openCreate()"
         [disabled]="!optionsReady() || loading()"
       >
-        + Crear incidente
+        + Create incident
       </button>
     }
   </header>
   @if (checking()) {
-    <p class="panel" role="status">Verificando acceso…</p>
+    <p class="panel" role="status">Checking access…</p>
   }
   @if (notice()) {
     <p class="alert success" role="status">{{ notice() }}</p>
@@ -34,58 +34,58 @@
     <div class="alert error" role="alert">
       {{ error() }}
       @if (!invalidId()) {
-        <button type="button" (click)="retry()" [disabled]="loading()">Reintentar</button>
+        <button type="button" (click)="retry()" [disabled]="loading()">Retry</button>
       }
     </div>
   }
   @if (!checking() && !canRead() && !error()) {
-    <p class="panel">Tu cuenta no tiene permiso para consultar incidentes.</p>
+    <p class="panel">Your account does not have permission to view incidents.</p>
   }
   @if (canRead() && !invalidId()) {
     @if (!detailId()) {
       <form class="filters panel" [formGroup]="filters" (ngSubmit)="search()">
         <label class="search"
-          >Buscar<input
+          >Search<input
             type="search"
             formControlName="search"
             maxlength="200"
-            placeholder="Título o descripción"
+            placeholder="Title or description"
         /></label>
         <label
-          >Tipo<select formControlName="typeId">
-            <option value="">Todos los tipos</option>
+          >Type<select formControlName="typeId">
+            <option value="">All types</option>
             @for (o of options().types; track o.id) {
               <option [value]="o.id">{{ o.name }}</option>
             }
           </select></label
         >
         <label
-          >Estado<select formControlName="statusId">
-            <option value="">Todos los estados</option>
+          >Status<select formControlName="statusId">
+            <option value="">All statuses</option>
             @for (o of options().statuses; track o.id) {
               <option [value]="o.id">{{ o.name }}</option>
             }
           </select></label
         >
         <label
-          >Responsable<select formControlName="assigneeId">
-            <option value="">Todos los responsables</option>
+          >Assignee<select formControlName="assigneeId">
+            <option value="">All assignees</option>
             @for (o of options().users; track o.id) {
               <option [value]="o.id">{{ o.name }}</option>
             }
           </select></label
         >
         <div class="filter-actions">
-          <button type="submit" [disabled]="loading()">Buscar</button
+          <button type="submit" [disabled]="loading()">Search</button
           ><button type="button" class="quiet" (click)="clearFilters()" [disabled]="loading()">
-            Limpiar filtros
+            Clear filters
           </button>
         </div>
       </form>
       @if (loading()) {
-        <p role="status" class="panel">Cargando incidentes…</p>
+        <p role="status" class="panel">Loading incidents…</p>
       } @else if (!error()) {
-        <p class="count">{{ total() }} incidentes</p>
+        <p class="count">{{ total() }} incidents</p>
         <div class="records">
           @for (incident of rows(); track incident.id) {
             <article class="record">
@@ -97,44 +97,44 @@
               <p class="preview">{{ incident.description }}</p>
               <dl>
                 <div>
-                  <dt>Tipo</dt>
+                  <dt>Type</dt>
                   <dd>{{ incident.typeName }}</dd>
                 </div>
                 <div>
-                  <dt>Responsable</dt>
-                  <dd>{{ incident.assigneeName || 'Sin asignar' }}</dd>
+                  <dt>Assignee</dt>
+                  <dd>{{ incident.assigneeName || 'Unassigned' }}</dd>
                 </div>
                 <div>
-                  <dt>Creado por</dt>
+                  <dt>Created by</dt>
                   <dd>{{ incident.creatorName }}</dd>
                 </div>
                 <div>
-                  <dt>Fecha de creación</dt>
+                  <dt>Created on</dt>
                   <dd>{{ incident.createAt | date: 'mediumDate' }}</dd>
                 </div>
               </dl>
               <button type="button" class="full" (click)="openDetail(incident.id)">
-                Ver detalle →
+                View details →
               </button>
             </article>
           } @empty {
             <div class="empty panel">
-              <h2>No hay incidentes para mostrar</h2>
-              <p>Prueba otros filtros o registra un nuevo incidente.</p>
+              <h2>No incidents to display</h2>
+              <p>Try other filters or create a new incident.</p>
             </div>
           }
         </div>
         @if (totalPages() > 0) {
-          <nav class="pagination" aria-label="Paginación de incidentes">
-            <button (click)="paginate(-1)" [disabled]="page() <= 1">Anterior</button
+          <nav class="pagination" aria-label="Incident pagination">
+            <button (click)="paginate(-1)" [disabled]="page() <= 1">Previous</button
             ><span>{{ page() }} / {{ totalPages() }}</span
-            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Siguiente</button>
+            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Next</button>
           </nav>
         }
       }
     } @else {
       @if (loading()) {
-        <p role="status" class="panel">Cargando información…</p>
+        <p role="status" class="panel">Loading information…</p>
       }
       @if (detail(); as data) {
         <div class="detail-grid">
@@ -146,31 +146,31 @@
             <h2 id="information-title">{{ data.incident.title }}</h2>
             <dl>
               <div>
-                <dt>Tipo</dt>
+                <dt>Type</dt>
                 <dd>{{ data.incident.typeName }}</dd>
               </div>
               <div>
-                <dt>Estado</dt>
+                <dt>Status</dt>
                 <dd>{{ data.incident.statusName }}</dd>
               </div>
               <div>
-                <dt>Creado por</dt>
+                <dt>Created by</dt>
                 <dd>{{ data.incident.creatorName }}</dd>
               </div>
               <div>
-                <dt>Creación</dt>
+                <dt>Created</dt>
                 <dd>{{ data.incident.createAt | date: 'medium' }}</dd>
               </div>
               <div>
-                <dt>Última actualización</dt>
-                <dd>{{ (data.incident.updatedAt | date: 'medium') || 'Sin actualizaciones' }}</dd>
+                <dt>Last updated</dt>
+                <dd>{{ (data.incident.updatedAt | date: 'medium') || 'No updates' }}</dd>
               </div>
             </dl>
-            <h3>Descripción</h3>
+            <h3>Description</h3>
             <p class="multiline">{{ data.incident.description }}</p>
             <div class="actions">
               <button type="button" (click)="loadDetail()" [disabled]="loading() || saving()">
-                Actualizar detalle
+                Refresh details
               </button>
               @if (canWrite()) {
                 <button
@@ -179,37 +179,37 @@
                   (click)="openEdit('edit')"
                   [disabled]="loading() || saving() || !optionsReady()"
                 >
-                  Editar incidente</button
+                  Edit incident</button
                 ><button
                   type="button"
                   class="danger"
                   (click)="confirmDeactivate()"
                   [disabled]="saving() || loading()"
                 >
-                  Desactivar
+                  Deactivate
                 </button>
               }
             </div>
           </section>
           <section class="panel responsibility" aria-labelledby="responsibility-title">
-            <h2 id="responsibility-title">Responsable</h2>
-            <p class="assignee">{{ data.incident.assigneeName || 'Sin asignar' }}</p>
-            <p class="help">Persona asignada para atender el incidente.</p>
+            <h2 id="responsibility-title">Assignee</h2>
+            <p class="assignee">{{ data.incident.assigneeName || 'Unassigned' }}</p>
+            <p class="help">The person assigned to handle this incident.</p>
             @if (canWrite()) {
               <button
                 type="button"
                 (click)="openEdit('assign')"
                 [disabled]="loading() || saving() || !optionsReady()"
               >
-                {{ data.incident.assigneeId ? 'Cambiar responsable' : 'Asignar responsable' }}
+                {{ data.incident.assigneeId ? 'Change assignee' : 'Assign user' }}
               </button>
             }
           </section>
           <section class="panel observations" aria-labelledby="observations-title">
             <h2 id="observations-title">
-              Observaciones <span class="count">({{ data.observations.length }})</span>
+              Observations <span class="count">({{ data.observations.length }})</span>
             </h2>
-            <p class="help">Actualizaciones registradas por los usuarios del módulo.</p>
+            <p class="help">Updates recorded by users of this module.</p>
             <ol class="timeline">
               @for (item of data.observations; track item.id) {
                 <li>
@@ -222,31 +222,31 @@
                   <p class="multiline">{{ item.text }}</p>
                 </li>
               } @empty {
-                <li class="empty">Todavía no hay observaciones.</li>
+                <li class="empty">No observations yet.</li>
               }
             </ol>
             @if (canWrite()) {
               <form [formGroup]="observation" (ngSubmit)="addObservation()">
                 <label
-                  >Nueva observación<textarea
+                  >New observation<textarea
                     formControlName="text"
                     maxlength="10000"
                     rows="4"
-                    placeholder="Describe el avance o la información que deseas compartir"
+                    placeholder="Describe the progress or information you want to share"
                   ></textarea>
                 </label>
                 @if (observationError()) {
                   <p class="alert error" role="alert">{{ observationError() }}</p>
                 }
                 <button class="primary" type="submit" [disabled]="saving() || loading()">
-                  {{ saving() ? 'Procesando…' : 'Agregar observación' }}
+                  {{ saving() ? 'Processing…' : 'Add observation' }}
                 </button>
               </form>
             }
           </section>
           <section class="panel attachments" aria-labelledby="attachments-title">
             <h2 id="attachments-title">
-              Archivos adjuntos <span class="count">({{ data.attachments.length }})</span>
+              Attachments <span class="count">({{ data.attachments.length }})</span>
             </h2>
             <ul class="files">
               @for (file of data.attachments; track file.id) {
@@ -263,11 +263,11 @@
                     (click)="download(file)"
                     [disabled]="downloading() !== null"
                   >
-                    {{ downloading() === file.id ? 'Descargando…' : 'Descargar' }}
+                    {{ downloading() === file.id ? 'Downloading…' : 'Download' }}
                   </button>
                 </li>
               } @empty {
-                <li class="empty">No hay archivos adjuntos.</li>
+                <li class="empty">No attachments.</li>
               }
             </ul>
             @if (fileError()) {
@@ -276,14 +276,14 @@
             @if (canWrite()) {
               <div class="upload">
                 <label
-                  >Adjuntar un archivo<input
+                  >Attach a file<input
                     #fileInput
                     type="file"
                     (change)="chooseFile($event)"
                     [disabled]="saving() || loading()"
                 /></label>
                 <p class="help">
-                  El servidor valida el tamaño permitido. Se adjunta un archivo por operación.
+                  The server checks the allowed file size. Upload one file at a time.
                 </p>
                 @if (selectedFile(); as file) {
                   <p class="selected-file">{{ file.name }} · {{ bytes(file.size) }}</p>
@@ -293,7 +293,7 @@
                   (click)="upload()"
                   [disabled]="!selectedFile() || saving() || loading()"
                 >
-                  {{ saving() ? 'Procesando…' : 'Subir archivo' }}
+                  {{ saving() ? 'Processing…' : 'Upload file' }}
                 </button>
               </div>
             }
@@ -308,13 +308,13 @@
     <h2 id="editor-title">
       {{
         mode() === 'create'
-          ? 'Crear incidente'
+          ? 'Create incident'
           : mode() === 'assign'
-            ? 'Asignar responsable'
-            : 'Editar incidente'
+            ? 'Assign user'
+            : 'Edit incident'
       }}
     </h2>
-    <button type="button" aria-label="Cerrar formulario" (click)="close()" [disabled]="saving()">
+    <button type="button" aria-label="Close form" (click)="close()" [disabled]="saving()">
       ×
     </button>
   </header>
@@ -323,27 +323,27 @@
   }
   <form [formGroup]="form" (ngSubmit)="save()">
     <fieldset [disabled]="saving()">
-      <legend class="visually-hidden">Datos del incidente</legend>
+      <legend class="visually-hidden">Incident information</legend>
       @if (mode() === 'assign') {
         <label
-          >Usuario responsable<select formControlName="assigneeId">
-            <option value="">Sin asignar</option>
+          >Assigned user<select formControlName="assigneeId">
+            <option value="">Unassigned</option>
             @for (o of options().users; track o.id) {
               <option [value]="o.id">{{ o.name }}</option>
             }
             @if (detail(); as d) {
               @if (d.incident.assigneeId && !hasOption('users', d.incident.assigneeId)) {
                 <option [value]="d.incident.assigneeId">
-                  {{ d.incident.assigneeName }} (inactivo; selecciona otro)
+                  {{ d.incident.assigneeName }} (inactive; select another)
                 </option>
               }
             }
           </select></label
         >
-        <p class="help">Selecciona un usuario activo o retira la asignación.</p>
+        <p class="help">Select an active user or remove the assignment.</p>
       } @else {
         <label
-          >Título *<input
+          >Title *<input
             formControlName="title"
             maxlength="200"
             required
@@ -351,27 +351,27 @@
         /></label>
         <div class="form-grid">
           <label
-            >Tipo de incidente *<select formControlName="typeId" required>
-              <option value="">Selecciona un tipo</option>
+            >Incident type *<select formControlName="typeId" required>
+              <option value="">Select a type</option>
               @for (o of options().types; track o.id) {
                 <option [value]="o.id">{{ o.name }}</option>
               }
               @if (detail(); as d) {
                 @if (mode() === 'edit' && !hasOption('types', d.incident.typeId)) {
                   <option [value]="d.incident.typeId">
-                    {{ d.incident.typeName }} (inactivo; selecciona otro)
+                    {{ d.incident.typeName }} (inactive; select another)
                   </option>
                 }
               }
             </select></label
           >
           <label
-            >Estado<select formControlName="statusId">
+            >Status<select formControlName="statusId">
               <option value="">
                 {{
                   mode() === 'create'
-                    ? 'Usar el estado inicial configurado'
-                    : 'Selecciona un estado'
+                    ? 'Use the configured initial status'
+                    : 'Select a status'
                 }}
               </option>
               @for (o of options().statuses; track o.id) {
@@ -380,7 +380,7 @@
               @if (detail(); as d) {
                 @if (mode() === 'edit' && !hasOption('statuses', d.incident.statusId)) {
                   <option [value]="d.incident.statusId">
-                    {{ d.incident.statusName }} (inactivo; selecciona otro)
+                    {{ d.incident.statusName }} (inactive; select another)
                   </option>
                 }
               }
@@ -388,7 +388,7 @@
           >
         </div>
         <label
-          >Descripción *<textarea
+          >Description *<textarea
             formControlName="description"
             rows="6"
             maxlength="10000"
@@ -399,15 +399,14 @@
           ></textarea>
         </label>
         <p class="help">
-          Después de crear el incidente podrás asignar un responsable, agregar observaciones y
-          adjuntar archivos.
+          After creating the incident, you can assign a user, add observations and attach files.
         </p>
       }
     </fieldset>
     <footer class="dialog-actions">
-      <button type="button" (click)="close()" [disabled]="saving()">Cancelar</button
+      <button type="button" (click)="close()" [disabled]="saving()">Cancel</button
       ><button type="submit" class="primary" [disabled]="saving() || !optionsReady()">
-        {{ saving() ? 'Guardando…' : 'Guardar' }}
+        {{ saving() ? 'Saving…' : 'Save' }}
       </button>
     </footer>
   </form>
@@ -417,21 +416,20 @@
   aria-labelledby="confirmation-title"
   (cancel)="saving() ? $event.preventDefault() : null"
 >
-  <h2 id="confirmation-title">¿Desactivar el incidente?</h2>
+  <h2 id="confirmation-title">Deactivate this incident?</h2>
   <p>
     <strong>{{ detail()?.incident?.title }}</strong>
   </p>
   <p>
-    Dejará de aparecer en el listado. Las observaciones, los archivos y las relaciones históricas se
-    conservarán.
+    It will no longer appear in the list. Observations, files and historical relationships will be preserved.
   </p>
   @if (formError()) {
     <p class="alert error" role="alert">{{ formError() }}</p>
   }
   <footer class="dialog-actions">
-    <button type="button" (click)="cancelDeactivate()" [disabled]="saving()">Cancelar</button
+    <button type="button" (click)="cancelDeactivate()" [disabled]="saving()">Cancel</button
     ><button type="button" class="danger" (click)="deactivate()" [disabled]="saving()">
-      {{ saving() ? 'Desactivando…' : 'Desactivar' }}
+      {{ saving() ? 'Deactivating…' : 'Deactivate' }}
     </button>
   </footer>
 </dialog>

@@ -75,7 +75,7 @@ describe('Incidents integration', () => {
     fixture.detectChanges();
     expect(component.detail()).toEqual(data);
     expect(fixture.nativeElement.textContent).not.toContain('Editar incidente');
-    expect(fixture.nativeElement.textContent).not.toContain('Agregar observación');
+    expect(fixture.nativeElement.textContent).not.toContain('Add observation');
   });
   it('creates without hardcoded status so the backend chooses its database initial status', () => {
     const { component, api, router } = setup();
@@ -97,7 +97,7 @@ describe('Incidents integration', () => {
     await Promise.resolve();
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(component.editor.nativeElement.close).toHaveBeenCalled();
-    expect(component.error()).toContain('se creó');
+    expect(component.error()).toContain('was created');
   });
   it('updates incident separately from assignment', () => {
     const { component, api } = setup(undefined, '1');
@@ -156,21 +156,21 @@ describe('Incidents integration', () => {
     component.observation.controls.text.setValue('Avance');
     component.addObservation();
     expect(component.observation.controls.text.value).toBe('Avance');
-    expect(component.observationError()).toContain('cambió');
+    expect(component.observationError()).toContain('changed');
   });
   it('rejects an empty file without an HTTP upload', () => {
     const { component, api } = setup(undefined, '1');
     component.selectedFile.set(new File([], 'empty.txt'));
     component.upload();
     expect(api.upload).not.toHaveBeenCalled();
-    expect(component.fileError()).toContain('vacío');
+    expect(component.fileError()).toContain('empty');
   });
   it('shows server size error and retains file for user review', () => {
     const { component, api } = setup(undefined, '1');
     api.upload.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 413 })));
     component.selectedFile.set(new File(['data'], 'report.txt'));
     component.upload();
-    expect(component.fileError()).toContain('tamaño');
+    expect(component.fileError()).toContain('size');
     expect(component.selectedFile()?.name).toBe('report.txt');
   });
   it('ignores stale detail responses when the selected incident changes', () => {

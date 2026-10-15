@@ -154,7 +154,7 @@ describe('Assignments workflow', () => {
     api.save.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
     component.save();
     expect(component.selectedPort()?.id).toBe(10);
-    expect(component.error()).toContain('cambió');
+    expect(component.error()).toContain('changed');
   });
   it('ignores stale Delivery lookup responses', () => {
     const { component, api } = setup();

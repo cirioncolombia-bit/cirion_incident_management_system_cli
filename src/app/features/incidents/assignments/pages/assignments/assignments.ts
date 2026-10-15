@@ -90,7 +90,7 @@ export class Assignments {
         id = raw === null ? null : Number(raw);
       this.id.set(id);
       if (id !== null && (!Number.isSafeInteger(id) || id <= 0)) {
-        this.error.set('El identificador de la asignación no es válido.');
+        this.error.set('The assignment ID is invalid.');
         this.mode.set('detail');
         return;
       }
@@ -137,7 +137,7 @@ export class Assignments {
     if (!this.saving())
       void this.router
         .navigate([], { relativeTo: this.route, queryParams: params })
-        .catch(() => this.error.set('No se pudo cambiar de pantalla.'));
+        .catch(() => this.error.set('Could not navigate to the requested page.'));
   }
   reload() {
     if (!this.canRead()) {
@@ -237,7 +237,7 @@ export class Assignments {
     }
     const id = Number(this.form.controls.deliveryId.value);
     if (!Number.isSafeInteger(id)) {
-      this.lookupError.set('Ingresa un ID válido.');
+      this.lookupError.set('Enter a valid ID.');
       return;
     }
     this.deliveryChanged();
@@ -409,7 +409,7 @@ export class Assignments {
       port.fiberTrayId !== Number(value.fiberTrayId)
     ) {
       this.error.set(
-        'Consulta un Delivery y selecciona GCO, FiberTray, puerto y estado antes de guardar.',
+        'Look up a Delivery and select a GCO, FiberTray, port and status before saving.',
       );
       return;
     }
@@ -433,7 +433,7 @@ export class Assignments {
       )
       .subscribe({
         next: (id) => {
-          this.notice.set('La asignación se guardó correctamente.');
+          this.notice.set('The assignment was saved successfully.');
           void this.router
             .navigate([], { relativeTo: this.route, queryParams: { id } })
             .then((ok) => {
@@ -472,27 +472,27 @@ export class Assignments {
       .subscribe({
         next: () => {
           this.confirmation.nativeElement.close();
-          this.notice.set('La asignación se desactivó correctamente.');
+          this.notice.set('The assignment was deactivated successfully.');
           void this.router.navigate([], { relativeTo: this.route, queryParams: {} });
         },
         error: (e) => this.error.set(this.message(e)),
       });
   }
   private message(e: unknown) {
-    if (!(e instanceof HttpErrorResponse)) return 'No se pudo completar la operación.';
-    if (e.status === 0) return 'No se pudo conectar con el servidor.';
-    if (e.status === 403) return 'No tienes permiso para esta operación.';
-    if (e.status === 404) return 'No se encontró el registro o no está disponible para tu cuenta.';
+    if (!(e instanceof HttpErrorResponse)) return 'The operation could not be completed.';
+    if (e.status === 0) return 'Could not connect to the server.';
+    if (e.status === 403) return 'You do not have permission to perform this operation.';
+    if (e.status === 404) return 'The record was not found or is not available to your account.';
     if (e.status === 409)
-      return 'El registro cambió o el nombre del equipo está reservado. Actualiza la información antes de reintentar.';
+      return 'The record changed or the equipment name is reserved. Refresh the information before trying again.';
     if (e.status === 400)
       return (
         e.error?.message ||
         Object.values(e.error?.errors ?? {})
           .flat()
           .join(' ') ||
-        'Revisa los datos del formulario.'
+        'Review the form information.'
       );
-    return 'No se pudo completar la operación. Inténtalo nuevamente.';
+    return 'The operation could not be completed. Please try again.';
   }
 }
