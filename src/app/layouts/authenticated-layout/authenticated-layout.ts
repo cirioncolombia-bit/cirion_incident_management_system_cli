@@ -60,6 +60,14 @@ export class AuthenticatedLayout {
       });
   }
 
+  readonly adminOpen = signal(true);
+  toggleAdmin(): void {
+    if (this.sidebarCollapsed()) {
+      this.sidebarCollapsed.set(false);
+      this.adminOpen.set(true);
+    } else this.adminOpen.update(open => !open);
+  }
+
   readonly sidebarOpen = signal(false);
   readonly userMenuOpen = signal(false);
   readonly sidebarCollapsed = signal(false);
