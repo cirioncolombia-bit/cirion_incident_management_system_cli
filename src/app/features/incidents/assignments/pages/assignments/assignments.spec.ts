@@ -66,6 +66,8 @@ describe('Assignments workflow', () => {
     const fixture = TestBed.createComponent(Assignments);
     fixture.detectChanges();
     const component = fixture.componentInstance;
+    component.saveConfirmation.nativeElement.showModal = vi.fn();
+    component.saveConfirmation.nativeElement.close = vi.fn();
     component.confirmation.nativeElement.showModal = vi.fn();
     component.confirmation.nativeElement.close = vi.fn();
     return { component, fixture, api, params, router };
@@ -124,6 +126,16 @@ describe('Assignments workflow', () => {
     component.deliveryChanged();
     expect(component.delivery()).toBeNull();
   });
+  it('requires confirmation and cancels without sending a request', () => {
+    const { component, api } = setup();
+    choose(component);
+    component.save();
+    expect(component.saveConfirmation.nativeElement.showModal).toHaveBeenCalled();
+    expect(api.save).not.toHaveBeenCalled();
+    component.cancelSave();
+    component.confirmSave();
+    expect(api.save).not.toHaveBeenCalled();
+  });
   it('rejects saving without consulting and selecting a port', () => {
     const { component, api } = setup();
     component.save();
@@ -135,6 +147,7 @@ describe('Assignments workflow', () => {
     choose(component);
     component.form.patchValue({ statusId: '6', equipmentName: ' Equipo nuevo ' });
     component.save();
+    component.confirmSave();
     expect(api.save).toHaveBeenCalledWith(null, {
       deliveryId: 128,
       portId: 10,
@@ -147,6 +160,7 @@ describe('Assignments workflow', () => {
     const { component, api } = setup();
     choose(component);
     component.save();
+    component.confirmSave();
     expect(api.save).toHaveBeenCalledWith(null, expect.objectContaining({ equipmentName: null }));
   });
   it('prevents duplicate saves while the first request is pending', () => {
@@ -154,7 +168,8 @@ describe('Assignments workflow', () => {
     choose(component);
     api.save.mockReturnValue(new Subject<number>());
     component.save();
-    component.save();
+    component.confirmSave();
+    component.confirmSave();
     expect(api.save).toHaveBeenCalledTimes(1);
   });
   it('keeps the form on a concurrency error', () => {
@@ -162,6 +177,7 @@ describe('Assignments workflow', () => {
     choose(component);
     api.save.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
     component.save();
+    component.confirmSave();
     expect(component.selectedPort()?.id).toBe(10);
     expect(component.error()).toContain('changed');
   });
