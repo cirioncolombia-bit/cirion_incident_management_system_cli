@@ -414,15 +414,73 @@
                           </option>
                         }
                       </select></label
-                    ><label
-                      >Equipment name<input
+                    >
+                    <div
+                      class="equipment-picker"
+                      (focusout)="
+                        !$any($event.currentTarget).contains($event.relatedTarget)
+                          ? equipmentOpen.set(false)
+                          : null
+                      "
+                    >
+                      <label for="assignment-equipment"
+                        >Equipment name
+                        @if (equipmentRequired()) {
+                          <span class="required-marker">*</span>
+                        }
+                      </label>
+                      <input
+                        id="assignment-equipment"
                         formControlName="equipmentName"
                         maxlength="100"
-                        placeholder="Equipment name (optional)"
-                    /></label>
-                    <p class="help">
-                      The selected port status and equipment will be updated when you save. Leave
-                      the name blank to clear its equipment.
+                        autocomplete="off"
+                        placeholder="Search or enter equipment name"
+                        [attr.aria-required]="equipmentRequired()"
+                        [attr.aria-invalid]="
+                          form.controls.equipmentName.touched && form.controls.equipmentName.invalid
+                        "
+                        [class.invalid]="
+                          form.controls.equipmentName.touched && form.controls.equipmentName.invalid
+                        "
+                        aria-describedby="equipment-help equipment-validation"
+                        (focus)="openEquipment()"
+                        (input)="equipmentOpen.set(true)"
+                        (keydown.escape)="equipmentOpen.set(false); $event.stopPropagation()"
+                      />
+                      @if (equipmentOpen()) {
+                        <div class="equipment-suggestions" aria-label="Equipment suggestions">
+                          @if (equipmentBusy()) {
+                            <p role="status">Loading equipment…</p>
+                          } @else if (equipmentError()) {
+                            <p role="status">{{ equipmentError() }}</p>
+                          } @else {
+                            @for (equipment of equipmentOptions(); track equipment.id) {
+                              <button type="button" (click)="chooseEquipment(equipment)">
+                                {{ equipment.name }}
+                              </button>
+                            } @empty {
+                              <p>No matching equipment. Enter a new name if needed.</p>
+                            }
+                            @if (equipmentOptions().length === 20) {
+                              <p>Type more characters to narrow the results.</p>
+                            }
+                          }
+                        </div>
+                      }
+                    </div>
+                    <p id="equipment-validation" class="equipment-validation" role="alert">
+                      @if (
+                        form.controls.equipmentName.touched &&
+                        form.controls.equipmentName.hasError('required')
+                      ) {
+                        Equipment is required for an occupied port.
+                      }
+                    </p>
+                    <p class="help" id="equipment-help">
+                      Choose an existing equipment name or enter a new one. Equipment is required
+                      for an occupied port. The selected port status and equipment will be updated
+                      when you save. For other statuses, leave the name blank to clear its
+                      equipment.
                     </p>
                   </section>
                   <section class="panel summary">

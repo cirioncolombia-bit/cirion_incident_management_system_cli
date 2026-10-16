@@ -31,6 +31,15 @@ describe('Assignments API contracts', () => {
     api.fiberTrays(128, 3).subscribe();
     http.expectOne(`${base}/deliveries/128/gcos/3/fiber-trays`).flush({ data: [] });
   });
+  it('searches equipment scoped to the selected FiberTray', () => {
+    api.equipment(128, 3, 4, 'Router').subscribe();
+    const request = http.expectOne(
+      (req) => req.url === `${base}/deliveries/128/gcos/3/fiber-trays/4/equipment`,
+    );
+    expect(request.request.params.get('Search')).toBe('Router');
+    expect(request.request.params.get('PageSize')).toBe('20');
+    request.flush({ rows: [] });
+  });
   it('sends both concurrency versions when editing', () => {
     const body = {
       deliveryId: 128,

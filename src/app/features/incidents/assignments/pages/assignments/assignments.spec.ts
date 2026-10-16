@@ -37,11 +37,15 @@ describe('Assignments workflow', () => {
         of({
           statuses: [
             { id: 5, name: 'Disponible' },
-            { id: 6, name: 'En uso' },
+            { id: 6, name: 'En uso', requiresEquipment: false },
+            { id: 7, name: 'OCUPADO', requiresEquipment: true },
           ],
         }),
       ),
       list: vi.fn(() => of({ rows: [], totalCount: 0, totalPages: 0, page: 1 })),
+      equipment: vi.fn(() =>
+        of({ rows: [{ id: 12, name: 'Equipment A' }], page: 1, totalPages: 1, totalCount: 1 }),
+      ),
       detail: vi.fn(),
       delivery: vi.fn(() => of(delivery)),
       fiberTrays: vi.fn(() =>
@@ -125,6 +129,59 @@ describe('Assignments workflow', () => {
     expect(component.form.controls.equipmentName.value).toBe('');
     component.deliveryChanged();
     expect(component.delivery()).toBeNull();
+  });
+  it('requires equipment for occupied ports before confirmation, and removes that requirement for other states', () => {
+    const { component, api } = setup();
+    choose(component);
+    component.form.patchValue({ statusId: '7', equipmentName: '   ' });
+    component.save();
+    expect(component.form.controls.equipmentName.hasError('required')).toBe(true);
+    expect(component.saveConfirmation.nativeElement.showModal).not.toHaveBeenCalled();
+    expect(api.save).not.toHaveBeenCalled();
+    component.form.controls.equipmentName.setValue('New equipment');
+    component.save();
+    component.confirmSave();
+    expect(api.save).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ statusId: 7, equipmentName: 'New equipment' }),
+    );
+    component.form.patchValue({ statusId: '5', equipmentName: '' });
+    expect(component.form.controls.equipmentName.valid).toBe(true);
+  });
+  it('loads equipment for the selected FiberTray and allows choosing a suggestion', () => {
+    const { component, api } = setup();
+    choose(component);
+    component.openEquipment();
+    expect(api.equipment).toHaveBeenCalledWith(128, 3, 4, '');
+    component.chooseEquipment({ id: 12, name: 'Equipment A' });
+    expect(component.form.controls.equipmentName.value).toBe('Equipment A');
+    expect(component.equipmentOpen()).toBe(false);
+    component.form.controls.fiberTrayId.setValue('8');
+    component.trayChanged();
+    expect(component.form.controls.equipmentName.value).toBe('');
+    expect(component.equipmentOptions()).toEqual([]);
+  });
+  it('ignores equipment suggestions returned for a previous FiberTray', () => {
+    const { component, api } = setup();
+    choose(component);
+    const pending = new Subject<{
+      rows: { id: number; name: string }[];
+      page: number;
+      totalPages: number;
+      totalCount: number;
+    }>();
+    api.equipment.mockReturnValue(pending);
+    component.openEquipment();
+    component.form.controls.fiberTrayId.setValue('8');
+    component.trayChanged();
+    pending.next({
+      rows: [{ id: 99, name: 'Old tray equipment' }],
+      page: 1,
+      totalPages: 1,
+      totalCount: 1,
+    });
+    pending.complete();
+    expect(component.equipmentOptions()).toEqual([]);
   });
   it('requires confirmation and cancels without sending a request', () => {
     const { component, api } = setup();

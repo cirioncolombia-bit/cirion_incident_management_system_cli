@@ -20,3 +20,10 @@ Se verificó el CRUD en Chromium con API simulada a 320, 375, 768 y 1440 px. La 
 El formulario sigue Delivery → GCO → FiberTray → puertos. El catálogo de FiberTrays activos de la GCO se obtiene mediante `GET /api/Assignment/deliveries/{deliveryId}/gcos/{gcoId}/fiber-trays`, conservando el alcance del Delivery y su nodo. No se filtran las bandejas por ocupación de sus puertos.
 
 El endpoint de puertos acepta `FiberTrayId` y `StatusId` opcionales. Los filtros se aplican conjuntamente con la GCO y la búsqueda antes del conteo y de la paginación; omitir StatusId muestra todos los estados. El frontend exige seleccionar FiberTray antes de consultar puertos, limpia la selección previa al cambiar filtros y restaura el FiberTray al editar. Los estados provienen del catálogo existente. No requiere cambios de esquema ni otra migración.
+
+
+### Equipment selection and occupied status
+
+The equipment field offers active equipment associated with ports of the selected FiberTray. Suggestions are searched by name through the scoped equipment endpoint (up to 20 matches; refine the search for more). Users may also enter a new name, preserving the existing equipment creation behavior. Changing the FiberTray clears equipment selection and suggestions.
+
+Status options supplied by the backend include `requiresEquipment`. When true (the database OCUPADO status), equipment is required, whitespace-only input is rejected, and the confirmation dialog cannot open until the field is valid. Other statuses allow a blank name to clear equipment. Deploy the accompanying backend change before this frontend feature.
