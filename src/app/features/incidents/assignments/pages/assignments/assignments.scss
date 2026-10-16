@@ -471,6 +471,15 @@ fieldset > label,
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
 }
+.port-color-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid #64748b;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-inline: 0.2rem;
+}
 .port-card .badge {
   display: inline-block;
 }
