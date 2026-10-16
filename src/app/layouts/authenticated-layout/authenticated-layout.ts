@@ -15,6 +15,15 @@ export class AuthenticatedLayout {
 
   readonly currentUser = this.authService.currentUser;
   readonly accountError = signal('');
+  canAccess(permission: string): boolean {
+    return this.currentUser()?.permissions.includes(permission) ?? false;
+  }
+  readonly canManageUsers = computed(() => {
+    const user = this.currentUser();
+    return !!user && !user.isExternal &&
+      (user.permissions.includes('users.manage') || user.permissions.includes('catalogs.manage'));
+  });
+
   readonly displayName = computed(
     () => this.currentUser()?.fullName || this.currentUser()?.email || 'Cuenta',
   );
