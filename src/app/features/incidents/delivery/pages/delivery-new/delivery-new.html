@@ -45,6 +45,7 @@
     <button type="button" (click)="acceptCreation()" [disabled]="navigatingToDelivery()">OK</button>
   }
 
+@if (canWrite()) {
   <form
     class="delivery-new__form"
     [formGroup]="form"
@@ -1399,6 +1400,10 @@
     </footer>
     </fieldset>
   </form>
+} @else {
+  <p role="status">You do not have permission to create or edit deliveries.</p>
+}
+
 </section>
 <dialog #creationDialog class="delivery-success-dialog" aria-labelledby="delivery-success-title"
   aria-describedby="delivery-success-message">

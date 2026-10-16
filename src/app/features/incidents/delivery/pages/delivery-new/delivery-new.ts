@@ -95,6 +95,7 @@ const optionalCostValidator: ValidatorFn = (control) => {
   styleUrl: './delivery-new.scss',
 })
 export class DeliveryNew {
+  readonly canWrite = computed(() => this.authService.currentUser()?.permissions.includes('deliveries.write') ?? false);
   private readonly router = inject(Router);
   private readonly creationDialog = viewChild.required<ElementRef<HTMLDialogElement>>('creationDialog');
   readonly navigatingToDelivery = signal(false);
@@ -334,6 +335,7 @@ export class DeliveryNew {
   // ====================================================
 
   submit(): void {
+    if (!this.canWrite()) return;
     if (this.saving() || this.createdDeliveryId() !== null
       || this.optionsLoading() || !this.options() || this.optionsError()) return;
 

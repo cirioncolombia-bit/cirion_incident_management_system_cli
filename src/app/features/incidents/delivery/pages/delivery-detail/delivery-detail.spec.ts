@@ -1,3 +1,4 @@
+import { AuthService } from '../../../../auth/services/auth.service';
 import { Component } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -75,6 +76,7 @@ describe('DeliveryDetail', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
+        {provide: AuthService, useValue: {currentUser: () => ({permissions: ['deliveries.read', 'deliveries.write']})}},
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([

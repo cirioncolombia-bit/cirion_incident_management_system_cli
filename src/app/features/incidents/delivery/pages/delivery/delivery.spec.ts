@@ -1,19 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../../../auth/services/auth.service';
 import { Delivery } from './delivery';
 import { DeliveryService } from '../../services/delivery.service';
 import { DeliverySummary } from '../../models/delivery-summary';
 
 describe('Delivery summary', () => {
-  function setup(totalInstallationCost: number | undefined = 125000) {
+  function setup(totalInstallationCost: number | undefined = 125000, permissions = ['deliveries.read', 'deliveries.write']) {
     const record = {
       id: 42, workOrderId: 'DKO-100', rfsFiberChain: 'RFS-1', clientName: 'Client',
       buildingSite: 'Site', address: 'Address', cityName: 'Bogotá', nodeName: 'SUBA',
       revenue: 1000, surveryCost: 0, installationBudget: 0, totalInstallationCost,
       statusDescription: 'DETENIDO CLIENTE', email: 'contact@example.com', contactName: 'Ana', mobilePhone: 3001234567,
     } as DeliverySummary;
-    TestBed.configureTestingModule({ imports: [Delivery], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [Delivery], providers: [provideRouter([]), {provide: AuthService, useValue: {currentUser: () => ({permissions})}},
       { provide: DeliveryService, useValue: { getAll: () => of([record]), getStatusHistory: () => throwError(() => new Error('Not available')) } },
     ] });
     const fixture = TestBed.createComponent(Delivery); fixture.detectChanges();
@@ -31,6 +32,19 @@ describe('Delivery summary', () => {
     expect(cells[headers.indexOf('DKO/TKT')].textContent).toContain('#42');
     expect(cells[headers.indexOf('Email')].textContent).toContain('contact@example.com');
     expect(cells[headers.indexOf('Installation Cost')].textContent).toContain('125.000');
+  });
+  it('keeps details available but hides creation and editing for a viewer', () => {
+    const {element, component} = setup(125000, ['deliveries.read']);
+    expect(component.canWrite()).toBe(false);
+    expect(element.querySelector('.delivery-page__create')).toBeNull();
+    expect(element.querySelector('button[title="Edit delivery"]')).toBeNull();
+    expect(element.querySelector('a[title="View details"]')).not.toBeNull();
+  });
+  it('allows a module Admin with combined read/write grants to create and edit', () => {
+    const {element, component} = setup();
+    expect(component.canWrite()).toBe(true);
+    expect(element.querySelector('.delivery-page__create')).not.toBeNull();
+    expect(element.querySelector('button[title="Edit delivery"]')).not.toBeNull();
   });
   it('uses the service total and formats an empty cost total as zero pesos', () => {
     const {component} = setup(0);

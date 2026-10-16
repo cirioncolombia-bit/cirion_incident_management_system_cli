@@ -1,3 +1,4 @@
+import { AuthService } from '../../../../auth/services/auth.service';
 import { currentPeriod, formatDuration, DeliveryStatusHistoryData } from '../../models/delivery-status-history';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -93,6 +94,8 @@ const noWhitespaceValidator: ValidatorFn = (
   styleUrl: './delivery.scss',
 })
 export class Delivery {
+  private readonly accessAuth = inject(AuthService);
+  readonly canWrite = computed(() => this.accessAuth.currentUser()?.permissions.includes('deliveries.write') ?? false);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly queryParams = toSignal(this.route.queryParamMap, {
@@ -586,7 +589,7 @@ export class Delivery {
   }
 
   startEdit(delivery: DeliveryItem): void {
-    void this.router.navigate(['/delivery', delivery.id, 'edit']);
+    if (this.canWrite()) void this.router.navigate(['/delivery', delivery.id, 'edit']);
   }
 
   cancelEdit(): void {

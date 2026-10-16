@@ -32,11 +32,13 @@
         <p class="delivery-detail__subtitle">Review the complete delivery information.</p>
 
         <div class="delivery-detail__actions">
+          @if (canWrite()) {
           <a class="delivery-detail__edit" [routerLink]="['/delivery', delivery.id, 'edit']">
             <span class="delivery-detail__edit-icon" aria-hidden="true"> ✎ </span>
 
             <span> Edit Delivery </span>
           </a>
+          }
         </div>
       </div>
     </header>

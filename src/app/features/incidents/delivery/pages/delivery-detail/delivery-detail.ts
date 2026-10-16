@@ -1,3 +1,5 @@
+import { computed } from '@angular/core';
+import { AuthService } from '../../../../auth/services/auth.service';
 import { DatePipe } from '@angular/common';
 import { currentPeriod, formatDuration, DeliveryStatusHistoryData, DeliveryStatusPeriod, DeliveryStatusTotal } from '../../models/delivery-status-history';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,6 +17,8 @@ import { DeliveryService } from '../../services/delivery.service';
   styleUrl: './delivery-detail.scss',
 })
 export class DeliveryDetail {
+  private readonly accessAuth = inject(AuthService);
+  readonly canWrite = computed(() => this.accessAuth.currentUser()?.permissions.includes('deliveries.write') ?? false);
   private readonly route = inject(ActivatedRoute);
   private readonly service = inject(DeliveryService);
   private readonly destroyRef = inject(DestroyRef);
