@@ -33,6 +33,17 @@ describe('Navigation by effective permissions', () => {
   it('allows internal catalog managers to access the Users module',()=>{
     expect(setup(['catalogs.manage']).links()).toEqual(['/users']);
   });
+  it('shows Network inside Admin for internal catalog readers', () => {
+    const { fixture, links } = setup(['catalogs.read']);
+    expect(links()).toEqual(['/admin/network']);
+    expect(fixture.nativeElement.querySelector('#admin-submenu a[href="/admin/network"]')).not.toBeNull();
+  });
+  it('shows Network and Users when both permissions are available', () => {
+    expect(setup(['catalogs.read', 'catalogs.manage']).links()).toEqual(['/users', '/admin/network']);
+  });
+  it('hides Network from external accounts even with catalog permissions', () => {
+    expect(setup(['catalogs.read', 'catalogs.manage'], true).links()).toEqual([]);
+  });
   it('does not expose global user administration to external accounts',()=>{
     expect(setup(['users.manage','catalogs.manage','deliveries.read'],true).links()).toEqual(['/delivery']);
   });
