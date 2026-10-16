@@ -83,77 +83,115 @@
       <p class="record-count">
         {{ total() }} {{ total() === 1 ? 'record' : 'records' }} · {{ catalog().label }}
       </p>
-      <div class="records">
-        @for (record of rows(); track record.id) {
-          <article class="record">
-            <div class="record-header">
-              <div>
-                <span class="record-id">#{{ record.id }}</span>
-                <h3>{{ record.name }}</h3>
-              </div>
-              <span class="badge" [class.inactive]="!record.isActive">{{
-                record.isActive ? 'Active' : 'Inactive'
-              }}</span>
-            </div>
-            <dl>
-              @if (record.parentName) {
-                <div>
-                  <dt>{{ parentLevel()?.label }}</dt>
-                  <dd>{{ record.parentName }}</dd>
-                </div>
+      <p class="help table-hint" id="network-table-hint">Scroll horizontally to see all columns.</p>
+      <div
+        class="table-wrapper"
+        role="region"
+        [attr.aria-label]="catalog().label + ' records'"
+        aria-describedby="network-table-hint"
+        tabindex="0"
+      >
+        <table class="network-table" [class.network-table--ports]="catalog().resource === 'Ports'">
+          <caption class="visually-hidden">
+            {{
+              catalog().label
+            }}
+          </caption>
+          <thead>
+            <tr>
+              @if (canManage() && catalog().resource !== 'Countries') {
+                <th scope="col" class="edit-column">Edit</th>
+              }
+              <th scope="col">ID</th>
+              <th scope="col">Name</th>
+              @if (parentLevel(); as parent) {
+                <th scope="col">{{ parent.label }}</th>
               }
               @if (catalog().resource === 'Nodes') {
-                <div>
-                  <dt>Address</dt>
-                  <dd>{{ record.address || '—' }}</dd>
-                </div>
+                <th scope="col">Address</th>
               }
               @if (catalog().resource === 'Gcos') {
-                <div>
-                  <dt>Distance to port</dt>
-                  <dd>{{ record.distanceToPort ?? 0 }}</dd>
-                </div>
+                <th scope="col">Distance to port</th>
               }
               @if (catalog().resource === 'Ports') {
-                <div>
-                  <dt>Status</dt>
-                  <dd>{{ record.statusName || '—' }}</dd>
-                </div>
-                <div>
-                  <dt>Equipment</dt>
-                  <dd>{{ record.equipmentName || 'Not assigned' }}</dd>
-                </div>
-                <div>
-                  <dt>Conduit</dt>
-                  <dd>{{ record.conduitName || 'Not assigned' }}</dd>
-                </div>
-                <div>
-                  <dt>Fiber Color</dt>
-                  <dd>{{ record.fiberColorName || 'Not assigned' }}</dd>
-                </div>
+                <th scope="col">Port status</th>
+                <th scope="col">Equipment</th>
+                <th scope="col">Conduit</th>
+                <th scope="col">Fiber Color</th>
               }
-            </dl>
-            @if (canManage() && record.isActive && catalog().resource !== 'Countries') {
-              <div class="record-actions">
-                <button
-                  type="button"
-                  (click)="openEditor(record)"
-                  [attr.aria-label]="'Edit ' + record.name"
-                >
-                  Edit</button
-                ><button
-                  class="danger"
-                  type="button"
-                  (click)="confirmDeactivation(record)"
-                  [attr.aria-label]="'Deactivate ' + record.name"
-                >
-                  Deactivate
-                </button>
-              </div>
+              <th scope="col">Record status</th>
+              @if (canManage() && catalog().resource !== 'Countries') {
+                <th scope="col">Deactivate</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of rows(); track record.id) {
+              <tr>
+                @if (canManage() && catalog().resource !== 'Countries') {
+                  <td class="edit-column">
+                    @if (record.isActive) {
+                      <button
+                        class="edit-icon"
+                        type="button"
+                        (click)="openEditor(record)"
+                        [attr.aria-label]="'Edit ' + record.name"
+                        [title]="'Edit ' + record.name"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path d="m16 3 5 5-12 12-6 1 1-6L16 3Z" />
+                          <path d="m14 5 5 5" />
+                        </svg>
+                      </button>
+                    } @else {
+                      <span aria-label="Editing unavailable for inactive records">—</span>
+                    }
+                  </td>
+                }
+                <td class="id-column">{{ record.id }}</td>
+                <th scope="row">{{ record.name }}</th>
+                @if (parentLevel()) {
+                  <td>{{ record.parentName || '—' }}</td>
+                }
+                @if (catalog().resource === 'Nodes') {
+                  <td>{{ record.address || '—' }}</td>
+                }
+                @if (catalog().resource === 'Gcos') {
+                  <td>{{ record.distanceToPort ?? 0 }}</td>
+                }
+                @if (catalog().resource === 'Ports') {
+                  <td>{{ record.statusName || '—' }}</td>
+                  <td>{{ record.equipmentName || 'Not assigned' }}</td>
+                  <td>{{ record.conduitName || 'Not assigned' }}</td>
+                  <td>{{ record.fiberColorName || 'Not assigned' }}</td>
+                }
+                <td>
+                  <span class="badge" [class.inactive]="!record.isActive">{{
+                    record.isActive ? 'Active' : 'Inactive'
+                  }}</span>
+                </td>
+                @if (canManage() && catalog().resource !== 'Countries') {
+                  <td>
+                    @if (record.isActive) {
+                      <button
+                        class="danger"
+                        type="button"
+                        (click)="confirmDeactivation(record)"
+                        [attr.aria-label]="'Deactivate ' + record.name"
+                      >
+                        Deactivate
+                      </button>
+                    } @else {
+                      <span>—</span>
+                    }
+                  </td>
+                }
+              </tr>
             }
-          </article>
-        } @empty {
-          <div class="panel empty">
+          </tbody>
+        </table>
+        @if (rows().length === 0) {
+          <div class="empty-message">
             <h3>No records found</h3>
             <p>Try a different search or review the selected parent filter.</p>
           </div>

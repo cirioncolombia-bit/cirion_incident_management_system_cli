@@ -74,7 +74,7 @@ describe('Network administration workflow', () => {
   it('allows consultation but hides mutation controls from catalog readers', () => {
     const { component, fixture, api } = setup(['catalogs.read']);
     expect(api.list).toHaveBeenCalled();
-    expect(fixture.nativeElement.querySelector('.record-actions')).toBeNull();
+    expect(fixture.nativeElement.querySelector('tbody button')).toBeNull();
     expect(fixture.nativeElement.querySelector('.create')).toBeNull();
     component.openEditor(city);
     expect(api.detail).not.toHaveBeenCalled();
@@ -88,6 +88,34 @@ describe('Network administration workflow', () => {
     component.save();
     expect(fixture.nativeElement.querySelector('.create')).toBeNull();
     expect(api.save).not.toHaveBeenCalled();
+  });
+  it('renders rows in a table and opens the existing editor from the first-column icon', () => {
+    const { component, fixture, api } = setup();
+    const row = fixture.nativeElement.querySelector('tbody tr') as HTMLTableRowElement;
+    expect(row).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('article.record')).toBeNull();
+    const edit = row.cells[0].querySelector('button')!;
+    expect(edit.getAttribute('aria-label')).toBe('Edit City A');
+    expect(edit.querySelector('svg')).not.toBeNull();
+    edit.click();
+    expect(api.detail).toHaveBeenCalledWith('Cities', 2);
+    expect(component.editing()?.id).toBe(2);
+  });
+  it('shows port relationships as columns and keeps inactive rows read-only', () => {
+    const { component, fixture, api } = setup();
+    api.list.mockReturnValue(
+      of({ rows: [{ ...port, isActive: false }], page: 1, totalCount: 1, totalPages: 1 }),
+    );
+    component.changeCatalog('Ports');
+    fixture.detectChanges();
+    const headers = Array.from(fixture.nativeElement.querySelectorAll('thead th')).map(
+      (cell: any) => cell.textContent.trim(),
+    );
+    expect(headers).toContain('Equipment');
+    expect(headers).toContain('Conduit');
+    expect(headers).toContain('Fiber Color');
+    expect(fixture.nativeElement.querySelector('tbody').textContent).toContain('01 ROJO');
+    expect(fixture.nativeElement.querySelector('tbody button')).toBeNull();
   });
   it('restores the edited record and its selected ancestor labels', () => {
     const { component } = setup();
