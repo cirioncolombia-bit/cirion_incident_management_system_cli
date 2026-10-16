@@ -674,3 +674,22 @@
 }
 .app-header__user-info, .app-sidebar__user-info { min-width: 0; overflow-wrap: anywhere; }
 .app-header__user-info { max-width: 18rem; }
+
+.app-sidebar__admin-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.app-sidebar__admin-chevron { margin-inline-start: auto; }
+.app-sidebar__submenu { padding-inline-start: 1rem; }
+.app-sidebar__submenu[hidden] { display: none; }
+
+@include mixins.lg {
+  .app-layout--sidebar-collapsed {
+    .app-sidebar__admin-chevron { display: none; }
+    .app-sidebar__submenu { padding-inline-start: 0; }
+  }
+}

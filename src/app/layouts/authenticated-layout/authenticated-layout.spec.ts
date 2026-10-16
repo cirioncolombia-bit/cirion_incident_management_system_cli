@@ -41,6 +41,22 @@ describe('Navigation by effective permissions', () => {
     user.set({fullName:'Ana',firstName:'Ana',email:'ana@example.com',roles:[],permissions:['dashboard.read']} as unknown as CurrentUser);
     fixture.detectChanges();expect(links()).toEqual(['/dashboard']);
   });
+  it('groups Users inside Admin and supports opening and closing the submenu',()=>{
+    const {fixture}=setup(['users.manage']);
+    const admin=fixture.nativeElement.querySelector('button[aria-controls="admin-submenu"]') as HTMLButtonElement;
+    const submenu=fixture.nativeElement.querySelector('#admin-submenu') as HTMLElement;
+    expect(submenu.querySelector('a[href="/users"]')).not.toBeNull();
+    expect(admin.getAttribute('aria-expanded')).toBe('true');admin.click();fixture.detectChanges();
+    expect(submenu.hidden).toBe(true);admin.click();fixture.detectChanges();expect(submenu.hidden).toBe(false);
+  });
+  it('hides the complete Admin section when Users is unavailable',()=>{
+    const {fixture}=setup(['deliveries.read']);expect(fixture.nativeElement.querySelector('.app-sidebar__admin')).toBeNull();
+  });
+  it('expands the sidebar when opening Admin from collapsed mode',()=>{
+    const {fixture}=setup(['users.manage']);const component=fixture.componentInstance;
+    component.sidebarCollapsed.set(true);component.adminOpen.set(false);component.toggleAdmin();
+    expect(component.sidebarCollapsed()).toBe(false);expect(component.adminOpen()).toBe(true);
+  });
   it('keeps Profile and Logout available without module permissions',()=>{
     const {fixture,links}=setup([]);expect(links()).toEqual([]);
     expect(fixture.nativeElement.querySelector('a[href="/profile"]')).not.toBeNull();

@@ -131,6 +131,17 @@
       }
 
       @if (canManageUsers()) {
+        <div class="app-sidebar__admin">
+          <button type="button" class="app-sidebar__link app-sidebar__admin-toggle"
+            (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()"
+            aria-controls="admin-submenu" aria-label="Admin" title="Admin">
+            <span class="app-sidebar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z" /><path d="m8 12 3 3 5-6" /></svg>
+            </span>
+            <span class="app-sidebar__label">Admin</span>
+            <span class="app-sidebar__admin-chevron" aria-hidden="true">{{ adminOpen() ? '▾' : '▸' }}</span>
+          </button>
+          <div id="admin-submenu" class="app-sidebar__submenu" [hidden]="!adminOpen()">
       <a
         class="app-sidebar__link"
         routerLink="/users"
@@ -154,6 +165,8 @@
           Users
         </span>
       </a>
+          </div>
+        </div>
       }
     </nav>
 
