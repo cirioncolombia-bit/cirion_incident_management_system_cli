@@ -375,6 +375,49 @@ export class Assignments {
     this.portPage.update((p) => p + n);
     this.loadPorts();
   }
+  portColor(description: string | null | undefined): string {
+    const colors: Record<string, string> = {
+      rojo: '#dc2626',
+      red: '#dc2626',
+      azul: '#2563eb',
+      blue: '#2563eb',
+      verde: '#16a34a',
+      green: '#16a34a',
+      amarillo: '#facc15',
+      yellow: '#facc15',
+      negro: '#111827',
+      black: '#111827',
+      blanco: '#ffffff',
+      white: '#ffffff',
+      naranja: '#f97316',
+      anaranjado: '#f97316',
+      orange: '#f97316',
+      cafe: '#92400e',
+      marron: '#92400e',
+      brown: '#92400e',
+      gris: '#9ca3af',
+      gray: '#9ca3af',
+      grey: '#9ca3af',
+      violeta: '#7c3aed',
+      morado: '#7c3aed',
+      purple: '#7c3aed',
+      violet: '#7c3aed',
+      rosa: '#ec4899',
+      rosado: '#ec4899',
+      pink: '#ec4899',
+      aqua: '#22d3ee',
+      agua: '#22d3ee',
+      cyan: '#22d3ee',
+      turquesa: '#22d3ee',
+    };
+    const words =
+      (description ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .match(/[a-z]+/g) ?? [];
+    return words.map((word) => colors[word]).find(Boolean) ?? '#cbd5e1';
+  }
   selectPort(port: PortOption) {
     this.selectedPort.set(port);
     this.form.patchValue({

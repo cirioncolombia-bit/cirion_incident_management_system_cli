@@ -318,8 +318,22 @@
                               ><strong>Port {{ port.portNumber }}</strong
                               ><span>FiberTray: {{ port.fiberTrayName }}</span
                               ><span>Equipment: {{ port.equipmentName || 'No equipment' }}</span
-                              ><span>Conduit: {{ port.conduitName || 'Not assigned' }}</span
-                              ><span>Fiber Color: {{ port.fiberColorName || 'Not assigned' }}</span
+                              ><span
+                                >Conduit:
+                                <i
+                                  class="port-color-dot"
+                                  [style.background-color]="portColor(port.conduitName)"
+                                  aria-hidden="true"
+                                ></i>
+                                {{ port.conduitName || 'Not assigned' }}</span
+                              ><span
+                                >Fiber Color:
+                                <i
+                                  class="port-color-dot"
+                                  [style.background-color]="portColor(port.fiberColorName)"
+                                  aria-hidden="true"
+                                ></i>
+                                {{ port.fiberColorName || 'Not assigned' }}</span
                               ><span class="badge">{{ port.statusName }}</span></span
                             ></label
                           >
@@ -407,7 +421,8 @@
                         placeholder="Equipment name (optional)"
                     /></label>
                     <p class="help">
-                      The selected port status and equipment will be updated when you save. Leave the name blank to clear its equipment.
+                      The selected port status and equipment will be updated when you save. Leave
+                      the name blank to clear its equipment.
                     </p>
                   </section>
                   <section class="panel summary">

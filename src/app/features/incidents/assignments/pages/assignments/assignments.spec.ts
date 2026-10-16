@@ -79,6 +79,15 @@ describe('Assignments workflow', () => {
     component.trayChanged();
     component.selectPort(port);
   }
+  it('recognizes catalog colors with numbers, accents and different casing', () => {
+    const { component } = setup();
+    expect(component.portColor('01 ROJO')).toBe('#dc2626');
+    expect(component.portColor('02AZUL')).toBe('#2563eb');
+    expect(component.portColor(' Marrón ')).toBe('#92400e');
+    expect(component.portColor('WHITE')).toBe('#ffffff');
+    expect(component.portColor('Unknown')).toBe('#cbd5e1');
+    expect(component.portColor(null)).toBe('#cbd5e1');
+  });
   it('does not load assignments without permission', () => {
     const { api, component } = setup([]);
     expect(component.canRead()).toBe(false);
