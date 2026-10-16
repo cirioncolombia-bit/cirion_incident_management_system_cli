@@ -335,9 +335,11 @@
                 <option value="2">External</option>
               </select></label
             >
-            <label
-              >EAIM (optional)<select formControlName="eaimId">
-                <option value="">No EAIM</option>
+            @if (form.controls.userType.value === '2') {
+              <label>EAIM *<select formControlName="eaimId" required
+                [attr.aria-invalid]="form.controls.eaimId.touched && form.controls.eaimId.invalid"
+                aria-describedby="eaim-help">
+                <option value="">Select an EAIM</option>
                 @for (o of options().eaims; track o.id) {
                   <option [value]="o.id">{{ o.name }}</option>
                 }
@@ -346,12 +348,16 @@
                     <option [value]="u.eaimId">{{ u.eaimName }} (inactive; select another)</option>
                   }
                 }
-              </select></label
-            >
+              </select>
+              @if (form.controls.eaimId.touched && form.controls.eaimId.invalid) {
+                <small class="help" role="alert">Select an EAIM for external users.</small>
+              }
+              </label>
+            }
           </div>
-          <p class="help">
-            A user linked to an EAIM can only access that company. External users without an EAIM cannot access its records.
-          </p>
+          @if (form.controls.userType.value === '2') {
+            <p id="eaim-help" class="help">External users must belong to an EAIM.</p>
+          }
         }
         @if (section() === 'users' && (mode() === 'new' || mode() === 'roles')) {
           <fieldset class="choices">

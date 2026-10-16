@@ -91,6 +91,15 @@ export class UsersList {
     description: '',
   });
   constructor() {
+    this.form.controls.userType.valueChanges.pipe(takeUntilDestroyed(this.destroy)).subscribe(type => {
+      const eaim = this.form.controls.eaimId;
+      if (type === '2') eaim.setValidators([Validators.required, Validators.pattern(/^[1-9]\d*$/)]);
+      else {
+        eaim.clearValidators();
+        eaim.reset('', { emitEvent: false });
+      }
+      eaim.updateValueAndValidity({ emitEvent: false });
+    });
     this.loadSession();
   }
   retry() {
@@ -345,7 +354,7 @@ export class UsersList {
           secondSurname: v.secondSurname.trim(),
           email: v.email.trim(),
           areaId: Number(v.areaId),
-          eaimId: v.eaimId ? Number(v.eaimId) : null,
+          eaimId: v.userType === '2' && v.eaimId ? Number(v.eaimId) : null,
           userType: Number(v.userType),
         };
         if (this.mode() === 'new') {

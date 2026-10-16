@@ -93,6 +93,25 @@ describe('Users administration', () => {
       }),
     );
   });
+  it('requires an EAIM for external users before saving', () => {
+    const {component, api, fixture} = setup(); component.openNew();
+    component.form.patchValue({firstName:'Ana',firstSurname:'Torres',email:'ana@example.com',areaId:'1',userType:'2',password:'test-value'});
+    component.save(); fixture.detectChanges();
+    expect(api.save).not.toHaveBeenCalled();
+    expect(component.form.controls.eaimId.hasError('required')).toBe(true);
+    expect(component.editor.nativeElement.querySelector('[formControlName="eaimId"]')).not.toBeNull();
+    component.form.controls.eaimId.setValue('8'); component.save();
+    expect(api.save).toHaveBeenCalledWith('users', null, expect.objectContaining({userType:2,eaimId:8}));
+  });
+  it('clears and hides EAIM when changing to Internal and requires a new choice on External', () => {
+    const {component, fixture, api} = setup(); component.openNew();
+    component.form.patchValue({firstName:'Ana',firstSurname:'Torres',email:'ana@example.com',areaId:'1',userType:'2',password:'test-value'});
+    component.form.controls.eaimId.setValue('8'); component.form.controls.userType.setValue('1'); fixture.detectChanges();
+    expect(component.form.controls.eaimId.value).toBe('');
+    expect(component.editor.nativeElement.querySelector('[formControlName="eaimId"]')).toBeNull();
+    component.save(); expect(api.save).toHaveBeenCalledWith('users',null,expect.objectContaining({eaimId:null}));
+    component.form.controls.userType.setValue('2'); expect(component.form.controls.eaimId.hasError('required')).toBe(true);
+  });
   it('does not send password or role changes when editing the profile', () => {
     const { component, api } = setup();
     component.openUser(user, 'edit');
