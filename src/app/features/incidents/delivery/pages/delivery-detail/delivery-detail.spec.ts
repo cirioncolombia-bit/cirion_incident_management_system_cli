@@ -145,7 +145,9 @@ describe('DeliveryDetail', () => {
       expect(page.textContent).toContain(text);
     }
     expect(page.querySelectorAll('.detail-section').length).toBe(9);
-    expect(page.textContent).toContain('Partial history');
+    expect(page.textContent).not.toContain('Partial history');
+    expect(page.textContent).not.toContain('Tracking started:');
+    expect(page.textContent).not.toContain('Visits:');
     expect(page.textContent).toContain('0d 02h 00m');
     expect(page.textContent).toContain('Time in Status');
     expect(page.querySelectorAll('.status-history-card').length).toBe(2);
