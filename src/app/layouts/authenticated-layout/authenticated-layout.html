@@ -26,6 +26,7 @@
       class="app-sidebar__nav"
       aria-label="Main navigation"
     >
+      @if (canAccess('dashboard.read')) {
       <a
         class="app-sidebar__link"
         routerLink="/dashboard"
@@ -48,7 +49,9 @@
           Dashboard
         </span>
       </a>
+      }
 
+      @if (canAccess('incidents.read')) {
       <a
         class="app-sidebar__link"
         routerLink="/incidents"
@@ -71,7 +74,9 @@
           Incidents
         </span>
       </a>
+      }
 
+      @if (canAccess('assignments.read')) {
       <a
         class="app-sidebar__link"
         routerLink="/assignments"
@@ -97,7 +102,9 @@
           Assignments
         </span>
       </a>
+      }
 
+      @if (canAccess('deliveries.read')) {
       <a
         class="app-sidebar__link"
         routerLink="/delivery"
@@ -121,7 +128,9 @@
           Deliveries
         </span>
       </a>
+      }
 
+      @if (canManageUsers()) {
       <a
         class="app-sidebar__link"
         routerLink="/users"
@@ -145,6 +154,7 @@
           Users
         </span>
       </a>
+      }
     </nav>
 
     <!-- Control de expansión/colapso: solo desktop -->
