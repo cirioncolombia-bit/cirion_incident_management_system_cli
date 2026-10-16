@@ -49,6 +49,7 @@ export const routes: Routes = [
 
       {
         path: 'delivery',
+        data: { permission: 'deliveries.read' },
         loadComponent: () =>
           import('./features/incidents/delivery/pages/delivery/delivery').then(
             (component) => component.Delivery,
@@ -57,6 +58,7 @@ export const routes: Routes = [
 
       {
         path: 'delivery/new',
+        data: { permission: 'deliveries.write' },
         loadComponent: () =>
           import('./features/incidents/delivery/pages/delivery-new/delivery-new').then(
             (component) => component.DeliveryNew,
@@ -64,6 +66,7 @@ export const routes: Routes = [
       },
       {
         path: 'delivery/:id/edit',
+        data: { permission: 'deliveries.write' },
         loadComponent: () =>
           import('./features/incidents/delivery/pages/delivery-edit/delivery-edit').then(
             (component) => component.DeliveryEdit,
@@ -71,6 +74,7 @@ export const routes: Routes = [
       },
       {
         path: 'delivery/:id',
+        data: { permission: 'deliveries.read' },
         loadComponent: () =>
           import('./features/incidents/delivery/pages/delivery-detail/delivery-detail').then(
             (component) => component.DeliveryDetail,

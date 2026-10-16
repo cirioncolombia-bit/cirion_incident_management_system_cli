@@ -1,3 +1,5 @@
+import { computed } from '@angular/core';
+import { AuthService } from '../../../../auth/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -66,6 +68,8 @@ const integer: ValidatorFn = (control) =>
   styleUrl: './delivery-edit.scss',
 })
 export class DeliveryEdit {
+  private readonly accessAuth = inject(AuthService);
+  readonly canWrite = computed(() => this.accessAuth.currentUser()?.permissions.includes('deliveries.write') ?? false);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
@@ -317,7 +321,7 @@ export class DeliveryEdit {
 
   save(): void {
     const delivery = this.delivery();
-    if (!delivery || this.loading() || this.saving() || this.saved()) return;
+    if (!this.canWrite() || !delivery || this.loading() || this.saving() || this.saved()) return;
     this.submitted.set(true);
     this.saveError.set('');
     this.editForm.markAllAsTouched();

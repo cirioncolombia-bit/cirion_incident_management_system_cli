@@ -8,7 +8,7 @@ import { AuthService } from '../../../../auth/services/auth.service';
 describe('New Delivery responsible selection', () => {
   function setup() {
     TestBed.configureTestingModule({imports:[DeliveryNew], providers:[provideRouter([]),
-      {provide:AuthService,useValue:{}},
+      {provide:AuthService,useValue:{currentUser:()=>({permissions:['deliveries.read','deliveries.write']})}},
       {provide:DeliveryService,useValue:{getCreateOptions:()=>of({cities:[],nodes:[],deliveryTypes:[],deliveryStatuses:[],deliveryTechnologies:[],landlords:[],eaims:[{id:1,name:'A'},{id:2,name:'B'}],deliveryCauses:[],responsibles:[{id:10,name:'User A',eaimId:1},{id:20,name:'User B',eaimId:2},{id:30,name:'Internal',eaimId:null}]})}},
     ]});
     const fixture=TestBed.createComponent(DeliveryNew);fixture.detectChanges();return {component:fixture.componentInstance,fixture};

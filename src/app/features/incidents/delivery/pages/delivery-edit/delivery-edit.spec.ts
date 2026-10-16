@@ -1,3 +1,4 @@
+import { AuthService } from '../../../../auth/services/auth.service';
 import { Component } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -93,6 +94,7 @@ describe('DeliveryEdit API integration', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
+        {provide: AuthService, useValue: {currentUser: () => ({permissions: ['deliveries.read', 'deliveries.write']})}},
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([
@@ -265,7 +267,8 @@ describe('DeliveryEdit API integration', () => {
     http.expectOne(environment.apiUrl + '/api/Delivery').flush({ data: [record], message: '' });
     harness.detectChanges();
     const edit =
-      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.delivery-table__edit')!;
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('button.delivery-table__edit')!;
+    http.expectOne(environment.apiUrl + '/api/Delivery/42/status-history').flush({}, {status:500,statusText:'Unavailable'});
     expect(edit.disabled).toBe(false);
     edit.click();
     await harness.fixture.whenStable();

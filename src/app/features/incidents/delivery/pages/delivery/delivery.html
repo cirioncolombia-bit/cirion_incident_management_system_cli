@@ -12,6 +12,7 @@
       </p>
     </div>
 
+    @if (canWrite()) {
     <a
       class="delivery-page__create"
       routerLink="/delivery/new"
@@ -19,6 +20,7 @@
       <span aria-hidden="true">＋</span>
       New Delivery
     </a>
+    }
   </header>
 
   @if (loading()) {
@@ -445,6 +447,7 @@
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     </a>
+                    @if (canWrite()) {
                     <button
                       class="delivery-table__edit delivery-table__icon-action"
                       type="button"
@@ -457,6 +460,7 @@
                         <path d="m13 6 5 5" />
                       </svg>
                     </button>
+                    }
                   </div>
                 }
               </td>
