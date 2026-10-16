@@ -103,9 +103,17 @@ export class AssignmentsService {
       { params },
     );
   }
+  equipment(deliveryId: number, gcoId: number, fiberTrayId: number, search: string) {
+    return this.http.get<Page<Option>>(
+      `${this.base}/deliveries/${deliveryId}/gcos/${gcoId}/fiber-trays/${fiberTrayId}/equipment`,
+      { params: new HttpParams().set('Search', search).set('PageSize', 20) },
+    );
+  }
   options() {
     return this.http
-      .get<{ data: { statuses: Option[] } }>(`${this.base}/form-options`)
+      .get<{ data: { statuses: (Option & { requiresEquipment?: boolean })[] } }>(
+        `${this.base}/form-options`,
+      )
       .pipe(map((r) => r.data));
   }
   save(id: number | null, body: AssignmentWrite) {

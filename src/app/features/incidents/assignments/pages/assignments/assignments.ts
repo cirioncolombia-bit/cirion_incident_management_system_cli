@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import {
   Assignment,
   AssignmentWrite,
@@ -44,7 +44,12 @@ export class Assignments {
   readonly rows = signal<Assignment[]>([]);
   readonly detail = signal<Assignment | null>(null);
   readonly delivery = signal<DeliveryLookup | null>(null);
-  readonly statuses = signal<Option[]>([]);
+  readonly statuses = signal<(Option & { requiresEquipment?: boolean })[]>([]);
+  readonly equipmentOptions = signal<Option[]>([]);
+  readonly equipmentOpen = signal(false);
+  readonly equipmentBusy = signal(false);
+  readonly equipmentError = signal('');
+  private equipmentVersion = 0;
   readonly fiberTrays = signal<Option[]>([]);
   readonly traysBusy = signal(false);
   readonly trayError = signal('');
@@ -68,10 +73,27 @@ export class Assignments {
     gcoId: ['', Validators.required],
     fiberTrayId: ['', Validators.required],
     statusId: ['', Validators.required],
-    equipmentName: ['', Validators.maxLength(100)],
+    equipmentName: [
+      '',
+      [
+        Validators.maxLength(100),
+        (control: { value: string }) =>
+          this.equipmentRequired() && !control.value.trim() ? { required: true } : null,
+      ],
+    ],
   });
   readonly portFilter = this.fb.nonNullable.control('', Validators.maxLength(200));
   constructor() {
+    this.form.controls.statusId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe(() => {
+        this.form.controls.equipmentName.updateValueAndValidity({ emitEvent: false });
+      });
+    this.form.controls.equipmentName.valueChanges
+      .pipe(debounceTime(200), distinctUntilChanged(), takeUntilDestroyed(this.destroy))
+      .subscribe(() => {
+        if (this.equipmentOpen()) this.loadEquipment();
+      });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroy)).subscribe((p) => {
       this.routeVersion++;
       this.lookupVersion++;
@@ -131,7 +153,10 @@ export class Assignments {
         finalize(() => (this.optionsLoading = false)),
       )
       .subscribe({
-        next: (o) => this.statuses.set(o.statuses),
+        next: (o) => {
+          this.statuses.set(o.statuses);
+          this.form.controls.equipmentName.updateValueAndValidity({ emitEvent: false });
+        },
         error: (e) => this.error.set(this.message(e)),
       });
   }
@@ -270,6 +295,7 @@ export class Assignments {
       });
   }
   private clearTrays() {
+    this.clearEquipment();
     this.traysVersion++;
     this.traysBusy.set(false);
     this.fiberTrays.set([]);
@@ -277,6 +303,7 @@ export class Assignments {
     this.statusFilter.reset();
   }
   private clearPorts() {
+    this.clearEquipment();
     this.portsVersion++;
     this.portsBusy.set(false);
     this.selectedPort.set(null);
@@ -377,6 +404,57 @@ export class Assignments {
     this.portPage.update((p) => p + n);
     this.loadPorts();
   }
+  private clearEquipment() {
+    this.equipmentVersion++;
+    this.equipmentOpen.set(false);
+    this.equipmentBusy.set(false);
+    this.equipmentOptions.set([]);
+    this.equipmentError.set('');
+  }
+  equipmentRequired() {
+    return (
+      this.statuses().find((s) => s.id === Number(this.form.controls.statusId.value))
+        ?.requiresEquipment === true
+    );
+  }
+  openEquipment() {
+    this.equipmentOpen.set(true);
+    this.loadEquipment();
+  }
+  loadEquipment() {
+    const delivery = this.delivery();
+    const gcoId = Number(this.form.controls.gcoId.value);
+    const trayId = Number(this.form.controls.fiberTrayId.value);
+    if (!delivery || !gcoId || !trayId) return;
+    const version = ++this.equipmentVersion;
+    this.equipmentBusy.set(true);
+    this.equipmentError.set('');
+    this.api
+      .equipment(delivery.id, gcoId, trayId, this.form.controls.equipmentName.value.trim())
+      .pipe(
+        takeUntilDestroyed(this.destroy),
+        finalize(() => {
+          if (version === this.equipmentVersion) this.equipmentBusy.set(false);
+        }),
+      )
+      .subscribe({
+        next: (page) => {
+          if (version === this.equipmentVersion) this.equipmentOptions.set(page.rows);
+        },
+        error: () => {
+          if (version === this.equipmentVersion) {
+            this.equipmentOptions.set([]);
+            this.equipmentError.set(
+              'Equipment suggestions could not be loaded. You can still enter a name.',
+            );
+          }
+        },
+      });
+  }
+  chooseEquipment(option: Option) {
+    this.form.controls.equipmentName.setValue(option.name);
+    this.equipmentOpen.set(false);
+  }
   portColor(description: string | null | undefined): string {
     const colors: Record<string, string> = {
       rojo: '#dc2626',
@@ -442,6 +520,10 @@ export class Assignments {
       return;
     this.form.markAllAsTouched();
     this.error.set('');
+    if (this.form.controls.equipmentName.hasError('required')) {
+      this.error.set('Equipment is required for an occupied port.');
+      return;
+    }
     const d = this.delivery(),
       port = this.selectedPort();
     const value = this.form.getRawValue();
