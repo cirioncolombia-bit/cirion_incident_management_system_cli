@@ -218,7 +218,19 @@ export class DeliveryNew {
     (this.options()?.nodes ?? []).filter((node) => node.cityId === this.selectedCity()),
   );
 
+  private readonly selectedEaim = toSignal(this.form.controls.eaim.valueChanges, {
+    initialValue: this.form.controls.eaim.value,
+  });
+
+  readonly filteredResponsibles = computed(() => {
+    const eaimId = this.selectedEaim();
+    return eaimId == null ? [] : (this.options()?.responsibles ?? []).filter(user => user.eaimId === eaimId);
+  });
+
   constructor() {
+    this.form.controls.eaim.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.form.controls.responsible.reset(null));
     this.form.controls.city.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.form.controls.node.reset(null));
@@ -338,6 +350,12 @@ export class DeliveryNew {
     // Select controls are nullable until a choice is made; never send a placeholder ID.
     if (value.city == null || value.node == null || value.type == null || value.status == null
       || value.technology == null || value.eaim == null || value.responsible == null) return;
+    if (!this.filteredResponsibles().some(user => user.id === value.responsible)) {
+      this.form.controls.responsible.reset(null);
+      this.form.controls.responsible.markAsTouched();
+      this.openFirstInvalidSection();
+      return;
+    }
     const request: CreateDelivery = {
       workOrderId: value.dkoTkt.trim(),
       rfsFiberChain: value.rfsFiberChain.trim(),

@@ -7,6 +7,10 @@ export interface NodeSelectOption extends SelectOption {
   cityId: number;
 }
 
+export interface ResponsibleSelectOption extends SelectOption {
+  eaimId: number | null;
+}
+
 export interface DeliveryCreateOptions {
   cities: SelectOption[];
   nodes: NodeSelectOption[];
@@ -15,7 +19,7 @@ export interface DeliveryCreateOptions {
   deliveryTechnologies: SelectOption[];
   landlords: SelectOption[];
   eaims: SelectOption[];
-  responsibles: SelectOption[];
+  responsibles: ResponsibleSelectOption[];
   deliveryCauses: SelectOption[];
 }
 
