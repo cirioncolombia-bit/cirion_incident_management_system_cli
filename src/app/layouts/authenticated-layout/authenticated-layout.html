@@ -130,7 +130,7 @@
       </a>
       }
 
-      @if (canManageUsers()) {
+      @if (canManageUsers() || canViewNetwork()) {
         <div class="app-sidebar__admin">
           <button type="button" class="app-sidebar__link app-sidebar__admin-toggle"
             (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()"
@@ -142,6 +142,7 @@
             <span class="app-sidebar__admin-chevron" aria-hidden="true">{{ adminOpen() ? '▾' : '▸' }}</span>
           </button>
           <div id="admin-submenu" class="app-sidebar__submenu" [hidden]="!adminOpen()">
+            @if (canManageUsers()) {
       <a
         class="app-sidebar__link"
         routerLink="/users"
@@ -165,6 +166,16 @@
           Users
         </span>
       </a>
+            }
+            @if (canViewNetwork()) {
+              <a class="app-sidebar__link" routerLink="/admin/network" routerLinkActive="app-sidebar__link--active"
+                (click)="closeSidebar()" title="Network configuration">
+                <span class="app-sidebar__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="6" rx="1"/><path d="M12 8v5M4 13h16M4 13v3m8-3v3m8-3v3"/><rect x="1" y="16" width="6" height="6" rx="1"/><rect x="9" y="16" width="6" height="6" rx="1"/><rect x="17" y="16" width="6" height="6" rx="1"/></svg>
+                </span>
+                <span class="app-sidebar__label">Network</span>
+              </a>
+            }
           </div>
         </div>
       }

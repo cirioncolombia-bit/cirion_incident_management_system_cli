@@ -90,6 +90,14 @@ export const routes: Routes = [
       },
 
       {
+        path: 'admin/network',
+        data: { permission: 'catalogs.read' },
+        loadComponent: () =>
+          import('./features/admin/network/network').then(
+            (component) => component.NetworkAdministration,
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/pages/profile/profile').then((component) => component.Profile),

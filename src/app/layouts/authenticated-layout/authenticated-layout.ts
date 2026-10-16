@@ -24,6 +24,11 @@ export class AuthenticatedLayout {
       (user.permissions.includes('users.manage') || user.permissions.includes('catalogs.manage'));
   });
 
+  readonly canViewNetwork = computed(() => {
+    const user = this.currentUser();
+    return !!user && !user.isExternal && user.permissions.includes('catalogs.read');
+  });
+
   readonly displayName = computed(
     () => this.currentUser()?.fullName || this.currentUser()?.email || 'Cuenta',
   );
