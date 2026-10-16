@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/services/auth.service';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError, Subject } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -39,12 +40,14 @@ describe('Users administration', () => {
       user: vi.fn(() => of(user)),
       catalogs: vi.fn(() => of([])),
       save: vi.fn(() => of({})),
+      resetPassword: vi.fn(() => of<void>(void 0)),
       roles: vi.fn(() => of({})),
       deactivate: vi.fn(() => of(null)),
     };
+    const auth = {signInAgain: vi.fn()};
     TestBed.configureTestingModule({
       imports: [UsersList],
-      providers: [{ provide: UsersAdminService, useValue: api }],
+      providers: [{ provide: UsersAdminService, useValue: api },{provide: AuthService,useValue: auth}],
     });
     const fixture = TestBed.createComponent(UsersList);
     fixture.detectChanges();
@@ -54,7 +57,7 @@ describe('Users administration', () => {
     component.editor.nativeElement.close = vi.fn();
     component.confirmation.nativeElement.showModal = vi.fn();
     component.confirmation.nativeElement.close = vi.fn();
-    return { api, fixture, component };
+    return { api, fixture, component, auth };
   }
   it('denies global administration to external users, even with administrative grants', () => {
     const { component, api } = setup(['users.manage', 'catalogs.manage'], true);
@@ -139,6 +142,39 @@ describe('Users administration', () => {
     expect(body[2]).not.toHaveProperty('password');
     expect(body[2]).not.toHaveProperty('roleIds');
     expect(api.roles).not.toHaveBeenCalled();
+    expect(api.resetPassword).not.toHaveBeenCalled();
+  });
+  it('resets a password using the existing endpoint after saving details', () => {
+    const {component,api}=setup(); component.me.set({id:99,isExternal:false,permissions:['users.manage']});
+    component.openUser(user,'edit');component.form.controls.password.setValue('new-test-password');component.save();
+    expect(api.resetPassword).toHaveBeenCalledWith(3,'new-test-password');
+    expect((api.save.mock.calls[0] as any)[2]).not.toHaveProperty('password');
+    expect(component.notice()).toContain('password reset successfully');
+    expect(component.form.controls.password.value).toBe('');
+  });
+  it('reports partial success when the password reset fails and retains the form', () => {
+    const {component,api}=setup();api.resetPassword.mockReturnValue(throwError(()=>new HttpErrorResponse({status:409})));
+    component.openUser(user,'edit');component.form.controls.password.setValue('new-test-password');component.save();
+    expect(api.save).toHaveBeenCalledTimes(1);expect(component.formError()).toContain('details were saved, but the password could not be reset');
+    expect(component.editor.nativeElement.close).not.toHaveBeenCalled();expect(component.saving()).toBe(false);
+  });
+  it('does not reset a password if saving the details fails', () => {
+    const {component,api}=setup();api.save.mockReturnValue(throwError(()=>new HttpErrorResponse({status:400})));
+    component.openUser(user,'edit');component.form.controls.password.setValue('new-test-password');component.save();
+    expect(api.resetPassword).not.toHaveBeenCalled();
+  });
+  it('rejects a whitespace-only replacement password',()=>{
+    const {component,api}=setup();component.openUser(user,'edit');component.form.controls.password.setValue('   ');component.save();
+    expect(api.save).not.toHaveBeenCalled();expect(api.resetPassword).not.toHaveBeenCalled();
+  });
+  it('returns to login after an administrator resets their own password',()=>{
+    const {component,api,auth}=setup();component.openUser(user,'edit');component.form.controls.password.setValue('new-test-password');component.save();
+    expect(api.resetPassword).toHaveBeenCalled();expect(auth.signInAgain).toHaveBeenCalledWith(expect.stringContaining('sign in again'));
+  });
+  it('blocks duplicate saves while password reset is pending',()=>{
+    const {component,api}=setup();api.resetPassword.mockReturnValue(new Subject<void>());
+    component.openUser(user,'edit');component.form.controls.password.setValue('new-test-password');component.save();component.save();
+    expect(api.save).toHaveBeenCalledTimes(1);expect(api.resetPassword).toHaveBeenCalledTimes(1);
   });
   it('uses separate role replacement endpoint and allows removing every role', () => {
     const { component, api } = setup();

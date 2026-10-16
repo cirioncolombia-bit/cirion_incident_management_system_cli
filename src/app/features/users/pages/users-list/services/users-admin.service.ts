@@ -117,6 +117,9 @@ export class UsersAdminService {
     const url = `${this.base}/${this.paths[section]}${id === null ? '' : '/' + id}`;
     return id === null ? this.http.post(url, body) : this.http.put(url, body);
   }
+  resetPassword(id: number, newPassword: string) {
+    return this.http.post<void>(`${this.base}/User/${id}/reset-password`, { newPassword });
+  }
   roles(id: number, roleIds: number[]) {
     return this.http.put(`${this.base}/User/${id}/roles`, { roleIds });
   }

@@ -3,7 +3,8 @@ import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, switchMap } from 'rxjs';
+import { AuthService } from '../../../auth/services/auth.service';
 import {
   Catalog,
   CurrentUser,
@@ -21,6 +22,7 @@ import {
 })
 export class UsersList {
   private readonly api = inject(UsersAdminService);
+  private readonly auth = inject(AuthService);
   private readonly destroy = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   @ViewChild('editor') editor!: ElementRef<HTMLDialogElement>;
@@ -238,6 +240,7 @@ export class UsersList {
       c.areaId.setValidators(Validators.required);
       c.userType.setValidators(Validators.required);
       if (this.mode() === 'new') c.password.setValidators(Validators.required);
+      else c.password.setValidators(control => control.value && !control.value.trim() ? { whitespace: true } : null);
     } else {
       (this.section() === 'permissions' ? c.code : c.name).setValidators([
         Validators.required,
@@ -324,6 +327,7 @@ export class UsersList {
       this.saving() ||
       this.loading() ||
       this.mode() === 'detail' ||
+      !this.allowed(this.section()) ||
       !this.formReady() ||
       (this.section() === 'users' && !this.optionsReady())
     )
@@ -331,6 +335,8 @@ export class UsersList {
     this.formError.set('');
     const v = this.form.getRawValue();
     let request: Observable<unknown>;
+    let detailsSavedBeforePasswordReset = false;
+    const resetRequested = this.section() === 'users' && this.mode() === 'edit' && v.password.length > 0;
     if (this.mode() === 'roles') request = this.api.roles(this.editingId()!, this.selectedIds());
     else {
       this.form.markAllAsTouched();
@@ -366,6 +372,12 @@ export class UsersList {
           body.roleIds = this.selectedIds();
         }
         request = this.api.save('users', this.editingId(), body);
+        if (resetRequested) {
+          request = request.pipe(switchMap(() => {
+            detailsSavedBeforePasswordReset = true;
+            return this.api.resetPassword(this.editingId()!, v.password);
+          }));
+        }
       } else {
         if (
           !(this.section() === 'permissions' ? v.code : v.name).trim() ||
@@ -397,10 +409,16 @@ export class UsersList {
         next: () => {
           this.editor.nativeElement.close();
           this.form.controls.password.reset('');
-          this.notice.set('Changes saved successfully.');
+          if (resetRequested && this.editingId() === this.me()?.id) {
+            this.auth.signInAgain('Your password was reset successfully. Please sign in again.');
+            return;
+          }
+          this.notice.set(resetRequested ? 'User details saved and password reset successfully.' : 'Changes saved successfully.');
           this.reload();
         },
-        error: (e) => this.formError.set(this.message(e)),
+        error: (e) => this.formError.set(detailsSavedBeforePasswordReset
+          ? 'User details were saved, but the password could not be reset. ' + this.message(e)
+          : this.message(e)),
       });
   }
   confirmDelete(id: number, name: string) {

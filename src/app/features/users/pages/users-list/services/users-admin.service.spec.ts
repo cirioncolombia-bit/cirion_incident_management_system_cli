@@ -36,6 +36,12 @@ describe('UsersAdminService API contracts', () => {
     expect(req.request.body).toEqual({ roleIds: [] });
     req.flush({});
   });
+  it('resets credentials without sending the previous password', () => {
+    api.resetPassword(3,'new-test-password').subscribe();
+    const req=http.expectOne(`${base}/User/3/reset-password`);
+    expect(req.request.method).toBe('POST');expect(req.request.body).toEqual({newPassword:'new-test-password'});
+    req.flush(null,{status:204,statusText:'No Content'});
+  });
   it('uses DELETE for logical deactivation', () => {
     api.deactivate('permissions', 5).subscribe();
     const req = http.expectOne(`${base}/Permission/5`);
