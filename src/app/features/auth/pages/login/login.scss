@@ -261,3 +261,43 @@
 }
 
 .login__notice { padding: 1rem; margin-bottom: 1rem; border-radius: .65rem; color: #186444; background: #e4f5ed; overflow-wrap: anywhere; }
+
+.login__form .login__forgot {
+  min-height: 2.75rem;
+  padding: 0;
+  color: var(--cims-color-primary);
+  background: transparent;
+  font-size: inherit;
+  text-align: end;
+}
+
+.login__form .login__forgot:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
+.login__password-help {
+  width: min(26rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 1rem;
+  color: var(--cims-color-text-primary);
+  background: #fff;
+
+  &::backdrop { background: rgb(0 25 50 / 45%); }
+  p { margin: 1rem 0; }
+  button {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-radius: 0.625rem;
+    color: #fff;
+    background: var(--cims-color-primary);
+    font-weight: 600;
+  }
+}

@@ -124,9 +124,9 @@
             Remember me
           </label>
 
-          <a href="#">
+          <button class="login__forgot" type="button" (click)="passwordHelp.showModal()" aria-haspopup="dialog">
             Forgot your password?
-          </a>
+          </button>
         </div>
 
         @if (errorMessage()) {
@@ -152,3 +152,9 @@
     </div>
   </section>
 </main>
+<dialog #passwordHelp class="login__password-help" aria-labelledby="password-help-title" aria-describedby="password-help-description">
+  <h2 id="password-help-title">Password recovery</h2>
+  <p id="password-help-description">Contact your CIMS administrator to request a password reset. Provide the email address registered to your account.</p>
+  <p>Your administrator will help you regain access. You do not need to provide your previous password.</p>
+  <button type="button" (click)="passwordHelp.close()" autofocus>Back to sign in</button>
+</dialog>
