@@ -15,9 +15,11 @@ describe('IncidentsService contracts', () => {
   });
   afterEach(() => http.verify());
   it('uses paginated response and backend filter names', () => {
-    api.list(2, { search: 'Falla', typeId: '7', statusId: '42', assigneeId: '3' }).subscribe();
+    api.list(2, { search: 'Ana Torres', typeId: '7', statusId: '42', assigneeId: '3' }).subscribe();
     const r = http.expectOne((req) => req.url === base);
     expect(r.request.params.get('Page')).toBe('2');
+    expect(r.request.params.get('search')).toBe('Ana Torres');
+    expect(r.request.params.get('assigneeId')).toBe('3');
     expect(r.request.params.get('statusId')).toBe('42');
     r.flush({ rows: [], page: 2, pageSize: 12, totalCount: 0, totalPages: 0 });
   });
