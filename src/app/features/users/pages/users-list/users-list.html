@@ -311,6 +311,9 @@
                   autocomplete="new-password"
                   required
               /></label>
+            } @else if (mode() === 'edit') {
+              <label>New password (optional)<input formControlName="password" type="password" autocomplete="new-password" aria-describedby="password-reset-help" /></label>
+              <p id="password-reset-help" class="help">Leave blank to keep the current password. A new password will end this user's previous sessions. Administrative locks remain unchanged.</p>
             }
           </div>
           <h3>Company and classification</h3>
