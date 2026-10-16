@@ -997,7 +997,7 @@
               formControlName="responsible"
             >
               <option [ngValue]="null">Select a responsible engineer</option>
-                @for (option of options()?.responsibles ?? []; track option.id) {
+                @for (option of filteredResponsibles(); track option.id) {
                   <option [ngValue]="option.id">{{ option.name }}</option>
                 }
             </select>

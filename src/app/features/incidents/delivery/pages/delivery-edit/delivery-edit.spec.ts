@@ -27,7 +27,7 @@ const options: DeliveryCreateOptions = {
   deliveryTechnologies: [{ id: 8, name: 'DWDM' }],
   landlords: [{ id: 9, name: 'Landlord A' }],
   eaims: [{ id: 10, name: 'EAIM A' }],
-  responsibles: [{ id: 11, name: 'User A' }],
+  responsibles: [{ id: 11, name: 'User A', eaimId: 10 }],
   deliveryCauses: [{ id: 12, name: 'Materials' }],
 };
 const record: DeliveryEditData = {
