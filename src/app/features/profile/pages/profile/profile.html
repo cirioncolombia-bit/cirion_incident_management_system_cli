@@ -32,7 +32,7 @@
             <legend class="visually-hidden">Edit personal details</legend>
             <div class="form-grid">
               <label
-                >First name *<input
+                >First name <span class="cims-required">*</span><input
                   formControlName="firstName"
                   maxlength="100"
                   autocomplete="given-name"
@@ -44,7 +44,7 @@
                   autocomplete="additional-name"
               /></label>
               <label
-                >First surname *<input
+                >First surname <span class="cims-required">*</span><input
                   formControlName="firstSurname"
                   maxlength="100"
                   autocomplete="family-name"
@@ -53,14 +53,14 @@
                 >Second surname<input formControlName="secondSurname" maxlength="100"
               /></label>
               <label
-                >Email *<input
+                >Email <span class="cims-required">*</span><input
                   type="email"
                   formControlName="email"
                   maxlength="255"
                   autocomplete="email"
                   required /></label
               ><label
-                >Area *<select formControlName="areaId" required>
+                >Area <span class="cims-required">*</span><select formControlName="areaId" required>
                   <option value="">Select an area</option>
                   @for (area of areas(); track area.id) {
                     <option [value]="area.id">{{ area.name }}</option>
@@ -138,19 +138,19 @@
           <fieldset [disabled]="saving() || loading()">
             <legend class="visually-hidden">New password</legend>
             <label
-              >Current password *<input
+              >Current password <span class="cims-required">*</span><input
                 type="password"
                 formControlName="currentPassword"
                 autocomplete="current-password"
                 required /></label
             ><label
-              >New password *<input
+              >New password <span class="cims-required">*</span><input
                 type="password"
                 formControlName="newPassword"
                 autocomplete="new-password"
                 required /></label
             ><label
-              >Confirm new password *<input
+              >Confirm new password <span class="cims-required">*</span><input
                 type="password"
                 formControlName="confirmPassword"
                 autocomplete="new-password"

@@ -32,3 +32,17 @@ app-root,
   min-width: 0;
   max-width: 100%;
 }
+
+
+// Shared required markers and Angular validation states across all forms.
+.cims-required {
+  color: #b91c1c !important;
+}
+
+form :is(input, select, textarea).ng-invalid.ng-touched:not(:disabled) {
+  border-color: #b91c1c !important;
+}
+
+form :is(input, select, textarea).ng-invalid.ng-touched:not(:disabled):focus {
+  box-shadow: 0 0 0 2px rgb(185 28 28 / 15%) !important;
+}

@@ -71,7 +71,7 @@
             <div class="delivery-field">
               <label for="rfsFiberChain">
                 RFS Fiber Chain
-                <span>*</span>
+                <span class="cims-required">*</span>
               </label>
 
               <input
@@ -137,25 +137,25 @@
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="clientName"> Client Name <span>*</span> </label>
+              <label for="clientName"> Client Name <span class="cims-required">*</span> </label>
 
               <input id="clientName" type="text" formControlName="clientName" maxlength="50" />
             </div>
 
             <div class="delivery-field">
-              <label for="buildingName"> Building / Site <span>*</span> </label>
+              <label for="buildingName"> Building / Site <span class="cims-required">*</span> </label>
 
               <input id="buildingName" type="text" formControlName="buildingName" maxlength="150" />
             </div>
 
             <div class="delivery-field delivery-field--wide">
-              <label for="address"> Address <span>*</span> </label>
+              <label for="address"> Address <span class="cims-required">*</span> </label>
 
               <input id="address" type="text" formControlName="address" maxlength="150" />
             </div>
 
             <div class="delivery-field">
-              <label for="city"> City <span>*</span> </label>
+              <label for="city"> City <span class="cims-required">*</span> </label>
 
               <select id="city" formControlName="city">
                 <option [ngValue]="null">Select a city</option>
@@ -175,7 +175,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="node"> Node <span>*</span> </label>
+              <label for="node"> Node <span class="cims-required">*</span> </label>
 
               <select id="node" formControlName="node">
                 <option [ngValue]="null">Select a node</option>
@@ -256,13 +256,13 @@
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="contact"> Contact Name <span>*</span> </label>
+              <label for="contact"> Contact Name <span class="cims-required">*</span> </label>
 
               <input id="contact" type="text" formControlName="contact" maxlength="50" />
             </div>
 
             <div class="delivery-field">
-              <label for="email"> Email <span>*</span> </label>
+              <label for="email"> Email <span class="cims-required">*</span> </label>
 
               <input id="email" type="email" formControlName="email" maxlength="200" />
 
@@ -272,7 +272,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="phone"> Mobile Phone <span>*</span> </label>
+              <label for="phone"> Mobile Phone <span class="cims-required">*</span> </label>
 
               <input id="phone" type="tel" formControlName="phone" />
 
@@ -316,7 +316,7 @@
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="type"> Type <span>*</span> </label>
+              <label for="type"> Type <span class="cims-required">*</span> </label>
 
               <select id="type" formControlName="type">
                 <option [ngValue]="null">Select a type</option>
@@ -336,7 +336,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="status"> Status <span>*</span> </label>
+              <label for="status"> Status <span class="cims-required">*</span> </label>
 
               <select id="status" formControlName="status">
                 <option [ngValue]="null">Select a status</option>
@@ -358,7 +358,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="technology"> Technology <span>*</span> </label>
+              <label for="technology"> Technology <span class="cims-required">*</span> </label>
 
               <select id="technology" formControlName="technology">
                 <option [ngValue]="null">Select a technology</option>
@@ -576,7 +576,7 @@
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="eaim"> EAIM <span>*</span> </label>
+              <label for="eaim"> EAIM <span class="cims-required">*</span> </label>
 
               <select id="eaim" formControlName="eaim">
                 <option [ngValue]="null">Select a contractor</option>
@@ -596,7 +596,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="responsible"> Responsible <span>*</span> </label>
+              <label for="responsible"> Responsible <span class="cims-required">*</span> </label>
 
               <select id="responsible" formControlName="responsible">
                 <option [ngValue]="null">Select an engineer</option>
@@ -651,7 +651,7 @@
         >
           <div class="delivery-form-grid">
             <div class="delivery-field">
-              <label for="surveyCost"> Survey Cost <span>*</span> </label>
+              <label for="surveyCost"> Survey Cost <span class="cims-required">*</span> </label>
 
               <input
                 id="surveyCost"
@@ -664,7 +664,7 @@
             </div>
 
             <div class="delivery-field">
-              <label for="installationBudget"> Installation Budget <span>*</span> </label>
+              <label for="installationBudget"> Installation Budget <span class="cims-required">*</span> </label>
 
               <input
                 id="installationBudget"
@@ -710,7 +710,7 @@
 
                   <div class="repeatable-grid">
                     <div class="delivery-field">
-                      <label [for]="'cost-cause-' + index"> Cost Cause <span>*</span> </label>
+                      <label [for]="'cost-cause-' + index"> Cost Cause <span class="cims-required">*</span> </label>
 
                       <select [id]="'cost-cause-' + index" formControlName="cause">
                         <option [ngValue]="null">Select a cost cause</option>
@@ -730,7 +730,7 @@
                     </div>
 
                     <div class="delivery-field">
-                      <label [for]="'cost-amount-' + index"> Amount <span>*</span> </label>
+                      <label [for]="'cost-amount-' + index"> Amount <span class="cims-required">*</span> </label>
 
                       <input
                         [id]="'cost-amount-' + index"
