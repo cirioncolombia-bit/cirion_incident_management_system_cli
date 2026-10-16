@@ -343,7 +343,7 @@
         <p class="help">Select an active user or remove the assignment.</p>
       } @else {
         <label
-          >Title *<input
+          >Title <span class="cims-required">*</span><input
             formControlName="title"
             maxlength="200"
             required
@@ -351,7 +351,7 @@
         /></label>
         <div class="form-grid">
           <label
-            >Incident type *<select formControlName="typeId" required>
+            >Incident type <span class="cims-required">*</span><select formControlName="typeId" required>
               <option value="">Select a type</option>
               @for (o of options().types; track o.id) {
                 <option [value]="o.id">{{ o.name }}</option>
@@ -388,7 +388,7 @@
           >
         </div>
         <label
-          >Description *<textarea
+          >Description <span class="cims-required">*</span><textarea
             formControlName="description"
             rows="6"
             maxlength="10000"
