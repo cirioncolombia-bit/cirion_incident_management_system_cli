@@ -25,6 +25,8 @@ export interface PortOption {
   gcoId: number;
   portNumber: number;
   equipmentName: string | null;
+  conduitName?: string | null;
+  fiberColorName?: string | null;
   statusId: number;
   statusName: string;
   rowVersion: string;
