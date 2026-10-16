@@ -479,3 +479,65 @@
     </button>
   </div>
 </dialog>
+
+<dialog
+  #saveConfirmation
+  aria-labelledby="save-confirmation-title"
+  (cancel)="pendingSave.set(null)"
+>
+  <h2 id="save-confirmation-title">Confirm assignment</h2>
+  <p>Do you want to update this port and save the assignment?</p>
+  @if (selectedPort(); as port) {
+    @if (pendingSave(); as pending) {
+      <dl>
+        <div>
+          <dt>GCO</dt>
+          <dd>{{ selectedGcoName() }}</dd>
+        </div>
+        <div>
+          <dt>FiberTray</dt>
+          <dd>{{ port.fiberTrayName }}</dd>
+        </div>
+        <div>
+          <dt>Port</dt>
+          <dd>{{ port.portNumber }}</dd>
+        </div>
+        <div>
+          <dt>Conduit</dt>
+          <dd>{{ port.conduitName || 'Not assigned' }}</dd>
+        </div>
+        <div>
+          <dt>Fiber Color</dt>
+          <dd>{{ port.fiberColorName || 'Not assigned' }}</dd>
+        </div>
+        <div>
+          <dt>Current status</dt>
+          <dd>{{ port.statusName }}</dd>
+        </div>
+        <div>
+          <dt>New status</dt>
+          <dd>{{ statusName(pending.body.statusId) }}</dd>
+        </div>
+        <div>
+          <dt>Current equipment</dt>
+          <dd>{{ port.equipmentName || 'No equipment' }}</dd>
+        </div>
+        <div>
+          <dt>New equipment</dt>
+          <dd>{{ pending.body.equipmentName || 'No equipment' }}</dd>
+        </div>
+      </dl>
+    }
+  }
+  <div class="actions">
+    <button type="button" (click)="cancelSave()">Cancel</button>
+    <button
+      type="button"
+      class="primary"
+      (click)="confirmSave()"
+      [disabled]="saving() || !pendingSave()"
+    >
+      Confirm and save
+    </button>
+  </div>
+</dialog>

@@ -25,6 +25,8 @@ export class Assignments {
   private readonly route = inject(ActivatedRoute);
   private readonly destroy = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
+  @ViewChild('saveConfirmation') saveConfirmation!: ElementRef<HTMLDialogElement>;
+  readonly pendingSave = signal<{ id: number | null; body: AssignmentWrite } | null>(null);
   @ViewChild('confirmation') confirmation!: ElementRef<HTMLDialogElement>;
   readonly canRead = signal(false);
   readonly canWrite = signal(false);
@@ -467,9 +469,29 @@ export class Assignments {
       if (!this.detail()) return;
       body.rowVersion = this.detail()!.rowVersion;
     }
+    this.pendingSave.set({ id: this.id(), body });
+    this.saveConfirmation.nativeElement.showModal();
+  }
+  selectedGcoName() {
+    return (
+      this.delivery()?.gcos.find((g) => g.id === Number(this.form.controls.gcoId.value))?.name ?? ''
+    );
+  }
+  statusName(id: number) {
+    return this.statuses().find((s) => s.id === id)?.name ?? this.selectedPort()?.statusName ?? '';
+  }
+  cancelSave() {
+    this.pendingSave.set(null);
+    this.saveConfirmation.nativeElement.close();
+  }
+  confirmSave() {
+    const pending = this.pendingSave();
+    if (!pending || this.saving() || !this.canWrite()) return;
+    this.pendingSave.set(null);
+    this.saveConfirmation.nativeElement.close();
     this.saving.set(true);
     this.api
-      .save(this.id(), body)
+      .save(pending.id, pending.body)
       .pipe(
         takeUntilDestroyed(this.destroy),
         finalize(() => this.saving.set(false)),
