@@ -339,6 +339,10 @@ export class UsersList {
         return;
       }
       if (this.section() === 'users') {
+        if (this.mode() === 'new' && this.selectedIds().length === 0) {
+          this.formError.set('Select at least one role to create the user.');
+          return;
+        }
         if (
           !v.firstName.trim() ||
           !v.firstSurname.trim() ||

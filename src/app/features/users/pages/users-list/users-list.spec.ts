@@ -94,7 +94,7 @@ describe('Users administration', () => {
     );
   });
   it('requires an EAIM for external users before saving', () => {
-    const {component, api, fixture} = setup(); component.openNew();
+    const {component, api, fixture} = setup(); component.openNew(); component.toggle(2, true);
     component.form.patchValue({firstName:'Ana',firstSurname:'Torres',email:'ana@example.com',areaId:'1',userType:'2',password:'test-value'});
     component.save(); fixture.detectChanges();
     expect(api.save).not.toHaveBeenCalled();
@@ -104,13 +104,32 @@ describe('Users administration', () => {
     expect(api.save).toHaveBeenCalledWith('users', null, expect.objectContaining({userType:2,eaimId:8}));
   });
   it('clears and hides EAIM when changing to Internal and requires a new choice on External', () => {
-    const {component, fixture, api} = setup(); component.openNew();
+    const {component, fixture, api} = setup(); component.openNew(); component.toggle(2, true);
     component.form.patchValue({firstName:'Ana',firstSurname:'Torres',email:'ana@example.com',areaId:'1',userType:'2',password:'test-value'});
     component.form.controls.eaimId.setValue('8'); component.form.controls.userType.setValue('1'); fixture.detectChanges();
     expect(component.form.controls.eaimId.value).toBe('');
     expect(component.editor.nativeElement.querySelector('[formControlName="eaimId"]')).toBeNull();
     component.save(); expect(api.save).toHaveBeenCalledWith('users',null,expect.objectContaining({eaimId:null}));
     component.form.controls.userType.setValue('2'); expect(component.form.controls.eaimId.hasError('required')).toBe(true);
+  });
+  it('blocks creating a user without roles and preserves the entered data', () => {
+    const { component, api } = setup(); component.openNew();
+    component.form.patchValue({ firstName:'Ana', firstSurname:'Torres', email:'ana@example.com', areaId:'1', userType:'1', password:'test-value' });
+    const entered = component.form.getRawValue();
+    component.save();
+    expect(api.save).not.toHaveBeenCalled();
+    expect(component.formError()).toBe('Select at least one role to create the user.');
+    expect(component.form.getRawValue()).toEqual(entered);
+    expect(component.editor.nativeElement.close).not.toHaveBeenCalled();
+    component.toggle(2, true); component.save();
+    expect(api.save).toHaveBeenCalledWith('users',null,expect.objectContaining({roleIds:[2]}));
+  });
+  it('blocks creation if the final selected role is removed', () => {
+    const { component, api } = setup(); component.openNew();
+    component.form.patchValue({ firstName:'Ana', firstSurname:'Torres', email:'ana@example.com', areaId:'1', userType:'1', password:'test-value' });
+    component.toggle(2,true); component.toggle(2,false); component.save();
+    expect(api.save).not.toHaveBeenCalled();
+    expect(component.formError()).toContain('at least one role');
   });
   it('does not send password or role changes when editing the profile', () => {
     const { component, api } = setup();

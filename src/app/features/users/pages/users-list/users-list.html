@@ -362,7 +362,9 @@
         @if (section() === 'users' && (mode() === 'new' || mode() === 'roles')) {
           <fieldset class="choices">
             <legend>User roles</legend>
-            <p class="help">You can select multiple roles. Users without roles have no permissions.</p>
+            <p class="help">{{ mode() === 'new'
+              ? 'Select at least one role. You can select multiple roles.'
+              : 'You can select multiple roles. Users without roles have no permissions.' }}</p>
             @for (r of options().roles; track r.id) {
               <label class="check"
                 ><input
