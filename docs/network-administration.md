@@ -8,7 +8,7 @@ Internal users need the existing database permission `catalogs.read` to access t
 
 ## Screen and forms
 
-The catalog selector covers Cities, Nodes, GCOs, FiberTrays, physical ports, Equipment, port numbers, port statuses, Conduits, Fiber Colors and Countries. The list uses server search, pagination and an inactive-record filter. Hierarchical catalogs also have an optional searchable parent filter; clearing it shows all matching records.
+The catalog selector covers Cities, Nodes, GCOs, FiberTrays, physical ports, Equipment, port numbers, port statuses, Conduits, Fiber Colors and Countries. The list uses server search, pagination and an inactive-record filter. Hierarchical catalogs require the location filters in order: Country → City → Node → GCO → FiberTray, up to the immediate parent of the catalog being viewed. Cities require Country; Nodes require Country and City; physical ports require the full chain. Child options are searched and paginated within their selected parent. Changing or clearing any ancestor clears lower filters, results and pagination, and invalidates pending list responses. The table is queried only after the required chain is selected, using the existing ParentId parameter. Independent catalogs continue to load without location filters.
 
 Records use a semantic data table, with an edit icon in the first column for active records when the user has write permission. Entity-specific columns show parent names and port details; deactivation remains in the last column. The table scrolls horizontally within its container on narrow screens and keeps the edit column visible. Forms use one column on mobile and two on wider screens. Dialogs scroll within the viewport. Buttons and inputs have at least 44px touch targets, visible focus, and wrapping text. Required markers and invalid fields are red.
 
@@ -34,4 +34,6 @@ Deploy the accompanying backend NetworkConfiguration implementation and apply it
 
 Automated tests cover endpoint contracts, ancestor resolution, menu permissions, read-only access, dependent fields, validation, occupied equipment, rowversion, cancellation/conflicts, duplicate submission and stale responses. Browser checks use mocked API responses and widths 320, 360, 390, 768 and 1440px; they verify page/dialog overflow, edit preselection and port-save validation. Live SQL Server integration remains pending.
 
-Verification results: production build passed with existing stylesheet budget warnings. All 38 focused network/navigation tests passed. The previously identified unrelated `app.spec.ts` title assertion failure is outside this change; the App component/test was not changed.
+Verification results: production build passed with existing stylesheet budget warnings. All 42 focused network/navigation tests passed. The previously identified unrelated `app.spec.ts` title assertion failure is outside this change; the App component/test was not changed.
+
+Hierarchical-filter browser checks additionally verified scoped requests for each catalog, lower-filter reset after changing country, and no final list request before the required ancestors are selected. These checks used mocked responses at 320, 390, 768 and 1440px. No new endpoint or migration is needed.

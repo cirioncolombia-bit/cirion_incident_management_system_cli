@@ -64,7 +64,14 @@ export class NetworkAdministration {
   readonly page = signal(1);
   readonly pages = signal(0);
   readonly total = signal(0);
-  readonly filterParent = signal<NetworkSelection | null>(null);
+  readonly filterLocations = signal<Partial<Record<LocationField, NetworkSelection>>>({});
+  readonly filtersReady = computed(() =>
+    this.locationLevels().every((level) => !!this.filterLocations()[level.field]),
+  );
+  readonly filterParent = computed(() => {
+    const parent = this.parentLevel();
+    return parent ? (this.filterLocations()[parent.field] ?? null) : null;
+  });
   readonly editing = signal<NetworkRecord | null>(null);
   readonly deletion = signal<NetworkRecord | null>(null);
   readonly selections = signal<Partial<Record<LocationField | ReferenceField, NetworkSelection>>>(
@@ -120,7 +127,7 @@ export class NetworkAdministration {
     if (!catalog || this.saving()) return;
     this.catalog.set(catalog);
     this.filters.reset();
-    this.filterParent.set(null);
+    this.filterLocations.set({});
     this.page.set(1);
     this.rows.set([]);
     this.notice.set('');
@@ -132,9 +139,14 @@ export class NetworkAdministration {
       this.reload();
     }
   }
-  changeParent(parent: NetworkSelection | null) {
-    this.filterParent.set(parent);
-    this.search();
+  changeFilterLocation(field: LocationField, record: NetworkRecord | null) {
+    const locations = { ...this.filterLocations() };
+    const index = LOCATION_LEVELS.findIndex((level) => level.field === field);
+    for (const level of LOCATION_LEVELS.slice(index)) delete locations[level.field];
+    if (record) locations[field] = record;
+    this.filterLocations.set(locations);
+    this.page.set(1);
+    this.reload();
   }
   paginate(delta: number) {
     this.page.update((page) => page + delta);
@@ -143,6 +155,14 @@ export class NetworkAdministration {
   reload() {
     if (!this.canRead()) return;
     const version = ++this.listVersion;
+    if (!this.filtersReady()) {
+      this.rows.set([]);
+      this.pages.set(0);
+      this.total.set(0);
+      this.error.set('');
+      this.loading.set(false);
+      return;
+    }
     this.loading.set(true);
     this.error.set('');
     this.api
