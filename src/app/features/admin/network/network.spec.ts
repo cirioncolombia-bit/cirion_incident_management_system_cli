@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 import { AuthService } from '../../auth/services/auth.service';
 import { NetworkAdministration } from './network';
 import { NetworkService } from './services/network.service';
-import { NetworkPage, NetworkRecord } from './network.models';
+import { NetworkPage, NetworkQuery, NetworkRecord, NetworkResource } from './network.models';
 
 const city: NetworkRecord = {
   id: 2,
@@ -34,9 +34,15 @@ const port: NetworkRecord = {
 };
 
 describe('Network administration workflow', () => {
-  function setup(permissions = ['catalogs.read', 'catalogs.manage'], external = false) {
+  function setup(
+    permissions = ['catalogs.read', 'catalogs.manage'],
+    external = false,
+    selectCountry = true,
+  ) {
     const api = {
-      list: vi.fn(() => of<NetworkPage>({ rows: [city], page: 1, totalCount: 1, totalPages: 1 })),
+      list: vi.fn((_resource: NetworkResource, _query?: NetworkQuery) =>
+        of<NetworkPage>({ rows: [city], page: 1, totalCount: 1, totalPages: 1 }),
+      ),
       detail: vi.fn(() => of<NetworkRecord>(city)),
       ancestors: vi.fn(() => of<NetworkRecord[]>([country])),
       save: vi.fn(() => of({ data: 2 })),
@@ -55,6 +61,10 @@ describe('Network administration workflow', () => {
     const fixture = TestBed.createComponent(NetworkAdministration);
     fixture.detectChanges();
     const component = fixture.componentInstance;
+    if (selectCountry && component.canRead()) {
+      component.changeFilterLocation('countryId', country);
+      fixture.detectChanges();
+    }
     component.editor.nativeElement.showModal = vi.fn();
     component.editor.nativeElement.close = vi.fn();
     component.confirmation.nativeElement.showModal = vi.fn();
@@ -62,6 +72,63 @@ describe('Network administration workflow', () => {
     return { fixture, component, api };
   }
 
+  function selectPortFilters(component: NetworkAdministration) {
+    component.changeFilterLocation('countryId', country);
+    component.changeFilterLocation('cityId', city);
+    component.changeFilterLocation('nodeId', { id: 3, name: 'Node', isActive: true });
+    component.changeFilterLocation('gcoId', { id: 4, name: 'GCO', isActive: true });
+    component.changeFilterLocation('fiberTrayId', { id: 5, name: 'Tray', isActive: true });
+  }
+  it('waits for a country and then requests only that country cities', () => {
+    const { component, api } = setup(['catalogs.read'], false, false);
+    expect(api.list.mock.calls.some(([resource]) => resource === 'Cities')).toBe(false);
+    component.changeFilterLocation('countryId', country);
+    expect(api.list).toHaveBeenLastCalledWith(
+      'Cities',
+      expect.objectContaining({ parentId: 1, page: 1 }),
+    );
+  });
+  it('waits for each ancestor before loading nodes', () => {
+    const { component, api, fixture } = setup();
+    component.changeCatalog('Nodes');
+    component.changeFilterLocation('countryId', country);
+    fixture.detectChanges();
+    expect(api.list).toHaveBeenCalledWith('Cities', expect.objectContaining({ parentId: 1 }));
+    expect(api.list.mock.calls.some(([resource]) => resource === 'Nodes')).toBe(false);
+    component.changeFilterLocation('cityId', city);
+    expect(api.list).toHaveBeenLastCalledWith(
+      'Nodes',
+      expect.objectContaining({ parentId: 2, page: 1 }),
+    );
+  });
+  it('clears lower filters and pagination when a higher location changes', () => {
+    const { component, api } = setup();
+    component.changeCatalog('Ports');
+    selectPortFilters(component);
+    expect(api.list).toHaveBeenLastCalledWith('Ports', expect.objectContaining({ parentId: 5 }));
+    component.page.set(3);
+    component.changeFilterLocation('cityId', { id: 99, name: 'Another city', isActive: true });
+    expect(component.filterLocations().countryId?.id).toBe(1);
+    expect(component.filterLocations().cityId?.id).toBe(99);
+    expect(component.filterLocations().nodeId).toBeUndefined();
+    expect(component.filterLocations().gcoId).toBeUndefined();
+    expect(component.filterLocations().fiberTrayId).toBeUndefined();
+    expect(component.rows()).toEqual([]);
+    expect(component.page()).toBe(1);
+    expect(component.filtersReady()).toBe(false);
+  });
+  it('ignores old results if a parent filter is cleared during a request', () => {
+    const { component, api } = setup();
+    const pending = new Subject<NetworkPage>();
+    api.list.mockReturnValueOnce(pending);
+    component.reload();
+    component.changeFilterLocation('countryId', null);
+    pending.next({ rows: [city], page: 1, totalCount: 1, totalPages: 1 });
+    pending.complete();
+    expect(component.rows()).toEqual([]);
+    expect(component.pages()).toBe(0);
+    expect(component.loading()).toBe(false);
+  });
   it('does not request records or allow writes without internal catalog access', () => {
     const { component, api } = setup(['catalogs.read', 'catalogs.manage'], true);
     component.openEditor(city);
@@ -107,6 +174,7 @@ describe('Network administration workflow', () => {
       of({ rows: [{ ...port, isActive: false }], page: 1, totalCount: 1, totalPages: 1 }),
     );
     component.changeCatalog('Ports');
+    selectPortFilters(component);
     fixture.detectChanges();
     const headers = Array.from(fixture.nativeElement.querySelectorAll('thead th')).map(
       (cell: any) => cell.textContent.trim(),
