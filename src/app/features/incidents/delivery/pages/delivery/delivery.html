@@ -51,6 +51,7 @@
 
       <input
         type="search"
+        maxlength="200"
         aria-label="Search deliveries"
         placeholder="Search by DKO/TKT, RFS, client, site, city or responsible..."
         [value]="searchTerm()"
@@ -1116,14 +1117,14 @@
       Showing
       {{ pagedDeliveries().length }}
       of
-      {{ filteredDeliveries().length }}
+      {{ totalCount() }}
       results
     </p>
 
     <nav aria-label="Pagination">
       <button
         type="button"
-        [disabled]="currentPage() === 1"
+        [disabled]="loading() || currentPage() === 1"
         (click)="
           goToPage(
             currentPage() - 1
@@ -1136,12 +1137,12 @@
       @for (page of pageNumbers(); track page) {
         <button type="button" [class.delivery-pagination__active]="currentPage() === page"
           [attr.aria-current]="currentPage() === page ? 'page' : null"
-          (click)="goToPage(page)">{{ page }}</button>
+          [disabled]="loading()" (click)="goToPage(page)">{{ page }}</button>
       }
 
       <button
         type="button"
-        [disabled]="currentPage() >= totalPages()"
+        [disabled]="loading() || currentPage() >= totalPages()"
         (click)="
           goToPage(
             currentPage() + 1

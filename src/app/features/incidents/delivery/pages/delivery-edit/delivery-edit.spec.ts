@@ -265,11 +265,12 @@ describe('DeliveryEdit API integration', () => {
       { path: 'delivery/:id/edit', component: DeliveryEdit },
     ]);
     await harness.navigateByUrl('/delivery', Delivery);
-    http.expectOne(environment.apiUrl + '/api/Delivery').flush({ data: [record], message: '' });
+    http.expectOne(request => request.url === environment.apiUrl + '/api/Delivery/paged').flush({ data: {
+      rows: [record], page: 1, pageSize: 20, totalCount: 1, totalPages: 1, totalActive: 1, statuses: []
+    }, message: '' });
     harness.detectChanges();
     const edit =
       harness.routeNativeElement!.querySelector<HTMLButtonElement>('button.delivery-table__edit')!;
-    http.expectOne(environment.apiUrl + '/api/Delivery/42/status-history').flush({}, {status:500,statusText:'Unavailable'});
     expect(edit.disabled).toBe(false);
     edit.click();
     await harness.fixture.whenStable();

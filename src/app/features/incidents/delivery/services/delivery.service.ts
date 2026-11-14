@@ -1,9 +1,9 @@
 import { DeliveryStatusHistoryData } from '../models/delivery-status-history';
 import { DeliveryEditData, UpdateDeliveryEdit } from '../models/delivery-edit';
-import { DeliverySummary } from '../models/delivery-summary';
+import { DeliverySummary, DeliveryListQuery, DeliveryPage } from '../models/delivery-summary';
 import { CreateDelivery, CreatedDelivery } from '../models/create-delivery';
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ApiResponse, DeliveryCreateOptions } from '../models/delivery-create-options';
@@ -28,6 +28,15 @@ export class DeliveryService {
     return this.http
       .put<ApiResponse<CreatedDelivery>>(`${environment.apiUrl}/api/Delivery/${id}/edit`, request)
       .pipe(map((response) => response.data));
+  }
+
+  getPage(query: DeliveryListQuery) {
+    let params = new HttpParams().set('Page', query.page).set('PageSize', query.pageSize);
+    if (query.search?.trim()) params = params.set('Search', query.search.trim());
+    if (query.status) params = params.set('Status', query.status);
+    if (query.deliveryId) params = params.set('DeliveryId', query.deliveryId);
+    return this.http.get<ApiResponse<DeliveryPage>>(`${environment.apiUrl}/api/Delivery/paged`, { params })
+      .pipe(map(response => response.data));
   }
 
   getAll() {
