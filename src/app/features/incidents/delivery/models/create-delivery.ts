@@ -1,4 +1,7 @@
 export interface CreateDelivery {
+  dkoAssignmentDate?: string | null;
+  eaimSurveyRequestDate?: string | null;
+  installationDate?: string | null;
   workOrderId: string;
   rfsFiberChain: string;
   soSap: string | null;

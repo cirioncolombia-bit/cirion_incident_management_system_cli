@@ -178,4 +178,26 @@ describe('Delivery summary', () => {
     expect(component.deliveries()[0].id).toBe(record.id);
   });
 
+  it('renders stored milestone dates in their corresponding columns without shifting calendar days', () => {
+    const { component, element } = setup(0, ['deliveries.read'], {
+      dkoAssignmentDate: '2026-11-13', eaimSurveyRequestDate: '2026-11-14', installationDate: '2028-02-29',
+    });
+    const headers = [...element.querySelectorAll('th')].map(h => h.textContent!.trim());
+    const cells = [...element.querySelectorAll('tbody tr:first-child td')];
+    expect(cells[headers.indexOf('DKO Assignment Date')].textContent?.trim()).toBe('2026-11-13');
+    expect(cells[headers.indexOf('EAIM Survey Request Date')].textContent?.trim()).toBe('2026-11-14');
+    expect(cells[headers.indexOf('Installation Date')].textContent?.trim()).toBe('2028-02-29');
+    expect(component.deliveries()[0].installationDate).toBe('2028-02-29');
+  });
+
+  it('shows an unavailable value for deliveries without milestone dates', () => {
+    const { component } = setup(0, ['deliveries.read'], {
+      dkoAssignmentDate: null, eaimSurveyRequestDate: null, installationDate: null,
+    });
+    const delivery = component.deliveries()[0];
+    expect(delivery.dkoAssignmentDate).toBe('—');
+    expect(delivery.eaimSurveyRequestDate).toBe('—');
+    expect(delivery.installationDate).toBe('—');
+  });
+
 });

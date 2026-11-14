@@ -331,6 +331,9 @@ export class DeliveryEdit {
     }
     const value = this.editForm.getRawValue();
     const request: UpdateDeliveryEdit = {
+      dkoAssignmentDate: delivery.dkoAssignmentDate ?? null,
+      eaimSurveyRequestDate: delivery.eaimSurveyRequestDate ?? null,
+      installationDate: delivery.installationDate ?? null,
       workOrderId: delivery.workOrderId,
       rfsFiberChain: value.rfsFiberChain.trim(),
       soSap: value.soSap.trim() || null,
