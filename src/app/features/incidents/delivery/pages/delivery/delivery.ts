@@ -284,7 +284,9 @@ export class Delivery {
       phone: delivery.mobilePhone == null ? '—' : label(String(delivery.mobilePhone)),
       observations: label(delivery.observation),
       consecutive: '—', landlord: '—', installationCost: delivery.totalInstallationCost == null ? null : String(delivery.totalInstallationCost),
-      dkoAssignmentDate: '—', eaimSurveyRequestDate: '—', installationDate: '—',
+      dkoAssignmentDate: delivery.dkoAssignmentDate ?? '—',
+      eaimSurveyRequestDate: delivery.eaimSurveyRequestDate ?? '—',
+      installationDate: delivery.installationDate ?? '—',
       statusHistory: [],
     };
   }

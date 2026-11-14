@@ -34,6 +34,9 @@ const options: DeliveryCreateOptions = {
 const record: DeliveryEditData = {
   id: 42,
   workOrderId: 'DKO-42',
+  dkoAssignmentDate: '2026-11-13',
+  eaimSurveyRequestDate: '2026-11-14',
+  installationDate: '2026-12-01',
   rfsFiberChain: 'RFS-42',
   soSap: null,
   clientId: 7,
@@ -161,6 +164,9 @@ describe('DeliveryEdit API integration', () => {
     const request = http.expectOne(environment.apiUrl + '/api/Delivery/42/edit');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body.workOrderId).toBe('DKO-42');
+    expect(request.request.body.dkoAssignmentDate).toBe('2026-11-13');
+    expect(request.request.body.eaimSurveyRequestDate).toBe('2026-11-14');
+    expect(request.request.body.installationDate).toBe('2026-12-01');
     expect(request.request.body.mobilePhone).toBe(573001234567);
     expect(request.request.body.surveryCost).toBe(12.5);
     expect(request.request.body.installationBudget).toBe(1000.75);
