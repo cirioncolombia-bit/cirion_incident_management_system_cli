@@ -1,4 +1,5 @@
 export interface DeliverySummary {
+  currentStatusStartedAt?: string | null;
   id: number;
   workOrderId: string;
   rfsFiberChain: string;
@@ -31,4 +32,23 @@ export interface DeliverySummary {
   technologyDescription: string | null;
   eaimName: string | null;
   responsibleName: string | null;
+}
+
+export interface DeliveryListQuery {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: string;
+  deliveryId?: number;
+}
+
+export interface DeliveryPage {
+  calculatedAt?: string;
+  rows: DeliverySummary[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  totalActive: number;
+  statuses: { description: string | null; count: number }[];
 }

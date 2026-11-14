@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { Delivery } from './delivery';
 import { DeliveryService } from '../../services/delivery.service';
-import { DeliverySummary } from '../../models/delivery-summary';
+import { DeliverySummary, DeliveryListQuery, DeliveryPage } from '../../models/delivery-summary';
 
 describe('Delivery summary', () => {
+  afterEach(() => vi.useRealTimers());
   function setup(totalInstallationCost: number | undefined = 125000, permissions = ['deliveries.read', 'deliveries.write'], overrides: Partial<DeliverySummary> = {}) {
     const record = {
       id: 42, workOrderId: 'DKO-100', rfsFiberChain: 'RFS-1', clientId: 7, clientName: 'Client', siteType: 'Site',
@@ -15,11 +16,23 @@ describe('Delivery summary', () => {
       statusDescription: 'DETENIDO CLIENTE', email: 'contact@example.com', contactName: 'Ana', mobilePhone: 3001234567,
       ...overrides,
     } as DeliverySummary;
+    const api = {
+      getPage: vi.fn((query: DeliveryListQuery) => {
+        const term = query.search?.toLowerCase() ?? '';
+        const haystack = [record.workOrderId, record.rfsFiberChain, record.clientName, record.siteType, record.cityName]
+          .map(value => value?.replace(/\s+/g, ' ').toLowerCase() ?? '').join(' ');
+        const matches = haystack.includes(term) && (!query.status || query.status === record.statusDescription);
+        const rows = matches ? [record] : [];
+        return of({ rows, page: query.page, pageSize: 20, totalCount: rows.length, totalPages: rows.length ? 1 : 0,
+          totalActive: 1, statuses: [{ description: record.statusDescription, count: 1 }] } as DeliveryPage);
+      }),
+      getStatusHistory: vi.fn(() => throwError(() => new Error('Not available'))),
+    };
     TestBed.configureTestingModule({ imports: [Delivery], providers: [provideRouter([]), {provide: AuthService, useValue: {currentUser: () => ({permissions})}},
-      { provide: DeliveryService, useValue: { getAll: () => of([record]), getStatusHistory: () => throwError(() => new Error('Not available')) } },
+      { provide: DeliveryService, useValue: api },
     ] });
     const fixture = TestBed.createComponent(Delivery); fixture.detectChanges();
-    return { fixture, component: fixture.componentInstance, element: fixture.nativeElement as HTMLElement };
+    return { api, record, fixture, component: fixture.componentInstance, element: fixture.nativeElement as HTMLElement };
   }
   it('shows the identifier beside Workorder and keeps table columns aligned', () => {
     const {element} = setup();
@@ -75,10 +88,16 @@ describe('Delivery summary', () => {
     const headers = [...element.querySelectorAll('th')].map(h => h.textContent!.trim());
     const cells = [...element.querySelectorAll('tbody tr:first-child td')];
     expect(cells[headers.indexOf('Client Name')].textContent?.trim()).toBe('Empresa vinculada');
-    component.searchTerm.set('empresa vinculada');
+    vi.useFakeTimers();
+    const input = document.createElement('input');
+    input.value = 'empresa vinculada';
+    component.onSearch({ target: input } as unknown as Event);
+    vi.advanceTimersByTime(300);
     fixture.detectChanges();
     expect(component.filteredDeliveries().length).toBe(1);
-    component.searchTerm.set('other client');
+    input.value = 'other client';
+    component.onSearch({ target: input } as unknown as Event);
+    vi.advanceTimersByTime(300);
     expect(component.filteredDeliveries()).toEqual([]);
   });
 
@@ -88,11 +107,75 @@ describe('Delivery summary', () => {
     });
     expect(component.deliveries()[0].clientName).toBe('—');
     expect(element.querySelector('.delivery-card__header p')?.textContent?.trim()).toBe('—');
-    component.searchTerm.set('not present');
+    vi.useFakeTimers();
+    const input = document.createElement('input');
+    input.value = 'not present';
+    component.onSearch({ target: input } as unknown as Event);
+    vi.advanceTimersByTime(300);
     expect(() => fixture.detectChanges()).not.toThrow();
     expect(component.filteredDeliveries()).toEqual([]);
-    component.searchTerm.set('dko-100');
+    input.value = 'dko-100';
+    component.onSearch({ target: input } as unknown as Event);
+    vi.advanceTimersByTime(300);
     expect(component.filteredDeliveries().length).toBe(1);
+  });
+
+  it('requests a bounded page and obtains current duration without per-row history requests', () => {
+    const { api, component } = setup(0, ['deliveries.read'], {
+      currentStatusStartedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    });
+    expect(api.getPage).toHaveBeenCalledTimes(1);
+    expect(api.getPage.mock.calls[0][0]).toMatchObject({ page: 1, pageSize: 20 });
+    expect(api.getStatusHistory).not.toHaveBeenCalled();
+    expect(component.timeInCurrentStatus(component.deliveries()[0])).toBe('0d 02h 00m');
+  });
+
+  it('uses server totals and page results rather than slicing them again', () => {
+    const { api, component, record } = setup();
+    api.getPage.mockImplementation(query => of({ rows: [record], page: query.page, pageSize: 20,
+      totalCount: 80, totalPages: 4, totalActive: 120,
+      statuses: [{ description: 'EN PROCESO', count: 60 }, { description: 'DETENIDO', count: 40 },
+        { description: 'TERMINADO', count: 20 }] }));
+    component.loadDeliveries();
+    component.goToPage(2);
+    expect(api.getPage.mock.calls.at(-1)?.[0].page).toBe(2);
+    expect(component.currentPage()).toBe(2);
+    expect(component.pagedDeliveries().length).toBe(1);
+    expect(component.totalCount()).toBe(80);
+    expect(component.totalDeliveries()).toBe(120);
+    expect(component.inProgressDeliveries()).toBe(60);
+    expect(component.stoppedDeliveries()).toBe(40);
+  });
+
+  it('debounces search and sends status and search filters to the server', () => {
+    vi.useFakeTimers();
+    const { api, component } = setup();
+    const input = document.createElement('input');
+    input.value = 'Cli';
+    component.onSearch({ target: input } as unknown as Event);
+    input.value = 'Client';
+    component.onSearch({ target: input } as unknown as Event);
+    expect(api.getPage).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(300);
+    expect(api.getPage).toHaveBeenCalledTimes(2);
+    component.filterByStatus('DETENIDO CLIENTE');
+    expect(api.getPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, search: 'Client', status: 'DETENIDO CLIENTE' });
+  });
+
+  it('cancels obsolete loads and recovers from an error when retried', () => {
+    const { api, component, record } = setup();
+    const previous = new Subject<DeliveryPage>();
+    api.getPage.mockReturnValueOnce(previous);
+    component.loadDeliveries();
+    expect(previous.observed).toBe(true);
+    api.getPage.mockReturnValueOnce(throwError(() => ({ status: 504 })));
+    component.loadDeliveries();
+    expect(previous.observed).toBe(false);
+    expect(component.loading()).toBe(false);
+    expect(component.loadError()).toContain('Unable to load');
+    component.loadDeliveries();
+    expect(component.loadError()).toBeNull();
+    expect(component.deliveries()[0].id).toBe(record.id);
   });
 
 });

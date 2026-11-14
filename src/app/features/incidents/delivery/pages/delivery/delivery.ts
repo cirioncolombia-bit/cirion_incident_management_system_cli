@@ -1,10 +1,11 @@
+import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
 import { AuthService } from '../../../../auth/services/auth.service';
-import { currentPeriod, formatDuration, DeliveryStatusHistoryData } from '../../models/delivery-status-history';
+import { formatDuration } from '../../models/delivery-status-history';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DeliveryService } from '../../services/delivery.service';
-import { DeliverySummary } from '../../models/delivery-summary';
-import { Component, computed, effect, untracked, DestroyRef, inject, signal } from '@angular/core';
+import { DeliverySummary, DeliveryListQuery, DeliveryPage } from '../../models/delivery-summary';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -26,6 +27,7 @@ interface DeliveryStatusHistory {
 }
 
 interface DeliveryItem {
+  readonly currentStatusStartedAt: string | null;
   readonly id: number;
 
   // 1. Identification
@@ -195,64 +197,71 @@ export class Delivery {
   readonly loadError = signal<string | null>(null);
   readonly deliveries = signal<readonly DeliveryItem[]>([]);
 
-  private readonly histories = signal<Record<number, { data: DeliveryStatusHistoryData; receivedAt: number }>>({});
-  private readonly requestedHistories = new Set<number>();
+  private readonly pageSize = 20;
+  readonly totalCount = signal(0);
+  private readonly totalActive = signal(0);
+  private readonly statusCounts = signal<DeliveryPage['statuses']>([]);
+  readonly totalPages = signal(1);
   private readonly now = signal(Date.now());
+  private readonly responseClock = signal({ calculatedAt: Date.now(), receivedAt: Date.now() });
+  private readonly requests = new Subject<{ query: DeliveryListQuery | null; debounce: boolean }>();
 
   constructor() {
-    const timer = setInterval(() => this.now.set(Date.now()), 60_000);
-    this.destroyRef.onDestroy(() => clearInterval(timer));
-    effect(() => {
-      const visible = this.pagedDeliveries();
-      untracked(() => {
-        for (const delivery of visible) {
-          if (this.requestedHistories.has(delivery.id)) continue;
-          this.requestedHistories.add(delivery.id);
-          this.deliveryService.getStatusHistory(delivery.id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: (data) => this.histories.update((values) => ({ ...values, [delivery.id]: { data, receivedAt: Date.now() } })),
-              error: () => {},
-            });
-        }
-      });
+    const clock = setInterval(() => this.now.set(Date.now()), 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(clock));
+    this.requests.pipe(
+      switchMap(({ query, debounce }) => (debounce ? timer(300) : of(0)).pipe(
+        switchMap(() => query === null
+          ? of({ rows: [], page: 1, pageSize: this.pageSize, totalCount: 0, totalPages: 0, totalActive: 0, statuses: [] } as DeliveryPage)
+          : this.deliveryService.getPage(query)),
+        map(data => ({ data, error: null as HttpErrorResponse | null })),
+        catchError((error: HttpErrorResponse) => of({ data: null, error })),
+      )),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(({ data, error }) => {
+      this.loading.set(false);
+      if (error || !data) {
+        this.loadError.set(error?.status === 401
+          ? 'Your session is missing or expired. Please sign in again.'
+          : 'Unable to load deliveries. Please try again.');
+        return;
+      }
+      const receivedAt = Date.now();
+      const calculatedAt = Date.parse(data.calculatedAt ?? '');
+      this.responseClock.set({ calculatedAt: Number.isFinite(calculatedAt) ? calculatedAt : receivedAt, receivedAt });
+      this.deliveries.set(data.rows.map(delivery => this.toItem(delivery)));
+      this.currentPage.set(data.page);
+      this.totalCount.set(data.totalCount);
+      this.totalPages.set(Math.max(1, data.totalPages));
+      this.totalActive.set(data.totalActive);
+      this.statusCounts.set(data.statuses);
     });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.searchTerm.set('');
       this.selectedStatus.set('TODOS');
       this.currentPage.set(1);
+      this.loadDeliveries();
     });
-    this.loadDeliveries();
   }
 
-  loadDeliveries(): void {
-    if (this.loading()) return;
+  loadDeliveries(debounce = false): void {
     this.loading.set(true);
     this.loadError.set(null);
     this.deliveries.set([]);
-    this.histories.set({});
-    this.requestedHistories.clear();
-    this.deliveryService.getAll()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (deliveries) => {
-          this.deliveries.set(deliveries.map((delivery) => this.toItem(delivery)));
-          this.currentPage.set(1);
-          this.loading.set(false);
-        },
-        error: (error: HttpErrorResponse) => {
-          this.loading.set(false);
-          this.loadError.set(error.status === 401
-            ? 'Your session is missing or expired. Please sign in again.'
-            : 'Unable to load deliveries. Please try again.');
-        },
-      });
+    const query = this.invalidDeliveryIdFilter() ? null : {
+      page: this.currentPage(), pageSize: this.pageSize,
+      search: this.searchTerm().trim(),
+      status: this.selectedStatus() === 'TODOS' ? undefined : this.selectedStatus(),
+      deliveryId: this.filteredDeliveryId() ?? undefined,
+    };
+    this.requests.next({ query, debounce });
   }
 
   private toItem(delivery: DeliverySummary): DeliveryItem {
     const label = (value: string | null | undefined) => value?.trim().replace(/\s+/g, ' ') || '—';
     return {
       id: delivery.id,
+      currentStatusStartedAt: delivery.currentStatusStartedAt ?? null,
       dkoTkt: label(delivery.workOrderId),
       rfsFiberChain: label(delivery.rfsFiberChain),
       soSap: delivery.soSap ?? '—',
@@ -456,60 +465,12 @@ export class Delivery {
       ],
     });
 
-  readonly filteredDeliveries =
-    computed(() => {
-      const search =
-        this.searchTerm()
-          .trim()
-          .toLocaleLowerCase();
-
-      const selectedStatus =
-        this.selectedStatus();
-
-      return this.deliveries().filter(
-        (delivery) => {
-          const matchesStatus =
-            selectedStatus === 'TODOS'
-            || delivery.status === selectedStatus;
-
-          const matchesSearch =
-            !search
-            || delivery.dkoTkt
-              .toLocaleLowerCase()
-              .includes(search)
-            || delivery.rfsFiberChain
-              .toLocaleLowerCase()
-              .includes(search)
-            || delivery.clientName
-              .toLocaleLowerCase()
-              .includes(search)
-            || delivery.buildingName
-              .toLocaleLowerCase()
-              .includes(search)
-            || delivery.city
-              .toLocaleLowerCase()
-              .includes(search)
-            || delivery.responsible
-              .toLocaleLowerCase()
-              .includes(search);
-
-          const matchesId = !this.invalidDeliveryIdFilter()
-            && (this.filteredDeliveryId() === null || delivery.id === this.filteredDeliveryId());
-          return matchesId && matchesStatus && matchesSearch;
-        },
-      );
-    });
-
-  readonly availableStatuses = computed(() =>
-    [...new Set(this.deliveries().map((delivery) => delivery.status))]
-      .filter((status) => status !== '—').sort((a, b) => a.localeCompare(b)),
-  );
-  private readonly pageSize = 20;
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredDeliveries().length / this.pageSize)));
-  readonly pagedDeliveries = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize;
-    return this.filteredDeliveries().slice(start, start + this.pageSize);
-  });
+  // The server filters and limits the result; never slice or search only the loaded page.
+  readonly filteredDeliveries = computed(() => this.deliveries());
+  readonly pagedDeliveries = computed(() => this.deliveries());
+  readonly availableStatuses = computed(() => this.statusCounts()
+    .map(status => status.description).filter((description): description is string => !!description)
+    .sort((a, b) => a.localeCompare(b)));
   readonly pageNumbers = computed(() => {
     const first = Math.max(1, this.currentPage() - 2);
     const last = Math.min(this.totalPages(), first + 4);
@@ -521,37 +482,14 @@ export class Delivery {
     if (target instanceof HTMLSelectElement) this.filterByStatus(target.value);
   }
 
-  readonly totalDeliveries =
-    computed(
-      () => this.deliveries().length,
-    );
+  readonly totalDeliveries = computed(() => this.totalActive());
+  readonly inProgressDeliveries = computed(() => this.countStatus('EN PROCESO'));
+  readonly stoppedDeliveries = computed(() => this.countStatus('DETENIDO'));
+  readonly completedDeliveries = computed(() => this.countStatus('TERMINADO'));
 
-  readonly inProgressDeliveries =
-    computed(
-      () =>
-        this.deliveries().filter(
-          (delivery) =>
-            delivery.status === 'EN PROCESO',
-        ).length,
-    );
-
-  readonly stoppedDeliveries =
-    computed(
-      () =>
-        this.deliveries().filter(
-          (delivery) =>
-            delivery.status === 'DETENIDO',
-        ).length,
-    );
-
-  readonly completedDeliveries =
-    computed(
-      () =>
-        this.deliveries().filter(
-          (delivery) =>
-            delivery.status === 'TERMINADO',
-        ).length,
-    );
+  private countStatus(description: string): number {
+    return this.statusCounts().find(status => status.description === description)?.count ?? 0;
+  }
 
   onSearch(event: Event): void {
     const target = event.target;
@@ -562,6 +500,7 @@ export class Delivery {
 
     this.searchTerm.set(target.value);
     this.currentPage.set(1);
+    this.loadDeliveries(true);
   }
 
   filterByStatus(
@@ -569,17 +508,17 @@ export class Delivery {
   ): void {
     this.selectedStatus.set(status);
     this.currentPage.set(1);
+    this.loadDeliveries();
   }
 
   clearFilters(): void {
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { deliveryId: null },
-      queryParamsHandling: 'merge',
-    });
     this.searchTerm.set('');
     this.selectedStatus.set('TODOS');
     this.currentPage.set(1);
+    if (this.queryParams().has('deliveryId')) {
+      void this.router.navigate([], { relativeTo: this.route,
+        queryParams: { deliveryId: null }, queryParamsHandling: 'merge' });
+    } else this.loadDeliveries();
   }
 
   goToPage(page: number): void {
@@ -588,6 +527,7 @@ export class Delivery {
     }
 
     this.currentPage.set(page);
+    this.loadDeliveries();
   }
 
   startEdit(delivery: DeliveryItem): void {
@@ -669,11 +609,10 @@ export class Delivery {
   timeInCurrentStatus(
     delivery: DeliveryItem,
   ): string {
-    const history = this.histories()[delivery.id];
-    const period = currentPeriod(history?.data);
-    return period && history
-      ? formatDuration(period.durationSeconds + Math.max(0, (this.now() - history.receivedAt) / 1000))
-      : '—';
+    const start = delivery.currentStatusStartedAt ? Date.parse(delivery.currentStatusStartedAt) : NaN;
+    const clock = this.responseClock();
+    const current = clock.calculatedAt + Math.max(0, this.now() - clock.receivedAt);
+    return Number.isFinite(start) ? formatDuration(Math.max(0, (current - start) / 1000)) : '—';
   }
 
   private currentStatusHistory(
