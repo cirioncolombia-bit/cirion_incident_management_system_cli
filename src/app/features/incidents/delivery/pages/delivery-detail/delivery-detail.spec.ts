@@ -187,6 +187,7 @@ describe('DeliveryDetail', () => {
   it('opens the selected real detail from the mobile View Details link and offers editing at the top', async () => {
     const startedAt = new Date(Date.now() - 7200000).toISOString();
     await harness.navigateByUrl('/delivery', Delivery);
+    http.expectOne(environment.apiUrl + '/api/Delivery/filter-options').flush({ data: { currentYear: 2026, years: [2026], statuses: [], cities: [], eaims: [], creators: [] } });
     http.expectOne(request => request.url === environment.apiUrl + '/api/Delivery/paged').flush({ data: {
       rows: [{ ...record, currentStatusStartedAt: startedAt }], page: 1, pageSize: 20, totalCount: 1, totalPages: 1, totalActive: 1, statuses: []
     }, message: '' });

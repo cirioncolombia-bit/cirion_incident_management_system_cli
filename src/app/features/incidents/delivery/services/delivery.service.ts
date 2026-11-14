@@ -1,6 +1,6 @@
 import { DeliveryStatusHistoryData } from '../models/delivery-status-history';
 import { DeliveryEditData, UpdateDeliveryEdit } from '../models/delivery-edit';
-import { DeliverySummary, DeliveryListQuery, DeliveryPage } from '../models/delivery-summary';
+import { DeliverySummary, DeliveryListQuery, DeliveryPage, DeliveryFilterOption, DeliveryFilterOptions } from '../models/delivery-summary';
 import { CreateDelivery, CreatedDelivery } from '../models/create-delivery';
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -30,9 +30,22 @@ export class DeliveryService {
       .pipe(map((response) => response.data));
   }
 
+  getFilterOptions() {
+    return this.http.get<ApiResponse<DeliveryFilterOptions>>(`${environment.apiUrl}/api/Delivery/filter-options`)
+      .pipe(map(response => response.data));
+  }
+
+  getFilterNodes(cityId: number) {
+    return this.http.get<ApiResponse<DeliveryFilterOption[]>>(`${environment.apiUrl}/api/Delivery/filter-nodes`, { params: { cityId } })
+      .pipe(map(response => response.data));
+  }
+
   getPage(query: DeliveryListQuery) {
     let params = new HttpParams().set('Page', query.page).set('PageSize', query.pageSize);
     if (query.search?.trim()) params = params.set('Search', query.search.trim());
+    for (const key of ['year', 'month', 'day', 'statusId', 'cityId', 'nodeId', 'eaimId', 'createdBy'] as const) {
+      if (query[key] != null) params = params.set(key, query[key]!);
+    }
     if (query.status) params = params.set('Status', query.status);
     if (query.deliveryId) params = params.set('DeliveryId', query.deliveryId);
     return this.http.get<ApiResponse<DeliveryPage>>(`${environment.apiUrl}/api/Delivery/paged`, { params })

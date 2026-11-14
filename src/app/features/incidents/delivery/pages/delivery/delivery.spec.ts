@@ -17,9 +17,14 @@ describe('Delivery summary', () => {
       ...overrides,
     } as DeliverySummary;
     const api = {
+      getFilterOptions: vi.fn(() => of({ currentYear: 2026, years: [2025, 2026],
+        statuses: [{ id: 1, name: 'EN PROCESO', isActive: true }, { id: 99, name: 'Archived', isActive: false }],
+        cities: [{ id: 1, name: 'Bogotá' }, { id: 2, name: 'Cali' }],
+        eaims: [{ id: 3, name: 'EAIM A' }], creators: [{ id: 4, name: 'Ana Creator' }] })),
+      getFilterNodes: vi.fn((cityId: number) => of([{ id: cityId * 10, name: 'Node ' + cityId }])),
       getPage: vi.fn((query: DeliveryListQuery) => {
         const term = query.search?.toLowerCase() ?? '';
-        const haystack = [record.workOrderId, record.rfsFiberChain, record.clientName, record.siteType, record.cityName]
+        const haystack = [record.workOrderId, String(record.clientId), record.clientName]
           .map(value => value?.replace(/\s+/g, ' ').toLowerCase() ?? '').join(' ');
         const matches = haystack.includes(term) && (!query.status || query.status === record.statusDescription);
         const rows = matches ? [record] : [];
@@ -88,16 +93,12 @@ describe('Delivery summary', () => {
     const headers = [...element.querySelectorAll('th')].map(h => h.textContent!.trim());
     const cells = [...element.querySelectorAll('tbody tr:first-child td')];
     expect(cells[headers.indexOf('Client Name')].textContent?.trim()).toBe('Empresa vinculada');
-    vi.useFakeTimers();
-    const input = document.createElement('input');
-    input.value = 'empresa vinculada';
-    component.onSearch({ target: input } as unknown as Event);
-    vi.advanceTimersByTime(300);
+    component.filters.controls.search.setValue('empresa vinculada');
+    component.search();
     fixture.detectChanges();
     expect(component.filteredDeliveries().length).toBe(1);
-    input.value = 'other client';
-    component.onSearch({ target: input } as unknown as Event);
-    vi.advanceTimersByTime(300);
+    component.filters.controls.search.setValue('other client');
+    component.search();
     expect(component.filteredDeliveries()).toEqual([]);
   });
 
@@ -107,16 +108,12 @@ describe('Delivery summary', () => {
     });
     expect(component.deliveries()[0].clientName).toBe('—');
     expect(element.querySelector('.delivery-card__header p')?.textContent?.trim()).toBe('—');
-    vi.useFakeTimers();
-    const input = document.createElement('input');
-    input.value = 'not present';
-    component.onSearch({ target: input } as unknown as Event);
-    vi.advanceTimersByTime(300);
+    component.filters.controls.search.setValue('not present');
+    component.search();
     expect(() => fixture.detectChanges()).not.toThrow();
     expect(component.filteredDeliveries()).toEqual([]);
-    input.value = 'dko-100';
-    component.onSearch({ target: input } as unknown as Event);
-    vi.advanceTimersByTime(300);
+    component.filters.controls.search.setValue('dko-100');
+    component.search();
     expect(component.filteredDeliveries().length).toBe(1);
   });
 
@@ -125,7 +122,7 @@ describe('Delivery summary', () => {
       currentStatusStartedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     });
     expect(api.getPage).toHaveBeenCalledTimes(1);
-    expect(api.getPage.mock.calls[0][0]).toMatchObject({ page: 1, pageSize: 20 });
+    expect(api.getPage.mock.calls[0][0]).toMatchObject({ page: 1, pageSize: 20, year: 2026 });
     expect(api.getStatusHistory).not.toHaveBeenCalled();
     expect(component.timeInCurrentStatus(component.deliveries()[0])).toBe('0d 02h 00m');
   });
@@ -142,24 +139,66 @@ describe('Delivery summary', () => {
     expect(component.currentPage()).toBe(2);
     expect(component.pagedDeliveries().length).toBe(1);
     expect(component.totalCount()).toBe(80);
-    expect(component.totalDeliveries()).toBe(120);
-    expect(component.inProgressDeliveries()).toBe(60);
-    expect(component.stoppedDeliveries()).toBe(40);
+    expect(component.totalDeliveries()).toBe(80);
   });
 
-  it('debounces search and sends status and search filters to the server', () => {
-    vi.useFakeTimers();
+  it('applies draft filters only on Search and preserves applied filters when paging', () => {
     const { api, component } = setup();
-    const input = document.createElement('input');
-    input.value = 'Cli';
-    component.onSearch({ target: input } as unknown as Event);
-    input.value = 'Client';
-    component.onSearch({ target: input } as unknown as Event);
+    component.filters.patchValue({ year: 2025, month: '11', day: '14', statusId: '99', cityId: '1', eaimId: '3', createdBy: '4', search: 'Client' });
     expect(api.getPage).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(300);
-    expect(api.getPage).toHaveBeenCalledTimes(2);
-    component.filterByStatus('DETENIDO CLIENTE');
-    expect(api.getPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, search: 'Client', status: 'DETENIDO CLIENTE' });
+    component.search();
+    expect(api.getPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, year: 2025, month: 11, day: 14, statusId: 99, cityId: 1, eaimId: 3, createdBy: 4, search: 'Client' });
+    component.filters.controls.search.setValue('Draft not applied');
+    component.totalPages.set(4);
+    component.goToPage(2);
+    expect(api.getPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 2, search: 'Client', year: 2025 });
+  });
+
+  it('removes status cards and includes inactive states in the dropdown', () => {
+    const { element, component, api } = setup();
+    expect(element.querySelector('.delivery-summary')).toBeNull();
+    expect(element.querySelector('select[aria-label="Delivery Status"]')?.textContent).toContain('Archived (Inactive)');
+    component.filters.controls.statusId.setValue('99');
+    component.search();
+    expect(api.getPage.mock.calls.at(-1)?.[0].statusId).toBe(99);
+    expect(component.months).toHaveLength(12);
+    expect(component.days).toHaveLength(31);
+    expect(component.yearOptions()).toEqual([2026, 2025]);
+  });
+
+  it('ties nodes to the selected city and cancels an obsolete city lookup', () => {
+    const { component, api } = setup();
+    expect(component.filters.controls.nodeId.disabled).toBe(true);
+    const old = new Subject<{ id: number; name: string }[]>();
+    api.getFilterNodes.mockReturnValueOnce(old);
+    component.filters.controls.cityId.setValue('1');
+    component.cityChanged();
+    expect(old.observed).toBe(true);
+    component.filters.controls.nodeId.setValue('10');
+    component.filters.controls.cityId.setValue('2');
+    component.cityChanged();
+    expect(old.observed).toBe(false);
+    expect(component.filters.controls.nodeId.value).toBe('');
+    expect(component.filterNodes()).toEqual([{ id: 20, name: 'Node 2' }]);
+    expect(component.filters.controls.nodeId.enabled).toBe(true);
+    component.filters.controls.cityId.setValue('');
+    component.cityChanged();
+    expect(component.filters.controls.nodeId.disabled).toBe(true);
+    expect(component.filterNodes()).toEqual([]);
+    expect(api.getPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears every filter and restores the current year in Colombia', () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date('2027-01-01T03:00:00Z'));
+    const { component, api } = setup();
+    component.filters.patchValue({ year: 2025, month: '2', day: '15', statusId: '99', cityId: '1', nodeId: '10', eaimId: '3', createdBy: '4', search: 'Client' });
+    component.clearFilters();
+    expect(component.filters.getRawValue()).toEqual({ year: 2026, month: '', day: '', statusId: '', cityId: '', nodeId: '', eaimId: '', createdBy: '', search: '' });
+    expect(api.getPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, year: 2026, search: '' });
+    vi.setSystemTime(new Date('2027-01-01T05:01:00Z'));
+    component.clearFilters();
+    expect(component.filters.controls.year.value).toBe(2027);
+    expect(component.yearOptions()).toContain(2027);
   });
 
   it('cancels obsolete loads and recovers from an error when retried', () => {

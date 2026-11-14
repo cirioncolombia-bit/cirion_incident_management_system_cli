@@ -1,10 +1,10 @@
-import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
+import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { formatDuration } from '../../models/delivery-status-history';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DeliveryService } from '../../services/delivery.service';
-import { DeliverySummary, DeliveryListQuery, DeliveryPage } from '../../models/delivery-summary';
+import { DeliverySummary, DeliveryListQuery, DeliveryPage, DeliveryFilterOptions, DeliveryFilterOption } from '../../models/delivery-summary';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import {
   AbstractControl,
@@ -117,12 +117,24 @@ export class Delivery {
   private readonly formBuilder =
     inject(FormBuilder);
 
-  readonly searchTerm = signal('');
-
-  readonly selectedStatus =
-    signal<DeliveryStatus | 'TODOS'>(
-      'TODOS',
-    );
+  private yearInColombia(): number {
+    return Number(new Intl.DateTimeFormat('en', { timeZone: 'America/Bogota', year: 'numeric' }).format(new Date()));
+  }
+  readonly currentYear = signal(this.yearInColombia());
+  readonly months = Array.from({ length: 12 }, (_, i) => i + 1);
+  readonly days = Array.from({ length: 31 }, (_, i) => i + 1);
+  readonly filterOptions = signal<DeliveryFilterOptions | null>(null);
+  readonly optionsLoading = signal(false);
+  readonly optionsError = signal('');
+  readonly filterNodes = signal<DeliveryFilterOption[]>([]);
+  readonly nodesLoading = signal(false);
+  readonly nodesError = signal('');
+  readonly yearOptions = computed(() => [...new Set([this.currentYear(), ...(this.filterOptions()?.years ?? [])])].sort((a, b) => b - a));
+  readonly filters = this.formBuilder.nonNullable.group({
+    year: this.currentYear(), month: '', day: '', statusId: '', cityId: '', nodeId: this.formBuilder.nonNullable.control({ value: '', disabled: true }), eaimId: '', createdBy: '', search: '',
+  });
+  private appliedFilters: Partial<DeliveryListQuery> = { year: this.currentYear() };
+  private readonly nodeRequests = new Subject<number | null>();
 
   readonly currentPage = signal(1);
 
@@ -199,21 +211,18 @@ export class Delivery {
 
   private readonly pageSize = 20;
   readonly totalCount = signal(0);
-  private readonly totalActive = signal(0);
-  private readonly statusCounts = signal<DeliveryPage['statuses']>([]);
   readonly totalPages = signal(1);
   private readonly now = signal(Date.now());
   private readonly responseClock = signal({ calculatedAt: Date.now(), receivedAt: Date.now() });
-  private readonly requests = new Subject<{ query: DeliveryListQuery | null; debounce: boolean }>();
+  private readonly requests = new Subject<DeliveryListQuery | null>();
 
   constructor() {
     const clock = setInterval(() => this.now.set(Date.now()), 60_000);
     this.destroyRef.onDestroy(() => clearInterval(clock));
     this.requests.pipe(
-      switchMap(({ query, debounce }) => (debounce ? timer(300) : of(0)).pipe(
-        switchMap(() => query === null
-          ? of({ rows: [], page: 1, pageSize: this.pageSize, totalCount: 0, totalPages: 0, totalActive: 0, statuses: [] } as DeliveryPage)
-          : this.deliveryService.getPage(query)),
+      switchMap(query => (query === null
+        ? of({ rows: [], page: 1, pageSize: this.pageSize, totalCount: 0, totalPages: 0, totalActive: 0, statuses: [] } as DeliveryPage)
+        : this.deliveryService.getPage(query)).pipe(
         map(data => ({ data, error: null as HttpErrorResponse | null })),
         catchError((error: HttpErrorResponse) => of({ data: null, error })),
       )),
@@ -233,28 +242,84 @@ export class Delivery {
       this.currentPage.set(data.page);
       this.totalCount.set(data.totalCount);
       this.totalPages.set(Math.max(1, data.totalPages));
-      this.totalActive.set(data.totalActive);
-      this.statusCounts.set(data.statuses);
+
+    });
+    this.nodeRequests.pipe(
+      switchMap(cityId => cityId === null ? of([] as DeliveryFilterOption[])
+        : this.deliveryService.getFilterNodes(cityId).pipe(catchError(() => {
+            this.nodesError.set('Nodes could not be loaded. Select the city again to retry.');
+            return of([] as DeliveryFilterOption[]);
+          }))),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(nodes => {
+      this.filterNodes.set(nodes);
+      this.nodesLoading.set(false);
+      if (this.filters.controls.cityId.value && !this.nodesError()) this.filters.controls.nodeId.enable({ emitEvent: false });
     });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.searchTerm.set('');
-      this.selectedStatus.set('TODOS');
-      this.currentPage.set(1);
-      this.loadDeliveries();
+      this.resetFilterValues();
+      if (this.filterOptions()) this.search();
+    });
+    this.loadFilterOptions();
+  }
+
+  loadFilterOptions(): void {
+    if (this.optionsLoading()) return;
+    this.optionsLoading.set(true);
+    this.optionsError.set('');
+    this.deliveryService.getFilterOptions().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: options => {
+        this.filterOptions.set(options);
+        this.currentYear.set(options.currentYear);
+        this.optionsLoading.set(false);
+        this.filters.controls.year.setValue(options.currentYear);
+        this.search();
+      },
+      error: () => {
+        this.optionsLoading.set(false);
+        this.optionsError.set('Delivery filter options could not be loaded.');
+      },
     });
   }
 
-  loadDeliveries(debounce = false): void {
+  cityChanged(): void {
+    this.filters.controls.nodeId.setValue('');
+    this.filters.controls.nodeId.disable({ emitEvent: false });
+    this.filterNodes.set([]);
+    this.nodesError.set('');
+    const cityId = Number(this.filters.controls.cityId.value) || null;
+    this.nodesLoading.set(cityId !== null);
+    this.nodeRequests.next(cityId);
+  }
+
+  search(): void {
+    if (!this.filterOptions()) return;
+    const value = this.filters.getRawValue();
+    this.appliedFilters = { year: value.year, month: Number(value.month) || undefined,
+      day: Number(value.day) || undefined, statusId: Number(value.statusId) || undefined,
+      cityId: Number(value.cityId) || undefined, nodeId: Number(value.nodeId) || undefined,
+      eaimId: Number(value.eaimId) || undefined, createdBy: Number(value.createdBy) || undefined,
+      search: value.search.trim() };
+    this.currentPage.set(1);
+    this.loadDeliveries();
+  }
+
+  loadDeliveries(): void {
+    if (!this.filterOptions()) { this.loadFilterOptions(); return; }
     this.loading.set(true);
     this.loadError.set(null);
     this.deliveries.set([]);
-    const query = this.invalidDeliveryIdFilter() ? null : {
-      page: this.currentPage(), pageSize: this.pageSize,
-      search: this.searchTerm().trim(),
-      status: this.selectedStatus() === 'TODOS' ? undefined : this.selectedStatus(),
+    this.requests.next(this.invalidDeliveryIdFilter() ? null : {
+      ...this.appliedFilters, page: this.currentPage(), pageSize: this.pageSize,
       deliveryId: this.filteredDeliveryId() ?? undefined,
-    };
-    this.requests.next({ query, debounce });
+    });
+  }
+
+  private resetFilterValues(): void {
+    this.filters.reset({ year: this.currentYear(), month: '', day: '', statusId: '', cityId: '', nodeId: '', eaimId: '', createdBy: '', search: '' });
+    this.appliedFilters = { year: this.currentYear() };
+    this.cityChanged();
+    this.currentPage.set(1);
   }
 
   private toItem(delivery: DeliverySummary): DeliveryItem {
@@ -470,57 +535,20 @@ export class Delivery {
   // The server filters and limits the result; never slice or search only the loaded page.
   readonly filteredDeliveries = computed(() => this.deliveries());
   readonly pagedDeliveries = computed(() => this.deliveries());
-  readonly availableStatuses = computed(() => this.statusCounts()
-    .map(status => status.description).filter((description): description is string => !!description)
-    .sort((a, b) => a.localeCompare(b)));
   readonly pageNumbers = computed(() => {
     const first = Math.max(1, this.currentPage() - 2);
     const last = Math.min(this.totalPages(), first + 4);
     return Array.from({ length: last - first + 1 }, (_, i) => first + i);
   });
 
-  onStatusChange(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLSelectElement) this.filterByStatus(target.value);
-  }
-
-  readonly totalDeliveries = computed(() => this.totalActive());
-  readonly inProgressDeliveries = computed(() => this.countStatus('EN PROCESO'));
-  readonly stoppedDeliveries = computed(() => this.countStatus('DETENIDO'));
-  readonly completedDeliveries = computed(() => this.countStatus('TERMINADO'));
-
-  private countStatus(description: string): number {
-    return this.statusCounts().find(status => status.description === description)?.count ?? 0;
-  }
-
-  onSearch(event: Event): void {
-    const target = event.target;
-
-    if (!(target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    this.searchTerm.set(target.value);
-    this.currentPage.set(1);
-    this.loadDeliveries(true);
-  }
-
-  filterByStatus(
-    status: DeliveryStatus | 'TODOS',
-  ): void {
-    this.selectedStatus.set(status);
-    this.currentPage.set(1);
-    this.loadDeliveries();
-  }
+  readonly totalDeliveries = computed(() => this.totalCount());
 
   clearFilters(): void {
-    this.searchTerm.set('');
-    this.selectedStatus.set('TODOS');
-    this.currentPage.set(1);
+    this.currentYear.set(this.yearInColombia());
+    this.resetFilterValues();
     if (this.queryParams().has('deliveryId')) {
-      void this.router.navigate([], { relativeTo: this.route,
-        queryParams: { deliveryId: null }, queryParamsHandling: 'merge' });
-    } else this.loadDeliveries();
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { deliveryId: null }, queryParamsHandling: 'merge' });
+    } else this.search();
   }
 
   goToPage(page: number): void {

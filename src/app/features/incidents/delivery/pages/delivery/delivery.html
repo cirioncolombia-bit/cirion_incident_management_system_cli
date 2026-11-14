@@ -23,7 +23,7 @@
     }
   </header>
 
-  @if (loading()) {
+  @if (loading() || optionsLoading()) {
     <p role="status">Loading deliveries…</p>
   }
   @if (loadError()) {
@@ -31,8 +31,8 @@
     <button type="button" (click)="loadDeliveries()">Retry</button>
     <a routerLink="/login">Sign in</a>
   }
-  @if (!loading() && !loadError() && totalDeliveries() === 0) {
-    <p role="status">No active deliveries are available.</p>
+  @if (filterOptions() && !loading() && !loadError() && totalDeliveries() === 0) {
+    <p role="status">No deliveries match the selected filters.</p>
   }
   @if (filteredDeliveryId() !== null) {
     <p role="status">Showing only Delivery #{{ filteredDeliveryId() }}.</p>
@@ -40,139 +40,77 @@
   @if (invalidDeliveryIdFilter()) {
     <p role="alert">The Delivery filter contains an invalid ID. Clear the filters to see all deliveries.</p>
   }
-  <section
-    class="delivery-filters"
-    aria-label="Delivery filters"
-  >
-    <div class="delivery-filters__search">
-      <span aria-hidden="true">
-        ⌕
-      </span>
-
-      <input
-        type="search"
-        maxlength="200"
-        aria-label="Search deliveries"
-        placeholder="Search by DKO/TKT, RFS, client, site, city or responsible..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-    </div>
-
-    <div class="delivery-filters__actions">
-      <select class="delivery-filters__button" aria-label="Filter by status"
-        [value]="selectedStatus()" (change)="onStatusChange($event)">
-        <option value="TODOS">All statuses</option>
-        @for (status of availableStatuses(); track status) {
-          <option [value]="status">{{ status }}</option>
-        }
-      </select>
-
-      <button
-        class="delivery-filters__clear"
-        type="button"
-        (click)="clearFilters()"
-      >
-        Clear filters
-      </button>
-    </div>
-  </section>
-
-  <section
-    class="delivery-summary"
-    aria-label="Delivery summary"
-  >
-    <button
-      class="delivery-summary__item"
-      type="button"
-      [class.delivery-summary__item--active]="
-        selectedStatus() === 'TODOS'
-      "
-      [attr.aria-pressed]="selectedStatus() === 'TODOS'"
-      (click)="filterByStatus('TODOS')"
-    >
-      <span>All</span>
-
-      <strong>
-        {{ totalDeliveries() }}
-      </strong>
-    </button>
-
-    <button
-      class="delivery-summary__item"
-      type="button"
-      [class.delivery-summary__item--active]="
-        selectedStatus() === 'EN PROCESO'
-      "
-      [attr.aria-pressed]="selectedStatus() === 'EN PROCESO'"
-      (click)="filterByStatus('EN PROCESO')"
-    >
-      <span class="delivery-summary__label">
-        <i
-          class="
-            delivery-status-dot
-            delivery-status-dot--progress
-          "
-        ></i>
-
-        In Progress
-      </span>
-
-      <strong>
-        {{ inProgressDeliveries() }}
-      </strong>
-    </button>
-
-    <button
-      class="delivery-summary__item"
-      type="button"
-      [class.delivery-summary__item--active]="
-        selectedStatus() === 'DETENIDO'
-      "
-      [attr.aria-pressed]="selectedStatus() === 'DETENIDO'"
-      (click)="filterByStatus('DETENIDO')"
-    >
-      <span class="delivery-summary__label">
-        <i
-          class="
-            delivery-status-dot
-            delivery-status-dot--stopped
-          "
-        ></i>
-
-        Stopped
-      </span>
-
-      <strong>
-        {{ stoppedDeliveries() }}
-      </strong>
-    </button>
-
-    <button
-      class="delivery-summary__item"
-      type="button"
-      [class.delivery-summary__item--active]="
-        selectedStatus() === 'TERMINADO'
-      "
-      [attr.aria-pressed]="selectedStatus() === 'TERMINADO'"
-      (click)="filterByStatus('TERMINADO')"
-    >
-      <span class="delivery-summary__label">
-        <i
-          class="
-            delivery-status-dot
-            delivery-status-dot--completed
-          "
-        ></i>
-
-        Completed
-      </span>
-
-      <strong>
-        {{ completedDeliveries() }}
-      </strong>
-    </button>
-  </section>
+  @if (optionsError()) {
+    <p role="alert">{{ optionsError() }}</p>
+    <button type="button" (click)="loadFilterOptions()">Retry filters</button>
+  }
+  <form class="delivery-filters" aria-label="Delivery filters" [formGroup]="filters" (ngSubmit)="search()">
+    <fieldset class="delivery-filters__fields" [disabled]="optionsLoading() || !filterOptions()">
+      <legend>Filter deliveries</legend>
+      <div class="delivery-filters__dates">
+        <label>DKO Assignment Year
+          <select formControlName="year" aria-label="DKO Assignment Year">
+            @for (year of yearOptions(); track year) { <option [ngValue]="year">{{ year }}</option> }
+          </select>
+        </label>
+        <label>Month
+          <select formControlName="month" aria-label="Assignment month">
+            <option value="">Any month</option>
+            @for (month of months; track month) { <option [value]="month">{{ month }}</option> }
+          </select>
+        </label>
+        <label>Day
+          <select formControlName="day" aria-label="Assignment day">
+            <option value="">Any day</option>
+            @for (day of days; track day) { <option [value]="day">{{ day }}</option> }
+          </select>
+        </label>
+      </div>
+      <div class="delivery-filters__catalogs">
+        <label>Delivery Status
+          <select formControlName="statusId" aria-label="Delivery Status">
+            <option value="">Any status</option>
+            @for (status of filterOptions()?.statuses ?? []; track status.id) {
+              <option [value]="status.id">{{ status.name }}{{ status.isActive ? '' : ' (Inactive)' }}</option>
+            }
+          </select>
+        </label>
+        <label>City
+          <select formControlName="cityId" aria-label="City" (change)="cityChanged()">
+            <option value="">Any city</option>
+            @for (city of filterOptions()?.cities ?? []; track city.id) { <option [value]="city.id">{{ city.name }}</option> }
+          </select>
+        </label>
+        <label>Node
+          <select formControlName="nodeId" aria-label="Node">
+            <option value="">{{ nodesLoading() ? 'Loading nodes…' : !filters.controls.cityId.value ? 'Select a city first' : 'Any node' }}</option>
+            @for (node of filterNodes(); track node.id) { <option [value]="node.id">{{ node.name }}</option> }
+          </select>
+        </label>
+        <label>EAIM
+          <select formControlName="eaimId" aria-label="EAIM">
+            <option value="">Any EAIM</option>
+            @for (eaim of filterOptions()?.eaims ?? []; track eaim.id) { <option [value]="eaim.id">{{ eaim.name }}</option> }
+          </select>
+        </label>
+        <label>Created by
+          <select formControlName="createdBy" aria-label="Created by">
+            <option value="">Any creator</option>
+            @for (creator of filterOptions()?.creators ?? []; track creator.id) { <option [value]="creator.id">{{ creator.name }}</option> }
+          </select>
+        </label>
+      </div>
+      @if (nodesError()) { <p role="alert">{{ nodesError() }}</p> }
+      <label class="delivery-filters__text-label">Client or work order
+        <input type="search" formControlName="search" aria-label="Search deliveries" maxlength="200"
+          placeholder="Client name, client ID or WorkOrderId" />
+      </label>
+      <div class="delivery-filters__actions">
+        <button class="delivery-filters__submit" type="submit" [disabled]="nodesLoading()">Search</button>
+        <button class="delivery-filters__clear" type="button" (click)="clearFilters()">Clear filters</button>
+      </div>
+    </fieldset>
+  </form>
 
   <!-- ============================================= -->
   <!-- MOBILE / TABLET -->
@@ -302,7 +240,7 @@
       </article>
     } @empty {
       <div class="delivery-empty">
-        @if (loading()) {
+        @if (loading() || optionsLoading()) {
           <strong>Loading deliveries…</strong>
         } @else if (loadError()) {
           <strong>Deliveries could not be loaded.</strong>
@@ -1101,7 +1039,7 @@
                 "
                 colspan="28"
               >
-                @if (loading()) { Loading deliveries… }
+                @if (loading() || optionsLoading()) { Loading deliveries… }
                 @else if (loadError()) { Deliveries could not be loaded. }
                 @else { No deliveries found with the current filters. }
               </td>
