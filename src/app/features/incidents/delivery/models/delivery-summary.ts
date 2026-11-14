@@ -3,13 +3,15 @@ export interface DeliverySummary {
   workOrderId: string;
   rfsFiberChain: string;
   soSap: string | null;
-  clientName: string;
+  clientId: number | null;
+  clientName: string | null;
+  siteType?: string | null;
   buildingSite: string;
   address: string;
   revenue: number | null;
   contactName: string;
   email: string;
-  mobilePhone: number;
+  mobilePhone: string | number | null;
   surveryCost: number;
   installationBudget: number;
   totalInstallationCost?: number;

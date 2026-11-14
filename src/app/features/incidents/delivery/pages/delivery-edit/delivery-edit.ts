@@ -283,7 +283,7 @@ export class DeliveryEdit {
       {
         rfsFiberChain: delivery.rfsFiberChain,
         soSap: delivery.soSap ?? '',
-        clientName: delivery.clientName,
+        clientName: delivery.clientName ?? '',
         buildingName: delivery.buildingSite,
         address: delivery.address,
         city: delivery.cityId,

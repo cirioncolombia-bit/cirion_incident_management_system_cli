@@ -35,6 +35,7 @@ interface DeliveryItem {
   readonly soSap: string;
 
   // 2. Client & Location
+  readonly clientId: number | null;
   readonly clientName: string;
   readonly buildingName: string;
   readonly address: string;
@@ -252,12 +253,13 @@ export class Delivery {
     const label = (value: string | null | undefined) => value?.trim().replace(/\s+/g, ' ') || '—';
     return {
       id: delivery.id,
-      dkoTkt: delivery.workOrderId,
-      rfsFiberChain: delivery.rfsFiberChain,
+      dkoTkt: label(delivery.workOrderId),
+      rfsFiberChain: label(delivery.rfsFiberChain),
       soSap: delivery.soSap ?? '—',
-      clientName: delivery.clientName,
-      buildingName: delivery.buildingSite,
-      address: delivery.address,
+      clientId: delivery.clientId,
+      clientName: label(delivery.clientName),
+      buildingName: label(delivery.siteType),
+      address: label(delivery.address),
       city: label(delivery.cityName),
       node: label(delivery.nodeName),
       revenue: delivery.revenue == null ? null : String(delivery.revenue),
@@ -266,12 +268,12 @@ export class Delivery {
       technology: label(delivery.technologyDescription),
       eaim: label(delivery.eaimName),
       responsible: label(delivery.responsibleName),
-      surveyCost: String(delivery.surveryCost),
-      installationBudget: String(delivery.installationBudget),
-      email: delivery.email,
-      contact: delivery.contactName,
-      phone: String(delivery.mobilePhone),
-      observations: delivery.observation,
+      surveyCost: delivery.surveryCost == null ? '—' : String(delivery.surveryCost),
+      installationBudget: delivery.installationBudget == null ? '—' : String(delivery.installationBudget),
+      email: label(delivery.email),
+      contact: label(delivery.contactName),
+      phone: delivery.mobilePhone == null ? '—' : label(String(delivery.mobilePhone)),
+      observations: label(delivery.observation),
       consecutive: '—', landlord: '—', installationCost: delivery.totalInstallationCost == null ? null : String(delivery.totalInstallationCost),
       dkoAssignmentDate: '—', eaimSurveyRequestDate: '—', installationDate: '—',
       statusHistory: [],
