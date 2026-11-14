@@ -36,6 +36,7 @@ const record: DeliveryEditData = {
   workOrderId: 'DKO-42',
   rfsFiberChain: 'RFS-42',
   soSap: null,
+  clientId: 7,
   clientName: 'Client',
   buildingSite: 'Site',
   address: 'Address',

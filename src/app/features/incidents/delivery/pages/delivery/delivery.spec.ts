@@ -7,12 +7,13 @@ import { DeliveryService } from '../../services/delivery.service';
 import { DeliverySummary } from '../../models/delivery-summary';
 
 describe('Delivery summary', () => {
-  function setup(totalInstallationCost: number | undefined = 125000, permissions = ['deliveries.read', 'deliveries.write']) {
+  function setup(totalInstallationCost: number | undefined = 125000, permissions = ['deliveries.read', 'deliveries.write'], overrides: Partial<DeliverySummary> = {}) {
     const record = {
-      id: 42, workOrderId: 'DKO-100', rfsFiberChain: 'RFS-1', clientName: 'Client',
+      id: 42, workOrderId: 'DKO-100', rfsFiberChain: 'RFS-1', clientId: 7, clientName: 'Client', siteType: 'Site',
       buildingSite: 'Site', address: 'Address', cityName: 'Bogotá', nodeName: 'SUBA',
       revenue: 1000, surveryCost: 0, installationBudget: 0, totalInstallationCost,
       statusDescription: 'DETENIDO CLIENTE', email: 'contact@example.com', contactName: 'Ana', mobilePhone: 3001234567,
+      ...overrides,
     } as DeliverySummary;
     TestBed.configureTestingModule({ imports: [Delivery], providers: [provideRouter([]), {provide: AuthService, useValue: {currentUser: () => ({permissions})}},
       { provide: DeliveryService, useValue: { getAll: () => of([record]), getStatusHistory: () => throwError(() => new Error('Not available')) } },
@@ -61,4 +62,37 @@ describe('Delivery summary', () => {
     expect(component.statusTone('Completed')).toBe('completed');
     expect(component.statusTone('New catalog status')).toBe('neutral');
   });
+  it('shows and searches the related client name instead of its identifier', () => {
+    const { component, element, fixture } = setup(0, ['deliveries.read'], {
+      clientId: 987, clientName: '  Empresa   vinculada  ', siteType: 'Office', address: 'Client address',
+    });
+    const item = component.deliveries()[0];
+    expect(item.clientId).toBe(987);
+    expect(item.clientName).toBe('Empresa vinculada');
+    expect(item.buildingName).toBe('Office');
+    expect(item.address).toBe('Client address');
+    expect(element.querySelector('.delivery-card__header p')?.textContent).toContain('Empresa vinculada');
+    const headers = [...element.querySelectorAll('th')].map(h => h.textContent!.trim());
+    const cells = [...element.querySelectorAll('tbody tr:first-child td')];
+    expect(cells[headers.indexOf('Client Name')].textContent?.trim()).toBe('Empresa vinculada');
+    component.searchTerm.set('empresa vinculada');
+    fixture.detectChanges();
+    expect(component.filteredDeliveries().length).toBe(1);
+    component.searchTerm.set('other client');
+    expect(component.filteredDeliveries()).toEqual([]);
+  });
+
+  it('keeps deliveries without a client visible and searchable without errors', () => {
+    const { component, fixture, element } = setup(0, ['deliveries.read'], {
+      clientId: null, clientName: null, siteType: null,
+    });
+    expect(component.deliveries()[0].clientName).toBe('—');
+    expect(element.querySelector('.delivery-card__header p')?.textContent?.trim()).toBe('—');
+    component.searchTerm.set('not present');
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(component.filteredDeliveries()).toEqual([]);
+    component.searchTerm.set('dko-100');
+    expect(component.filteredDeliveries().length).toBe(1);
+  });
+
 });
