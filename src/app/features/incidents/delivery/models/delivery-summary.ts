@@ -40,6 +40,14 @@ export interface DeliverySummary {
 export interface DeliveryListQuery {
   page: number;
   pageSize: number;
+  year?: number;
+  month?: number;
+  day?: number;
+  statusId?: number;
+  cityId?: number;
+  nodeId?: number;
+  eaimId?: number;
+  createdBy?: number;
   search?: string;
   status?: string;
   deliveryId?: number;
@@ -54,4 +62,14 @@ export interface DeliveryPage {
   totalPages: number;
   totalActive: number;
   statuses: { description: string | null; count: number }[];
+}
+
+export interface DeliveryFilterOption { id: number; name: string; }
+export interface DeliveryFilterOptions {
+  currentYear: number;
+  years: number[];
+  statuses: (DeliveryFilterOption & { isActive: boolean })[];
+  cities: DeliveryFilterOption[];
+  eaims: DeliveryFilterOption[];
+  creators: DeliveryFilterOption[];
 }
