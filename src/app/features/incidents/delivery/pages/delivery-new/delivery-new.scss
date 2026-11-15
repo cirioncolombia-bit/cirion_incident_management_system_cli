@@ -902,3 +902,14 @@
   p { margin: 0 0 1.5rem; }
   button:disabled { opacity: 0.6; cursor: wait; }
 }
+
+.client-location-header { display: flex; align-items: flex-start; gap: 0.75rem; }
+.client-location-header > .delivery-section__header--toggle { flex: 1; min-width: 0; width: auto; }
+.client-location-search {
+  display: grid; place-items: center; flex: 0 0 auto; width: 2.75rem; height: 2.75rem;
+  color: var(--cims-color-primary); background: var(--cims-color-surface);
+  border: 1px solid var(--cims-color-border); border-radius: 0.5rem; cursor: pointer;
+  svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; }
+  &:focus-visible { outline: 2px solid var(--cims-color-primary); outline-offset: 2px; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

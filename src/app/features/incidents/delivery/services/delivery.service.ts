@@ -1,3 +1,4 @@
+import { DeliveryClientPage } from '../models/delivery-client-lookup';
 import { DeliveryStatusHistoryData } from '../models/delivery-status-history';
 import { DeliveryEditData, UpdateDeliveryEdit } from '../models/delivery-edit';
 import { DeliverySummary, DeliveryListQuery, DeliveryPage, DeliveryFilterOption, DeliveryFilterOptions } from '../models/delivery-summary';
@@ -28,6 +29,12 @@ export class DeliveryService {
     return this.http
       .put<ApiResponse<CreatedDelivery>>(`${environment.apiUrl}/api/Delivery/${id}/edit`, request)
       .pipe(map((response) => response.data));
+  }
+
+  lookupClients(page: number, search: string) {
+    const params = new HttpParams().set('Page', page).set('PageSize', 10).set('Search', search.trim());
+    return this.http.get<ApiResponse<DeliveryClientPage>>(`${environment.apiUrl}/api/Delivery/client-lookup`, { params })
+      .pipe(map(response => response.data));
   }
 
   getFilterOptions() {

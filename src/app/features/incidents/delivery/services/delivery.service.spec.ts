@@ -25,3 +25,21 @@ describe('Paged delivery API', () => {
     http.verify();
   });
 });
+
+describe('Client lookup API for delivery', () => {
+  it('requests a bounded name/code search and unwraps the client data', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const api = TestBed.inject(DeliveryService);
+    let clientId: number | undefined;
+    api.lookupClients(2, ' 7 ').subscribe(page => clientId = page.rows[0]?.id);
+    const request = http.expectOne(req => req.url === `${environment.apiUrl}/api/Delivery/client-lookup`);
+    expect(request.request.params.get('Page')).toBe('2');
+    expect(request.request.params.get('PageSize')).toBe('10');
+    expect(request.request.params.get('Search')).toBe('7');
+    request.flush({ data: { rows: [{ id: 7, name: 'Client', siteType: 'Office', address: 'Address' }], page: 2,
+      pageSize: 10, totalCount: 11, totalPages: 2 } });
+    expect(clientId).toBe(7);
+    http.verify();
+  });
+});

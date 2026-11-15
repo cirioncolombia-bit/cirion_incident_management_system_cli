@@ -210,6 +210,7 @@
       class="delivery-section"
       aria-labelledby="client-location-title"
     >
+      <div class="client-location-header">
       <button
         class="delivery-section__header delivery-section__header--toggle"
         type="button"
@@ -251,6 +252,13 @@
           }
         </span>
       </button>
+        <button class="client-location-search" type="button" aria-label="Search and select a client"
+          title="Search clients" aria-haspopup="dialog" aria-controls="delivery-client-picker"
+          [disabled]="optionsLoading() || !options() || saving() || createdDeliveryId() !== null"
+          (click)="openClientPicker()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+        </button>
+      </div>
 
       <div
         id="client-location-content"
@@ -261,75 +269,55 @@
       >
         <div class="delivery-section__grid">
           <div class="delivery-field">
+            <label for="clientCode">Client Code <span aria-hidden="true" class="cims-required">*</span></label>
+            <input id="clientCode" type="text" formControlName="clientId" readonly placeholder="Select a client using the search button" />
+            @if (form.controls.clientId.touched && form.controls.clientId.invalid) {
+              <p class="delivery-field__error">Search and select a client.</p>
+            }
+          </div>
+          <div class="delivery-field">
             <label for="clientName">
               Client Name
-              <span aria-hidden="true" class="cims-required">*</span>
             </label>
 
             <input
               id="clientName"
               type="text"
               formControlName="clientName"
-              maxlength="50"
-              placeholder="Enter the client name"
+              readonly
+              placeholder="Selected client name"
             />
 
-            @if (
-              form.controls.clientName.touched
-              && form.controls.clientName.invalid
-            ) {
-              <p class="delivery-field__error">
-                Client Name is required.
-              </p>
-            }
           </div>
 
           <div class="delivery-field">
             <label for="buildingName">
-              Building / Site
-              <span aria-hidden="true" class="cims-required">*</span>
+              Site Type
             </label>
 
             <input
               id="buildingName"
               type="text"
               formControlName="buildingName"
-              maxlength="150"
-              placeholder="Enter the building or site name"
+              readonly
+              placeholder="Selected client site type"
             />
 
-            @if (
-              form.controls.buildingName.touched
-              && form.controls.buildingName.invalid
-            ) {
-              <p class="delivery-field__error">
-                Building / Site is required.
-              </p>
-            }
           </div>
 
           <div class="delivery-field">
             <label for="address">
               Address
-              <span aria-hidden="true" class="cims-required">*</span>
             </label>
 
             <input
               id="address"
               type="text"
               formControlName="address"
-              maxlength="150"
-              placeholder="Enter the address"
+              readonly
+              placeholder="Selected client address"
             />
 
-            @if (
-              form.controls.address.touched
-              && form.controls.address.invalid
-            ) {
-              <p class="delivery-field__error">
-                Address is required.
-              </p>
-            }
           </div>
 
           <div class="delivery-field">
@@ -1416,3 +1404,5 @@
     {{ navigatingToDelivery() ? 'Opening Delivery…' : 'OK' }}
   </button>
 </dialog>
+
+<app-delivery-client-picker (selected)="selectClient($event)" />
