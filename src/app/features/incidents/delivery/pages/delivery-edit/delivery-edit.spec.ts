@@ -219,6 +219,20 @@ describe('DeliveryEdit API integration', () => {
     expect(component.openSection()).toBe('landlordConsecutives');
   });
 
+  it('shows the historical technology label while requiring an active replacement to save', async () => {
+    await load({ ...record, technologyDescription: 'Legacy technology' }, {
+      ...options, deliveryTechnologies: [{ id: 99, name: 'Active technology' }],
+    });
+    const select = harness.routeNativeElement!.querySelector<HTMLSelectElement>('#technology')!;
+    expect(select.selectedOptions[0].textContent).toContain('Legacy technology');
+    expect(select.selectedOptions[0].disabled).toBe(true);
+    expect(component.editForm.controls.technology.value).toBe(8);
+    expect(component.editForm.invalid).toBe(true);
+    component.save(); http.expectNone(environment.apiUrl + '/api/Delivery/42/edit');
+    component.editForm.controls.technology.setValue(99);
+    expect(component.editForm.valid).toBe(true);
+  });
+
   it('filters nodes by city and clears the old selection when city changes', async () => {
     await load();
     component.editForm.controls.city.setValue(2);
