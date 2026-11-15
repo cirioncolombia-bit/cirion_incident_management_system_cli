@@ -165,7 +165,7 @@
                   !hasOption(cities, editForm.controls.city.value)
                 ) {
                   <option [ngValue]="editForm.controls.city.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.cityName || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (city of cities; track city.id) {
@@ -185,7 +185,7 @@
                   !hasOption(nodes, editForm.controls.node.value)
                 ) {
                   <option [ngValue]="editForm.controls.node.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.nodeName || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (node of nodes; track node.id) {
@@ -326,7 +326,7 @@
                   !hasOption(types, editForm.controls.type.value)
                 ) {
                   <option [ngValue]="editForm.controls.type.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.typeDescription || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (type of types; track type.id) {
@@ -346,7 +346,7 @@
                   !hasOption(statuses, editForm.controls.status.value)
                 ) {
                   <option [ngValue]="editForm.controls.status.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.statusDescription || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (status of statuses; track status.id) {
@@ -368,7 +368,7 @@
                   !hasOption(technologies, editForm.controls.technology.value)
                 ) {
                   <option [ngValue]="editForm.controls.technology.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.technologyDescription || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (technology of technologies; track technology.id) {
@@ -586,7 +586,7 @@
                   !hasOption(contractors, editForm.controls.eaim.value)
                 ) {
                   <option [ngValue]="editForm.controls.eaim.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.eaimName || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (contractor of contractors; track contractor.id) {
@@ -606,7 +606,7 @@
                   !hasOption(responsibles, editForm.controls.responsible.value)
                 ) {
                   <option [ngValue]="editForm.controls.responsible.value" disabled>
-                    Current option unavailable — select an active option
+                    {{ delivery.responsibleName || 'Current option unavailable' }} — select an active option
                   </option>
                 }
                 @for (responsible of responsibles; track responsible.id) {
