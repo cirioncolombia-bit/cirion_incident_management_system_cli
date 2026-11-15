@@ -1,3 +1,5 @@
+import { DeliveryClientPicker } from '../../components/delivery-client-picker/delivery-client-picker';
+import { DeliveryClient } from '../../models/delivery-client-lookup';
 import { CreateDelivery } from '../../models/create-delivery';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DeliveryService } from '../../services/delivery.service';
@@ -90,7 +92,7 @@ const optionalCostValidator: ValidatorFn = (control) => {
 
 @Component({
   selector: 'app-delivery-new',
-  imports: [ReactiveFormsModule, RouterLink, CurrencyInputDirective],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyInputDirective, DeliveryClientPicker],
   templateUrl: './delivery-new.html',
   styleUrl: './delivery-new.scss',
 })
@@ -98,6 +100,8 @@ export class DeliveryNew {
   readonly canWrite = computed(() => this.authService.currentUser()?.permissions.includes('deliveries.write') ?? false);
   private readonly router = inject(Router);
   private readonly creationDialog = viewChild.required<ElementRef<HTMLDialogElement>>('creationDialog');
+  private readonly clientPicker = viewChild.required(DeliveryClientPicker);
+  readonly selectedClient = signal<DeliveryClient | null>(null);
   readonly navigatingToDelivery = signal(false);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -135,11 +139,12 @@ export class DeliveryNew {
     // 2. Client & Location
     // ==================================================
 
-    clientName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
+    clientId: this.formBuilder.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    clientName: [''],
 
-    buildingName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(150)]],
+    buildingName: [''],
 
-    address: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(150)]],
+    address: [''],
 
     city: this.formBuilder.control<number | null>(null, Validators.required),
 
@@ -243,6 +248,20 @@ export class DeliveryNew {
       });
 
     this.updateCompletionValidators(this.form.controls.status.value);
+  }
+
+  openClientPicker(): void {
+    if (!this.canWrite() || this.saving() || this.createdDeliveryId() !== null || this.optionsLoading() || !this.options()) return;
+    this.clientPicker().open();
+  }
+
+  selectClient(client: DeliveryClient): void {
+    if (!this.canWrite() || this.saving() || this.createdDeliveryId() !== null) return;
+    this.selectedClient.set(client);
+    this.form.patchValue({ clientId: client.id, clientName: client.name, buildingName: client.siteType, address: client.address });
+    this.form.controls.clientId.markAsTouched();
+    this.form.markAsDirty();
+    this.openSection.set('clientLocation');
   }
 
   loadOptions(): void {
@@ -350,6 +369,7 @@ export class DeliveryNew {
 
     const value = this.form.getRawValue();
     // Select controls are nullable until a choice is made; never send a placeholder ID.
+    if (value.clientId == null || this.selectedClient()?.id !== value.clientId) return;
     if (value.city == null || value.node == null || value.type == null || value.status == null
       || value.technology == null || value.eaim == null || value.responsible == null) return;
     if (!this.filteredResponsibles().some(user => user.id === value.responsible)) {
@@ -362,15 +382,13 @@ export class DeliveryNew {
       workOrderId: value.dkoTkt.trim(),
       rfsFiberChain: value.rfsFiberChain.trim(),
       soSap: value.soSap.trim() || null,
-      clientName: value.clientName.trim(),
-      buildingSite: value.buildingName.trim(),
-      address: value.address.trim(),
+      clientId: value.clientId,
       cityId: value.city,
       nodeId: value.node,
       revenue: value.revenue === '' ? null : Number(value.revenue),
       contactName: value.contact.trim(),
       email: value.email.trim(),
-      mobilePhone: Number(value.phone.replace(/[^0-9]/g, '')),
+      mobilePhone: value.phone.trim(),
       typeId: value.type,
       statusId: value.status,
       technologyId: value.technology,
@@ -529,7 +547,8 @@ export class DeliveryNew {
     // 2. Client & Location
 
     if (
-      this.form.controls.clientName.invalid
+      this.form.controls.clientId.invalid
+      || this.form.controls.clientName.invalid
       || this.form.controls.buildingName.invalid
       || this.form.controls.address.invalid
       || this.form.controls.city.invalid

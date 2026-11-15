@@ -1,0 +1,45 @@
+<dialog #panel id="delivery-client-picker" class="client-picker" aria-labelledby="client-picker-title"
+  aria-describedby="client-picker-description" (cancel)="$event.preventDefault(); close()">
+  <header class="client-picker__header">
+    <h2 id="client-picker-title">Search clients</h2>
+    <button type="button" aria-label="Close client search" (click)="close()">×</button>
+  </header>
+  <p id="client-picker-description">Search by client name or code and select one client. The client code is its ID.</p>
+  <form class="client-picker__search" [formGroup]="searchForm" (ngSubmit)="searchClients()">
+    <label for="client-picker-search">Client name or code</label>
+    <div>
+      <input id="client-picker-search" type="search" formControlName="search" maxlength="200" autofocus
+        placeholder="Enter a name or client code" />
+      <button class="primary" type="submit" [disabled]="searchForm.invalid">Search</button>
+    </div>
+  </form>
+  @if (searchForm.invalid && searchForm.touched) { <p role="alert">Search text must be 200 characters or fewer.</p> }
+  @if (loading()) { <p role="status">Loading clients…</p> }
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  <p class="client-picker__scroll-hint">Scroll horizontally and vertically to see all client details.</p>
+  <div class="client-picker__results" role="region" aria-label="Scrollable client details" tabindex="0" [attr.aria-busy]="loading()">
+    <table aria-label="Client search results">
+      <thead><tr><th scope="col">Select</th><th scope="col">Client Code</th><th scope="col">Client Name</th><th scope="col">Site Type</th><th scope="col">Address</th></tr></thead>
+      <tbody>
+        @for (client of rows(); track client.id) {
+          <tr [class.selected]="pending()?.id === client.id">
+            <td><input type="radio" name="delivery-client-choice" [checked]="pending()?.id === client.id"
+              [attr.aria-label]="'Select client ' + client.id + ' ' + client.name" (change)="pending.set(client)" /></td>
+            <td>{{ client.id }}</td><td>{{ client.name }}</td><td>{{ client.siteType }}</td><td>{{ client.address }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5">{{ loading() ? 'Searching…' : error() ? 'Search unavailable.' : 'No clients match this search.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <nav class="client-picker__pagination" aria-label="Client search pagination">
+    <span>{{ total() }} results · Page {{ page() }} of {{ pages() || 1 }}</span>
+    <button type="button" [disabled]="loading() || page() <= 1" (click)="paginate(page() - 1)">Previous</button>
+    <button type="button" [disabled]="loading() || page() >= pages()" (click)="paginate(page() + 1)">Next</button>
+  </nav>
+  <footer class="client-picker__actions">
+    <button type="button" (click)="close()">Cancel</button>
+    <button class="primary" type="button" [disabled]="loading() || !pending() || !!error()" (click)="confirm()">Select client</button>
+  </footer>
+</dialog>
