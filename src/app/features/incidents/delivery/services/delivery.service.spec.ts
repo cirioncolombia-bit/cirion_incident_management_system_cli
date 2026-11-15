@@ -38,7 +38,7 @@ describe('Client lookup API for delivery', () => {
     expect(request.request.params.get('PageSize')).toBe('10');
     expect(request.request.params.get('Search')).toBe('7');
     request.flush({ data: { rows: [{ id: 7, name: 'Client', siteType: 'Office', address: 'Address' }], page: 2,
-      pageSize: 10, totalCount: 11, totalPages: 2 } });
+      pageSize: 10, hasNextPage: false } });
     expect(clientId).toBe(7);
     http.verify();
   });

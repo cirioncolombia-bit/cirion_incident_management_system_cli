@@ -9,6 +9,5 @@ export interface DeliveryClientPage {
   rows: DeliveryClient[];
   page: number;
   pageSize: number;
-  totalCount: number;
-  totalPages: number;
+  hasNextPage: boolean;
 }

@@ -16,7 +16,7 @@ describe('New Delivery client selection', () => {
         deliveryTypes: [{ id: 3, name: 'Type' }], deliveryStatuses: [{ id: 4, name: 'EN PROCESO' }],
         deliveryTechnologies: [{ id: 5, name: 'Technology' }], landlords: [], eaims: [{ id: 6, name: 'EAIM' }],
         deliveryCauses: [], responsibles: [{ id: 8, name: 'Responsible', eaimId: 6 }] }),
-      lookupClients: vi.fn(() => of({ rows: [client], page: 1, pageSize: 10, totalCount: 1, totalPages: 1 })),
+      lookupClients: vi.fn(() => of({ rows: [client], page: 1, pageSize: 10, hasNextPage: false })),
       create: vi.fn(() => of({ id: 42 })),
     };
     TestBed.configureTestingModule({ imports: [DeliveryNew], providers: [provideRouter([]),
@@ -38,6 +38,7 @@ describe('New Delivery client selection', () => {
     element.querySelector<HTMLButtonElement>('button[aria-label="Search and select a client"]')!.click();
     expect(picker.opened()).toBe(true);
     expect(element.querySelector('.client-location-header button button')).toBeNull();
+    picker.searchForm.controls.search.setValue('Selected'); picker.searchClients();
     picker.pending.set(client); picker.confirm(); fixture.detectChanges();
     expect(component.form.getRawValue()).toMatchObject({ clientId: 7, clientName: client.name,
       buildingName: client.siteType, address: client.address, city: 1, node: 2, revenue: '100' });
