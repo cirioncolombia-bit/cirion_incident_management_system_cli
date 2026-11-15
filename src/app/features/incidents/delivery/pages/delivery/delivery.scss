@@ -82,9 +82,12 @@
 }
 .delivery-filters__fields { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; gap: 1rem; }
 .delivery-filters legend { padding: 0 0 0.75rem; font-weight: 600; }
-.delivery-filters__dates, .delivery-filters__catalogs { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.delivery-filters__dates { align-items: end; }
-.delivery-filters__catalogs { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.delivery-filters__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+}
 .delivery-filters label { display: grid; min-width: 0; gap: 0.375rem; font-size: 0.875rem; color: var(--cims-color-text-secondary); }
 .delivery-filters select, .delivery-filters input {
   box-sizing: border-box; width: 100%; min-width: 0; min-height: 2.75rem; padding: 0.5rem;
@@ -835,6 +838,9 @@
 // ======================================================
 
 @include mixins.sm {
+  .delivery-filters__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   .delivery-card__header {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -847,6 +853,10 @@
 }
 
 @include mixins.md {
+  .delivery-filters__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .delivery-page__header {
     grid-template-columns:
       minmax(0, 1fr)
