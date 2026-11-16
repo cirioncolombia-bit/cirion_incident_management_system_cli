@@ -4,6 +4,8 @@ import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LocationOption,
+  CityRank,
+  currentMonth,
   ChartSeries,
   Indicator,
   MonthlyRecord,
@@ -18,10 +20,11 @@ import {
 import { IndicatorsService } from '../../services/indicators.service';
 import { IndicatorsNav } from '../../components/indicators-nav';
 import { LocationSelect } from '../../components/location-select';
+import { CityRanking } from '../../components/city-ranking';
 import { IndicatorPicker } from '../../components/indicator-picker';
 @Component({
   selector: 'app-dashboard',
-  imports: [ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker],
+  imports: [CityRanking, ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker],
   templateUrl: './dashboard.html',
   styleUrls: ['../../indicators-shared.scss', './dashboard.scss'],
 })
@@ -34,25 +37,34 @@ export class Dashboard {
   readonly city = signal<LocationOption | null>(null);
   readonly node = signal<LocationOption | null>(null);
   readonly selected = signal<Indicator | null>(null);
+  readonly rankingResult = signal<Page<CityRank> | null>(null);
+  readonly appliedView = signal<'city' | 'timeline'>('city');
+  readonly appliedNode = signal<number | null>(null);
+  readonly pageInfo = computed(() =>
+    this.appliedView() === 'city' ? this.rankingResult() : this.result(),
+  );
   readonly result = signal<Page<ChartSeries> | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly filters = inject(FormBuilder).group({
+    view: ['city' as 'city' | 'timeline'],
     year: [
       currentYear(),
       [Validators.required, Validators.min(1), Validators.max(9999), Validators.pattern(/^\d+$/)],
     ],
-    month: [null as number | null],
+    month: [currentMonth() as number | null],
   });
   private applied = {
+    view: 'city' as 'city' | 'timeline',
     year: currentYear(),
-    month: null as number | null,
+    month: currentMonth() as number | null,
     indicatorId: null as number | null,
     cityId: null as number | null,
     nodeId: null as number | null,
   };
   readonly appliedYear = signal(currentYear());
   private readonly requests = new Subject<{
+    view: 'city' | 'timeline';
     cityId: number | null;
     nodeId: number | null;
     year: number;
@@ -99,16 +111,35 @@ export class Dashboard {
   constructor() {
     this.requests
       .pipe(
-        switchMap((query) =>
-          this.api.charts({ ...query, pageSize: 6 }).pipe(
-            map((data) => ({ data, error: '' })),
-            catchError((error) => of({ data: null, error: requestError(error) })),
+        switchMap(({ view, ...query }) =>
+          (view === 'city'
+            ? this.api
+                .cityCharts({ ...query, pageSize: 6 })
+                .pipe(
+                  map((data) => ({
+                    city: data as Page<CityRank> | null,
+                    timeline: null as Page<ChartSeries> | null,
+                    error: '',
+                  })),
+                )
+            : this.api
+                .charts({ ...query, pageSize: 6 })
+                .pipe(
+                  map((data) => ({
+                    city: null as Page<CityRank> | null,
+                    timeline: data as Page<ChartSeries> | null,
+                    error: '',
+                  })),
+                )
+          ).pipe(
+            catchError((error) => of({ city: null, timeline: null, error: requestError(error) })),
           ),
         ),
         takeUntilDestroyed(this.destroy),
       )
-      .subscribe(({ data, error }) => {
-        this.result.set(data);
+      .subscribe(({ city, timeline, error }) => {
+        this.rankingResult.set(city);
+        this.result.set(timeline);
         this.error.set(error);
         this.loading.set(false);
       });
@@ -117,14 +148,21 @@ export class Dashboard {
   load(page = 1) {
     this.loading.set(true);
     this.error.set('');
+    this.appliedView.set(this.applied.view);
+    this.appliedNode.set(this.applied.nodeId);
     this.appliedYear.set(this.applied.year);
     this.requests.next({ ...this.applied, page });
   }
   search() {
     this.filters.markAllAsTouched();
-    if (this.filters.invalid) return;
+    if (
+      this.filters.invalid ||
+      (this.filters.controls.view.value === 'city' && !this.filters.controls.month.value)
+    )
+      return;
     const value = this.filters.getRawValue();
     this.applied = {
+      view: value.view ?? 'city',
       year: value.year!,
       month: value.month,
       indicatorId: this.selected()?.id ?? null,
@@ -133,6 +171,10 @@ export class Dashboard {
     };
     this.load();
   }
+  viewChanged() {
+    if (this.filters.controls.view.value === 'city' && !this.filters.controls.month.value)
+      this.filters.controls.month.setValue(currentMonth());
+  }
   chooseCity(row: LocationOption | null) {
     this.city.set(row);
     this.node.set(null);
@@ -140,7 +182,7 @@ export class Dashboard {
   clear() {
     this.city.set(null);
     this.node.set(null);
-    this.filters.reset({ year: currentYear(), month: null });
+    this.filters.reset({ view: 'city', year: currentYear(), month: currentMonth() });
     this.selected.set(null);
     this.search();
   }

@@ -47,6 +47,26 @@ function setup<T>(type: Type<T>, manage = true) {
     locations: vi.fn(() => of(page([{ id: 1, name: 'Bogotá', cityId: null as number | null }]))),
     list: vi.fn(() => of(page([indicator]))),
     records: vi.fn(() => of(page([record]))),
+    cityCharts: vi.fn(() =>
+      of(
+        page([
+          {
+            indicator,
+            cityId: 1,
+            cityName: 'Bogotá',
+            year: 2026,
+            month: 11,
+            nodes: [{ nodeId: 2, nodeName: 'Node A', value: '1972082.25' }],
+            nodePage: 1,
+            nodePageSize: 20,
+            nodeCount: 1,
+            totalNodePages: 1,
+            minValue: '1972082.25',
+            maxValue: '1972082.25',
+          },
+        ]),
+      ),
+    ),
     charts: vi.fn(() =>
       of(
         page([
@@ -213,7 +233,10 @@ describe('Monthly records', () => {
 });
 describe('Indicator dashboard', () => {
   it('shows real records for inactive indicators and links to both CRUD pages', () => {
-    const { component, element } = setup(Dashboard);
+    const { component, fixture, element } = setup(Dashboard);
+    component.filters.controls.view.setValue('timeline');
+    component.search();
+    fixture.detectChanges();
     expect(element.textContent).toContain('Inactivo');
     expect(element.querySelectorAll('svg circle')).toHaveLength(1);
     expect(element.querySelector('a[href="/dashboard/indicators"]')).not.toBeNull();
@@ -224,7 +247,7 @@ describe('Indicator dashboard', () => {
   it('filters by year, month and indicator and never invents zero values for missing months', () => {
     const { component, api } = setup(Dashboard);
     component.selected.set(indicator);
-    component.filters.setValue({ year: 2025, month: 11 });
+    component.filters.setValue({ view: 'timeline', year: 2025, month: 11 });
     component.search();
     expect(api.charts).toHaveBeenLastCalledWith({
       cityId: null,
