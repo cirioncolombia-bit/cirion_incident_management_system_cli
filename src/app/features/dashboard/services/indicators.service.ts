@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  LocationOption,
   ChartSeries,
   Indicator,
   MeasurementType,
@@ -21,6 +22,9 @@ export class IndicatorsService {
       if (value !== null && value !== undefined && value !== '')
         params = params.set(key, String(value));
     return this.http.get<{ data: T }>(this.url + path, { params }).pipe(map((x) => x.data));
+  }
+  locations(kind: 'cities' | 'nodes', query: Query) {
+    return this.get<Page<LocationOption>>('/locations/' + kind, query);
   }
   list(query: Query = {}) {
     return this.get<Page<Indicator>>('', query);
@@ -43,7 +47,15 @@ export class IndicatorsService {
   }
   saveRecord(
     id: number | null,
-    body: { indicatorId: number; year: number; month: number; value: string; rowVersion?: string },
+    body: {
+      cityId: number;
+      nodeId: number;
+      indicatorId: number;
+      year: number;
+      month: number;
+      value: string;
+      rowVersion?: string;
+    },
   ) {
     return (
       id === null

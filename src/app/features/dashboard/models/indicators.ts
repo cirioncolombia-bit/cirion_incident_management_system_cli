@@ -44,7 +44,16 @@ export interface Indicator {
   hasRecords: boolean;
   rowVersion: string;
 }
+export interface LocationOption {
+  id: number;
+  name: string;
+  cityId: number | null;
+}
 export interface MonthlyRecord {
+  cityId: number;
+  cityName: string;
+  nodeId: number;
+  nodeName: string;
   id: number;
   indicatorId: number;
   indicatorName: string;
@@ -63,10 +72,16 @@ export interface Page<T> {
   totalPages: number;
 }
 export interface ChartSeries {
+  cityId: number | null;
+  cityName: string | null;
+  nodeId: number | null;
+  nodeName: string | null;
   indicator: Pick<Indicator, 'id' | 'name' | 'measurementType' | 'isActive'>;
   records: MonthlyRecord[];
 }
 export interface Query {
+  cityId?: number | null;
+  nodeId?: number | null;
   page?: number;
   pageSize?: number;
   search?: string;

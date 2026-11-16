@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  LocationOption,
   ChartSeries,
   Indicator,
   MonthlyRecord,
@@ -16,10 +17,11 @@ import {
 } from '../../models/indicators';
 import { IndicatorsService } from '../../services/indicators.service';
 import { IndicatorsNav } from '../../components/indicators-nav';
+import { LocationSelect } from '../../components/location-select';
 import { IndicatorPicker } from '../../components/indicator-picker';
 @Component({
   selector: 'app-dashboard',
-  imports: [ReactiveFormsModule, IndicatorsNav, IndicatorPicker],
+  imports: [ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker],
   templateUrl: './dashboard.html',
   styleUrls: ['../../indicators-shared.scss', './dashboard.scss'],
 })
@@ -29,6 +31,8 @@ export class Dashboard {
   readonly months = months;
   readonly formatValue = formatValue;
   readonly typeLabel = typeLabel;
+  readonly city = signal<LocationOption | null>(null);
+  readonly node = signal<LocationOption | null>(null);
   readonly selected = signal<Indicator | null>(null);
   readonly result = signal<Page<ChartSeries> | null>(null);
   readonly loading = signal(false);
@@ -44,9 +48,13 @@ export class Dashboard {
     year: currentYear(),
     month: null as number | null,
     indicatorId: null as number | null,
+    cityId: null as number | null,
+    nodeId: null as number | null,
   };
   readonly appliedYear = signal(currentYear());
   private readonly requests = new Subject<{
+    cityId: number | null;
+    nodeId: number | null;
     year: number;
     month: number | null;
     indicatorId: number | null;
@@ -76,7 +84,16 @@ export class Dashboard {
           return `${command}${point.x},${point.y}`;
         })
         .join(' ');
-      return { ...series, points, path, zero: y(0), min, max, maxValue };
+      return {
+        ...series,
+        key: `${series.indicator.id}-${series.cityId ?? 0}-${series.nodeId ?? 0}`,
+        points,
+        path,
+        zero: y(0),
+        min,
+        max,
+        maxValue,
+      };
     }),
   );
   constructor() {
@@ -111,10 +128,18 @@ export class Dashboard {
       year: value.year!,
       month: value.month,
       indicatorId: this.selected()?.id ?? null,
+      cityId: this.city()?.id ?? null,
+      nodeId: this.node()?.id ?? null,
     };
     this.load();
   }
+  chooseCity(row: LocationOption | null) {
+    this.city.set(row);
+    this.node.set(null);
+  }
   clear() {
+    this.city.set(null);
+    this.node.set(null);
     this.filters.reset({ year: currentYear(), month: null });
     this.selected.set(null);
     this.search();

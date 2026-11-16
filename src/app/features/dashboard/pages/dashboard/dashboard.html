@@ -17,7 +17,22 @@
         </select></label
       >
     </div>
-    <div class="actions"></div>
+    <div class="form-grid actions">
+      <app-location-select
+        kind="cities"
+        [includeInactive]="true"
+        [allowAll]="true"
+        [selected]="city()"
+        (selectedChange)="chooseCity($event)"
+      /><app-location-select
+        kind="nodes"
+        [includeInactive]="true"
+        [allowAll]="true"
+        [parentCityId]="city()?.id ?? null"
+        [selected]="node()"
+        (selectedChange)="node.set($event)"
+      />
+    </div>
     <app-indicator-picker
       [selected]="selected()"
       [includeInactive]="true"
@@ -40,7 +55,7 @@
     <button type="button" (click)="load()">Reintentar</button>
   }
   <div class="charts-grid">
-    @for (series of series(); track series.indicator.id) {
+    @for (series of series(); track series.key) {
       <article class="card chart-card">
         <div class="chart-heading">
           <h2>{{ series.indicator.name }}</h2>
@@ -49,6 +64,9 @@
           }
         </div>
         <p class="muted">{{ typeLabel(series.indicator.measurementType) }} · {{ appliedYear() }}</p>
+        @if (series.cityId) {
+          <p class="muted">{{ series.cityName }} · {{ series.nodeName }}</p>
+        }
         @if (series.records.length) {
           <svg
             viewBox="0 0 600 240"
@@ -106,15 +124,14 @@
       </article>
     } @empty {
       @if (!loading() && !error()) {
-        <p class="card">No hay indicadores. Puedes crearlos en el catálogo.</p>
+        <p class="card">No hay series para los filtros seleccionados.</p>
       }
     }
   </div>
   @if (result(); as data) {
     <nav class="pagination" aria-label="Paginación de gráficos">
       <span
-        >{{ data.totalCount }} indicadores · Página {{ data.page }} de
-        {{ data.totalPages || 1 }}</span
+        >{{ data.totalCount }} series · Página {{ data.page }} de {{ data.totalPages || 1 }}</span
       ><button type="button" [disabled]="loading() || data.page <= 1" (click)="load(data.page - 1)">
         Anterior</button
       ><button
