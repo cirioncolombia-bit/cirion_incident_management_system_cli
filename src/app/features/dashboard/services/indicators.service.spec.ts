@@ -48,4 +48,15 @@ describe('Indicator API', () => {
     remove.flush(null);
     http.verify();
   });
+  it('explicitly requests annual aggregation when the city ranking month is null', () => {
+    const { api, http } = setup();
+    api.cityCharts({ year: 2024, month: null, nodePage: 2 }).subscribe();
+    const req = http.expectOne((r) => r.url === environment.apiUrl + '/api/Indicators/city-charts');
+    expect(req.request.params.get('annualTotal')).toBe('true');
+    expect(req.request.params.has('month')).toBe(false);
+    expect(req.request.params.get('year')).toBe('2024');
+    expect(req.request.params.get('nodePage')).toBe('2');
+    req.flush({ data: { rows: [] } });
+    http.verify();
+  });
 });

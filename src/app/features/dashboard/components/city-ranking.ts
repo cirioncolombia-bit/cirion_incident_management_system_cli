@@ -17,6 +17,7 @@ import {
   months,
   requestError,
   typeLabel,
+  rankingPeriod,
 } from '../models/indicators';
 import { IndicatorsService } from '../services/indicators.service';
 @Component({
@@ -38,8 +39,17 @@ import { IndicatorsService } from '../services/indicators.service';
         <span class="badge">Indicador inactivo</span>
       }
     </header>
-    <p>{{ chart().indicator.name }} · {{ months[chart().month - 1] }} {{ chart().year }}</p>
-    <small>Valores registrados · Mayor a menor · {{ chart().nodeCount }} nodos</small>
+    <p>{{ chart().indicator.name }} · {{ rankingPeriod(chart()) }}</p>
+    <small
+      >{{
+        chart().isAnnual
+          ? chart().aggregation === 'average'
+            ? 'Promedio de meses registrados'
+            : 'Suma de meses registrados'
+          : 'Valores registrados'
+      }}
+      · Mayor a menor · {{ chart().nodeCount }} nodos</small
+    >
     <div class="city-highlights">
       @if (leader(); as node) {
         <div class="leader-summary">
@@ -189,8 +199,11 @@ import { IndicatorsService } from '../services/indicators.service';
       >
         <small>Posición {{ node.rank }}</small
         ><strong>{{ node.nodeName }}</strong
-        ><span>{{ chart().cityName }} · {{ months[chart().month - 1] }} {{ chart().year }}</span
+        ><span>{{ chart().cityName }} · {{ rankingPeriod(chart()) }}</span
         ><b>{{ formatValue(node.value, chart().indicator.measurementType) }}</b>
+        @if (chart().isAnnual) {
+          <small>{{ node.monthsRecorded ?? 1 }} meses con registro</small>
+        }
       </div>
     }
     <nav class="pagination" aria-label="Paginación de nodos">
@@ -579,6 +592,7 @@ export class CityRanking {
   readonly chart = computed(() => this.page() ?? this.data());
   readonly formatValue = formatValue;
   readonly months = months;
+  readonly rankingPeriod = rankingPeriod;
   readonly loading = signal(false);
   readonly error = signal('');
   private readonly requests = new Subject<number | null>();
@@ -594,7 +608,7 @@ export class CityRanking {
   );
   nodeLabel(node: CityNodeRank & { rank: number }): string {
     const data = this.chart();
-    return `Posición ${node.rank}. ${node.nodeName}: ${formatValue(node.value, data.indicator.measurementType)}. ${data.cityName}, ${months[data.month - 1]} ${data.year}. Toca o pulsa Enter para ver el detalle.`;
+    return `Posición ${node.rank}. ${node.nodeName}: ${formatValue(node.value, data.indicator.measurementType)}. ${data.cityName}, ${rankingPeriod(data)}. Toca o pulsa Enter para ver el detalle.`;
   }
   private tooltipAnchor: HTMLElement | null = null;
   private showNode(node: CityNodeRank & { rank: number }, event: Event): void {

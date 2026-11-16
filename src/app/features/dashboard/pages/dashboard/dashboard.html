@@ -17,11 +17,7 @@
       />
 
       <label
-        >Vista<select
-          aria-label="Vista del gráfico"
-          formControlName="view"
-          (change)="viewChanged()"
-        >
+        >Vista<select aria-label="Vista del gráfico" formControlName="view">
           <option value="city">Nodos por ciudad</option>
           <option value="timeline">Evolución mensual</option>
         </select></label
@@ -31,6 +27,14 @@
         >Mes<select aria-label="Mes" formControlName="month">
           @if (filters.controls.view.value === 'timeline') {
             <option [ngValue]="null">Todos los meses</option>
+          } @else {
+            <option [ngValue]="null">
+              {{
+                selected()?.measurementType === 1
+                  ? 'Todos los meses · Promedio anual'
+                  : 'Todos los meses · Total anual'
+              }}
+            </option>
           }
           @for (month of months; track month; let i = $index) {
             <option [ngValue]="i + 1">{{ month }}</option>
@@ -71,10 +75,7 @@
   }
   @if (appliedView() === 'city') {
     @if (!loading() && !error() && rankingResult(); as data) {
-      <p role="status">
-        {{ data.totalCount }} gráficos por ciudad · {{ months[appliedMonth() - 1] }}
-        {{ appliedYear() }}
-      </p>
+      <p role="status">{{ data.totalCount }} gráficos por ciudad · {{ appliedPeriod() }}</p>
     }
     <div class="charts-grid">
       @for (city of rankingResult()?.rows ?? []; track city.indicator.id + '-' + city.cityId) {
@@ -82,9 +83,9 @@
       } @empty {
         @if (!loading() && !error()) {
           <p class="card">
-            No hay registros mensuales activos para {{ months[appliedMonth() - 1] }}
-            {{ appliedYear() }} con los filtros aplicados. Revisa el período, indicador, ciudad y
-            nodo. <a routerLink="/dashboard/records">Revisar registros mensuales</a>
+            No hay registros mensuales activos para {{ appliedPeriod() }} con los filtros aplicados.
+            Revisa el período, indicador, ciudad y nodo.
+            <a routerLink="/dashboard/records">Revisar registros mensuales</a>
           </p>
         }
       }
@@ -92,74 +93,7 @@
   } @else {
     <div class="charts-grid">
       @for (series of series(); track series.key) {
-        <article class="card chart-card">
-          <div class="chart-heading">
-            <h2>{{ series.indicator.name }}</h2>
-            @if (!series.indicator.isActive) {
-              <span class="badge">Inactivo</span>
-            }
-          </div>
-          <p class="muted">
-            {{ typeLabel(series.indicator.measurementType) }} · {{ appliedYear() }}
-          </p>
-          @if (series.cityId) {
-            <p class="muted">{{ series.cityName }} · {{ series.nodeName }}</p>
-          }
-          @if (series.records.length) {
-            <svg
-              viewBox="0 0 600 240"
-              role="img"
-              [attr.aria-label]="'Evolución mensual de ' + series.indicator.name"
-            >
-              <title>
-                {{ series.indicator.name }} — {{ typeLabel(series.indicator.measurementType) }}
-              </title>
-              <line x1="40" x2="565" [attr.y1]="series.zero" [attr.y2]="series.zero" class="axis" />
-              <path [attr.d]="series.path" class="series-line" />
-              @for (point of series.points; track point.record.id) {
-                <circle [attr.cx]="point.x" [attr.cy]="point.y" r="5" class="series-point">
-                  <title>{{ valueLabel(point.record) }}</title>
-                </circle>
-              }
-              @for (month of months; track month; let i = $index) {
-                <text [attr.x]="45 + i * 46" y="220" text-anchor="middle">
-                  {{ month.slice(0, 3) }}
-                </text>
-              }
-              <text x="40" y="18">
-                Máx. {{ formatValue(series.maxValue, series.indicator.measurementType) }}
-              </text>
-            </svg>
-            <details>
-              <summary>Ver valores</summary>
-              <div
-                class="table-scroll"
-                tabindex="0"
-                role="region"
-                [attr.aria-label]="'Valores de ' + series.indicator.name"
-              >
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Mes</th>
-                      <th>Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (row of series.records; track row.id) {
-                      <tr>
-                        <td>{{ months[row.month - 1] }}</td>
-                        <td>{{ formatValue(row.value, row.measurementType) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </details>
-          } @else {
-            <p class="notice">Sin registros en el período seleccionado.</p>
-          }
-        </article>
+        <app-indicator-timeline [data]="series" [year]="appliedYear()" />
       } @empty {
         @if (!loading() && !error()) {
           <p class="card">No hay series para los filtros seleccionados.</p>

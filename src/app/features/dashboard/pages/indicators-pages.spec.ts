@@ -238,7 +238,7 @@ describe('Indicator dashboard', () => {
     component.search();
     fixture.detectChanges();
     expect(element.textContent).toContain('Inactivo');
-    expect(element.querySelectorAll('svg circle')).toHaveLength(1);
+    expect(element.querySelectorAll('.timeline-point')).toHaveLength(1);
     expect(element.querySelector('a[href="/dashboard/indicators"]')).not.toBeNull();
     expect(element.querySelector('a[href="/dashboard/records"]')).not.toBeNull();
     expect(component.series()[0].records[0].value).toBe('1972082.25');
@@ -263,7 +263,44 @@ describe('Indicator dashboard', () => {
     expect(element.textContent).toContain('Server error');
     expect(element.textContent).not.toContain('No hay registros mensuales activos');
   });
-  it('filters by year, month and indicator and never invents zero values for missing months', () => {
+  it('locks month to All months in timeline and restores an enabled month for city rankings', () => {
+    const { component, fixture, element, api } = setup(Dashboard);
+    component.filters.controls.month.setValue(5);
+    component.filters.controls.view.setValue('timeline');
+    fixture.detectChanges();
+    const month = element.querySelector<HTMLSelectElement>('select[formcontrolname="month"]')!;
+    expect(component.filters.controls.month.disabled).toBe(true);
+    expect(component.filters.controls.month.value).toBeNull();
+    expect(month.disabled).toBe(true);
+    expect(month.selectedOptions[0].textContent).toContain('Todos los meses');
+    component.search();
+    expect(api.charts.mock.calls.at(-1)).toBeDefined();
+    component.filters.controls.view.setValue('city');
+    fixture.detectChanges();
+    expect(month.disabled).toBe(false);
+    expect(component.filters.controls.month.value).not.toBeNull();
+    component.filters.controls.view.setValue('timeline');
+    component.clear();
+    fixture.detectChanges();
+    expect(month.disabled).toBe(false);
+    expect(component.filters.controls.view.value).toBe('city');
+  });
+  it('keeps the annual option selected for city rankings and sends no month', () => {
+    const { component, api, fixture, element } = setup(Dashboard);
+    component.filters.controls.month.setValue(null);
+    component.search();
+    fixture.detectChanges();
+    expect(component.filters.controls.month.disabled).toBe(false);
+    expect(component.filters.controls.month.value).toBeNull();
+    const month = element.querySelector<HTMLSelectElement>('select[formcontrolname="month"]')!;
+    expect(month.selectedOptions[0].textContent).toContain('Total anual');
+    expect(api.cityCharts).toHaveBeenLastCalledWith(expect.objectContaining({ month: null }));
+    expect(component.appliedPeriod()).toContain('Resumen anual');
+    component.filters.controls.month.setValue(5);
+    component.search();
+    expect(api.cityCharts).toHaveBeenLastCalledWith(expect.objectContaining({ month: 5 }));
+  });
+  it('filters timeline by year and indicator while always requesting all months', () => {
     const { component, api } = setup(Dashboard);
     component.selected.set(indicator);
     component.filters.setValue({ view: 'timeline', year: 2025, month: 11 });
@@ -272,13 +309,12 @@ describe('Indicator dashboard', () => {
       cityId: null,
       nodeId: null,
       year: 2025,
-      month: 11,
+      month: null,
       indicatorId: 7,
       page: 1,
       pageSize: 6,
     });
-    expect(component.series()[0].points).toHaveLength(1);
-    expect(component.series()[0].path).toMatch(/^M/);
+    expect(component.series()[0].records).toHaveLength(1);
   });
 });
 describe('Location choices', () => {

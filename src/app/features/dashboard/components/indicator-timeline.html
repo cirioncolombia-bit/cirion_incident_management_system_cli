@@ -1,0 +1,186 @@
+<article class="card timeline-card">
+  <header>
+    <span class="timeline-icon" aria-hidden="true"
+      ><svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M4 4v16h16M7 15l4-5 4 3 5-7" /></svg
+    ></span>
+    <h2>{{ data().indicator.name }}</h2>
+    @if (!data().indicator.isActive) {
+      <span class="badge">Inactivo</span>
+    }
+  </header>
+  <div class="context">
+    <span>{{ typeLabel(data().indicator.measurementType) }}</span
+    ><span>{{ year() }}</span>
+    @if (data().cityId) {
+      <span>{{ data().cityName }}</span
+      ><span>{{ data().nodeName }}</span>
+    }
+  </div>
+  @if (stats().latest; as latest) {
+    <div class="timeline-metrics">
+      <div class="latest-metric">
+        <small>Último registro · {{ months[latest.month - 1] }}</small
+        ><strong>{{ formatValue(latest.value, data().indicator.measurementType) }}</strong>
+      </div>
+      <div class="peak-metric">
+        <small>Máximo registrado · {{ stats().peakMonths }}</small
+        ><strong>{{
+          formatValue(stats().maximum!.value, data().indicator.measurementType)
+        }}</strong>
+      </div>
+    </div>
+    <div class="timeline-legend">
+      <span class="peak-key">Mayor valor</span><span class="latest-key">Último registro</span
+      ><small>{{ stats().count }} meses con datos</small>
+    </div>
+    <div
+      class="timeline-scroll"
+      tabindex="0"
+      role="region"
+      [attr.aria-label]="'Evolución mensual de ' + data().indicator.name + ' — ' + data().nodeName"
+      (scroll)="dismissTooltip()"
+    >
+      <svg
+        viewBox="0 0 660 320"
+        role="group"
+        [attr.aria-label]="'Valores mensuales de ' + data().indicator.name"
+      >
+        <title>
+          {{ data().indicator.name }} · {{ data().cityName }} · {{ data().nodeName }} · {{ year() }}
+        </title>
+        <defs>
+          <linearGradient [attr.id]="chartId() + '-area'" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#45b8cc" stop-opacity=".28" />
+            <stop offset="100%" stop-color="#548ce4" stop-opacity=".02" />
+          </linearGradient>
+          <linearGradient [attr.id]="chartId() + '-line'" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#3376cb" />
+            <stop offset="100%" stop-color="#19a995" />
+          </linearGradient>
+        </defs>
+        @for (tick of geometry().ticks; track tick.value) {
+          <line x1="64" x2="636" [attr.y1]="tick.y" [attr.y2]="tick.y" class="grid-line" />
+          <text x="52" [attr.y]="tick.y + 4" text-anchor="end" class="tick">
+            {{ tickLabel(tick.value) }}
+          </text>
+        }
+        <line
+          x1="64"
+          x2="636"
+          [attr.y1]="geometry().zero"
+          [attr.y2]="geometry().zero"
+          class="zero-line"
+        />
+        @for (area of geometry().areas; track $index) {
+          <path
+            class="timeline-area"
+            [attr.d]="area"
+            [attr.fill]="'url(#' + chartId() + '-area)'"
+          />
+        }
+        <path
+          class="timeline-line"
+          [attr.d]="geometry().line"
+          [attr.stroke]="'url(#' + chartId() + '-line)'"
+          pathLength="1"
+        />
+        @for (point of geometry().points; track point.record.id) {
+          <g
+            class="timeline-point"
+            tabindex="0"
+            role="button"
+            [class.is-peak]="point.peak"
+            [class.is-latest]="point.latest"
+            [class.is-selected]="active()?.id === point.record.id"
+            [attr.aria-label]="pointLabel(point.record)"
+            [attr.aria-pressed]="pinned() === point.record.id"
+            [attr.aria-describedby]="
+              active()?.id === point.record.id ? chartId() + '-tooltip' : null
+            "
+            (pointerenter)="preview(point.record, $event)"
+            (pointerleave)="hidePreview()"
+            (focus)="preview(point.record, $event)"
+            (blur)="hidePreview()"
+            (click)="toggle(point.record, $event)"
+            (keydown.enter)="keyToggle(point.record, $event)"
+            (keydown.space)="keyToggle(point.record, $event)"
+          >
+            <circle class="point-hit" [attr.cx]="point.x" [attr.cy]="point.y" r="28" />
+            <circle class="point-ring" [attr.cx]="point.x" [attr.cy]="point.y" r="11" />
+            <circle class="point-dot" [attr.cx]="point.x" [attr.cy]="point.y" r="5" />
+            @if (point.peak && point.record.id === stats().maximum?.id) {
+              <text
+                class="peak-value"
+                [attr.x]="point.x"
+                [attr.y]="point.y - 18"
+                text-anchor="middle"
+              >
+                {{ tickLabel(+point.record.value) }}
+              </text>
+            }
+          </g>
+        }
+        @for (month of months; track month; let i = $index) {
+          <text class="month-label" [attr.x]="72 + i * 50" y="286" text-anchor="middle">
+            {{ month.slice(0, 3) }}
+          </text>
+        }
+      </svg>
+    </div>
+    <small class="chart-hint"
+      >Toca o enfoca un punto para ver el detalle. Los huecos indican meses sin registro.</small
+    >
+    <details>
+      <summary>Ver valores</summary>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="'Valores de ' + data().indicator.name"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of ordered(); track row.id) {
+              <tr>
+                <td>{{ months[row.month - 1] }}</td>
+                <td>{{ formatValue(row.value, row.measurementType) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  } @else {
+    <p class="notice">Sin registros en el período seleccionado.</p>
+  }
+  @if (active(); as row) {
+    <div
+      class="timeline-tooltip"
+      role="tooltip"
+      [id]="chartId() + '-tooltip'"
+      [style.left.px]="position().x"
+      [style.top.px]="position().y"
+    >
+      <small>{{ months[row.month - 1] }} {{ row.year }}</small
+      ><strong>{{ row.nodeName }}</strong
+      ><span>{{ row.cityName }} · {{ row.indicatorName }}</span
+      ><b>{{ formatValue(row.value, row.measurementType) }}</b>
+    </div>
+  }
+</article>

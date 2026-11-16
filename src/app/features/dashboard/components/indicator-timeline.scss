@@ -1,0 +1,264 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.timeline-card {
+  margin-bottom: 0;
+  border-top: 3px solid #76bdb9;
+  background: linear-gradient(145deg, #fff 70%, #f2fafb);
+  box-shadow: 0 8px 28px -20px #16477955;
+}
+header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+header h2 {
+  flex: 1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.timeline-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: #e5f6f1;
+  color: #178570;
+  font-size: 1.6rem;
+  flex: 0 0 auto;
+}
+.context {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 0.9rem 0 1.2rem;
+}
+.context span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.4rem;
+  background: #edf3fa;
+  color: #58718e;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.timeline-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.timeline-metrics > div {
+  padding: 0.9rem 1rem;
+  border: 1px solid #dfece9;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.timeline-metrics .latest-metric {
+  background: linear-gradient(110deg, #edf9f4, #fff);
+  border-left: 3px solid #34ab91;
+}
+.timeline-metrics .peak-metric {
+  background: linear-gradient(110deg, #fff2e9, #fff);
+  border-left: 3px solid #e97751;
+}
+.timeline-metrics small {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.timeline-metrics strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  color: #167963;
+  overflow-wrap: anywhere;
+}
+.peak-metric strong {
+  color: #af4329;
+}
+.timeline-legend {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 1.2rem 0 0.4rem;
+  font-size: 0.72rem;
+  color: #61738e;
+}
+.timeline-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+}
+.peak-key::before {
+  background: #e97751;
+}
+.latest-key::before {
+  background: #20a48c;
+}
+.timeline-legend small {
+  margin-left: auto;
+}
+.timeline-scroll {
+  overflow: auto;
+  max-width: 100%;
+  padding-top: 0.5rem;
+}
+.timeline-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+  max-height: 360px;
+}
+.grid-line {
+  stroke: #e1e9f3;
+  stroke-dasharray: 4 5;
+  stroke-width: 1;
+}
+.zero-line {
+  stroke: #9bb4cf;
+  stroke-width: 1;
+}
+.tick,
+.month-label {
+  fill: #657c98;
+  font-size: 11px;
+}
+.timeline-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: draw-line 0.65s ease both;
+}
+.timeline-area {
+  animation: fade-in 0.5s ease both;
+}
+.point-hit {
+  fill: transparent;
+}
+.timeline-point {
+  cursor: pointer;
+  outline: none;
+}
+.point-dot {
+  fill: #fff;
+  stroke: #3376cb;
+  stroke-width: 3;
+}
+.point-ring {
+  fill: #e8f1ff;
+  opacity: 0;
+}
+.timeline-point.is-latest .point-dot {
+  fill: #20a48c;
+  stroke: #fff;
+}
+.timeline-point.is-peak .point-dot {
+  fill: #ee865b;
+  stroke: #fff;
+}
+.timeline-point.is-peak .point-ring {
+  fill: #fff0e7;
+  opacity: 1;
+}
+.timeline-point:focus .point-ring,
+.timeline-point:hover .point-ring,
+.timeline-point.is-selected .point-ring {
+  fill: #b7d9ed;
+  stroke: #3376cb;
+  stroke-width: 1;
+  opacity: 1;
+}
+.peak-value {
+  fill: #a84c2d;
+  font-size: 11px;
+  font-weight: 700;
+}
+.chart-hint {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  margin: 0.35rem 0 1rem;
+}
+summary {
+  cursor: pointer;
+  padding: 0.75rem 0;
+  color: #003f7d;
+}
+.table-scroll table {
+  min-width: 18rem;
+}
+.timeline-tooltip {
+  position: fixed;
+  z-index: 1200;
+  width: min(288px, calc(100vw - 24px));
+  box-sizing: border-box;
+  max-height: calc(100dvh - 24px);
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  background: #12365b;
+  color: #fff;
+  box-shadow: 0 8px 28px #00172e44;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+.timeline-tooltip small {
+  color: #bcd4f4;
+  font-size: 0.72rem;
+}
+.timeline-tooltip strong {
+  display: block;
+  margin: 0.3rem 0;
+}
+.timeline-tooltip span {
+  display: block;
+  font-size: 0.8rem;
+  color: #d5e3f6;
+}
+.timeline-tooltip b {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 1.1rem;
+}
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-line,
+  .timeline-area {
+    animation: none;
+  }
+}
+@media (max-width: 480px) {
+  .timeline-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .timeline-legend small {
+    margin-left: 0;
+  }
+}
+
+.timeline-point.is-peak.is-latest .point-ring {
+  stroke: #20a48c;
+  stroke-width: 2;
+}
