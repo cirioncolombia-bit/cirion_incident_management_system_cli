@@ -34,7 +34,10 @@ export class IndicatorsService {
     return this.get<Page<MonthlyRecord>>('/records', query);
   }
   cityCharts(query: Query) {
-    return this.get<Page<CityRank>>('/city-charts', query);
+    return this.get<Page<CityRank>>('/city-charts', {
+      ...query,
+      annualTotal: query.month === null || query.annualTotal === true,
+    });
   }
   charts(query: Query) {
     return this.get<Page<ChartSeries>>('/charts', query);

@@ -80,6 +80,7 @@ export interface ChartSeries {
   records: MonthlyRecord[];
 }
 export interface Query {
+  annualTotal?: boolean;
   nodePage?: number;
   nodePageSize?: number;
   cityId?: number | null;
@@ -125,6 +126,7 @@ export function requestError(error: unknown): string {
 }
 
 export interface CityNodeRank {
+  monthsRecorded?: number;
   nodeId: number;
   nodeName: string;
   value: string;
@@ -134,7 +136,9 @@ export interface CityRank {
   cityId: number;
   cityName: string;
   year: number;
-  month: number;
+  month: number | null;
+  isAnnual?: boolean;
+  aggregation?: string;
   nodes: CityNodeRank[];
   nodePage: number;
   nodePageSize: number;
@@ -142,4 +146,14 @@ export interface CityRank {
   totalNodePages: number;
   minValue: string;
   maxValue: string;
+}
+
+export function rankingPeriod(data: {
+  year: number;
+  month: number | null;
+  aggregation?: string;
+}): string {
+  return data.month === null
+    ? `${data.aggregation === 'average' ? 'Promedio anual' : 'Total anual'} ${data.year}`
+    : `${months[data.month - 1]} ${data.year}`;
 }

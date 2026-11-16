@@ -136,6 +136,31 @@ describe('City node comparison', () => {
     expect(component.tooltipNode()).toBeNull();
     expect(component.pinnedNodeId()).toBeNull();
   });
+  it('labels annual totals and percentage averages and keeps the annual period when paging', () => {
+    const { component, fixture, api, element } = setup();
+    fixture.componentRef.setInput('data', {
+      ...data,
+      month: null,
+      isAnnual: true,
+      aggregation: 'sum',
+      nodes: [{ nodeId: 2, nodeName: 'Node A', value: '70', monthsRecorded: 3 }],
+    });
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Total anual 2026');
+    expect(element.textContent).toContain('Suma de meses registrados');
+    component.load(2);
+    expect(api.cityCharts).toHaveBeenLastCalledWith(expect.objectContaining({ month: null }));
+    fixture.componentRef.setInput('data', {
+      ...data,
+      indicator: { ...data.indicator, measurementType: 1 },
+      month: null,
+      isAnnual: true,
+      aggregation: 'average',
+    });
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Promedio anual 2026');
+    expect(element.textContent).toContain('Promedio de meses registrados');
+  });
   it('cancels an obsolete node page when the main filters change', () => {
     const { api, component, fixture } = setup();
     const pending = new Subject<Page<CityRank>>();
