@@ -24,6 +24,8 @@ export class AuthenticatedLayout {
       (user.permissions.includes('users.manage') || user.permissions.includes('catalogs.manage'));
   });
 
+  readonly canViewDashboard = computed(() => !!this.currentUser() && !this.currentUser()!.isExternal && this.canAccess('dashboard.read'));
+
   readonly canViewNetwork = computed(() => {
     const user = this.currentUser();
     return !!user && !user.isExternal && user.permissions.includes('catalogs.read');

@@ -25,10 +25,22 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
+        data: { permission: 'dashboard.read', internalOnly: true },
         loadComponent: () =>
           import('./features/dashboard/pages/dashboard/dashboard').then(
             (component) => component.Dashboard,
           ),
+      },
+
+      {
+        path: 'dashboard/indicators',
+        data: { permission: 'dashboard.read', internalOnly: true },
+        loadComponent: () => import('./features/dashboard/pages/indicator-catalog/indicator-catalog').then(m => m.IndicatorCatalog),
+      },
+      {
+        path: 'dashboard/records',
+        data: { permission: 'dashboard.read', internalOnly: true },
+        loadComponent: () => import('./features/dashboard/pages/monthly-records/monthly-records').then(m => m.MonthlyRecords),
       },
 
       {

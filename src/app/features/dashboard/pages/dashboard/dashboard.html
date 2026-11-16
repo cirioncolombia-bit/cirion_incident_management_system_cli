@@ -1,111 +1,129 @@
-<section
-  class="dashboard-summary"
-  aria-label="Incident summary"
->
-  <article class="dashboard-card dashboard-card--danger">
-    <div class="dashboard-card__top">
-      <span
-        class="dashboard-card__icon"
-        aria-hidden="true"
-      >
-        !
-      </span>
-
-      <div class="dashboard-card__value">
-        <strong>24</strong>
-        <span>Open incidents</span>
-      </div>
-    </div>
-
-    <p
-      class="
-        dashboard-card__trend
-        dashboard-card__trend--danger
-      "
-    >
-      ↑ 12%
-      <span>vs. previous week</span>
-    </p>
-  </article>
-
-  <article class="dashboard-card dashboard-card--info">
-    <div class="dashboard-card__top">
-      <span
-        class="dashboard-card__icon"
-        aria-hidden="true"
-      >
-        ◷
-      </span>
-
-      <div class="dashboard-card__value">
-        <strong>8</strong>
-        <span>In progress</span>
-      </div>
-    </div>
-
-    <p
-      class="
-        dashboard-card__trend
-        dashboard-card__trend--success
-      "
-    >
-      ↓ 20%
-      <span>vs. previous week</span>
-    </p>
-  </article>
-
-  <article class="dashboard-card dashboard-card--success">
-    <div class="dashboard-card__top">
-      <span
-        class="dashboard-card__icon"
-        aria-hidden="true"
-      >
-        ✓
-      </span>
-
-      <div class="dashboard-card__value">
-        <strong>112</strong>
-        <span>Resolved</span>
-      </div>
-    </div>
-
-    <p
-      class="
-        dashboard-card__trend
-        dashboard-card__trend--success
-      "
-    >
-      ↑ 18%
-      <span>vs. previous week</span>
-    </p>
-  </article>
-
-  <article class="dashboard-card dashboard-card--assignment">
-    <div class="dashboard-card__top">
-      <span
-        class="dashboard-card__icon"
-        aria-hidden="true"
-      >
-        ●
-      </span>
-
-      <div class="dashboard-card__value">
-        <strong>16</strong>
-        <span>Assigned to me</span>
-      </div>
-    </div>
-
-    <p class="dashboard-card__trend">
-      0%
-      <span>vs. previous week</span>
-    </p>
-  </article>
-</section>
-
-<section class="dashboard-placeholder">
-  <h2>Operational summary</h2>
-
-  <p>
-    Charts, recent incidents and shortcuts will appear here.
+<section class="indicator-page">
+  <h1>Dashboard de indicadores</h1>
+  <p class="muted">
+    Consulta la evolución mensual. Los gráficos incluyen indicadores activos e inactivos.
   </p>
+  <app-indicators-nav />
+  <form class="card" [formGroup]="filters" (ngSubmit)="search()">
+    <h2>Filtrar gráficos</h2>
+    <div class="form-grid">
+      <label>Año<input type="number" formControlName="year" min="1" max="9999" required /></label
+      ><label
+        >Mes<select aria-label="Mes" formControlName="month">
+          <option [ngValue]="null">Todos los meses</option>
+          @for (month of months; track month; let i = $index) {
+            <option [ngValue]="i + 1">{{ month }}</option>
+          }
+        </select></label
+      >
+    </div>
+    <div class="actions"></div>
+    <app-indicator-picker
+      [selected]="selected()"
+      [includeInactive]="true"
+      [allowAll]="true"
+      (selectedChange)="selected.set($event)"
+    />
+    @if (filters.invalid && filters.touched) {
+      <p class="error" role="alert">Ingresa un año válido (1–9999).</p>
+    }
+    <div class="actions">
+      <button type="submit" class="primary">Buscar</button
+      ><button type="button" (click)="clear()">Limpiar filtros</button>
+    </div>
+  </form>
+  @if (loading()) {
+    <p role="status">Cargando gráficos…</p>
+  }
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" (click)="load()">Reintentar</button>
+  }
+  <div class="charts-grid">
+    @for (series of series(); track series.indicator.id) {
+      <article class="card chart-card">
+        <div class="chart-heading">
+          <h2>{{ series.indicator.name }}</h2>
+          @if (!series.indicator.isActive) {
+            <span class="badge">Inactivo</span>
+          }
+        </div>
+        <p class="muted">{{ typeLabel(series.indicator.measurementType) }} · {{ appliedYear() }}</p>
+        @if (series.records.length) {
+          <svg
+            viewBox="0 0 600 240"
+            role="img"
+            [attr.aria-label]="'Evolución mensual de ' + series.indicator.name"
+          >
+            <title>
+              {{ series.indicator.name }} — {{ typeLabel(series.indicator.measurementType) }}
+            </title>
+            <line x1="40" x2="565" [attr.y1]="series.zero" [attr.y2]="series.zero" class="axis" />
+            <path [attr.d]="series.path" class="series-line" />
+            @for (point of series.points; track point.record.id) {
+              <circle [attr.cx]="point.x" [attr.cy]="point.y" r="5" class="series-point">
+                <title>{{ valueLabel(point.record) }}</title>
+              </circle>
+            }
+            @for (month of months; track month; let i = $index) {
+              <text [attr.x]="45 + i * 46" y="220" text-anchor="middle">
+                {{ month.slice(0, 3) }}
+              </text>
+            }
+            <text x="40" y="18">
+              Máx. {{ formatValue(series.maxValue, series.indicator.measurementType) }}
+            </text>
+          </svg>
+          <details>
+            <summary>Ver valores</summary>
+            <div
+              class="table-scroll"
+              tabindex="0"
+              role="region"
+              [attr.aria-label]="'Valores de ' + series.indicator.name"
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of series.records; track row.id) {
+                    <tr>
+                      <td>{{ months[row.month - 1] }}</td>
+                      <td>{{ formatValue(row.value, row.measurementType) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        } @else {
+          <p class="notice">Sin registros en el período seleccionado.</p>
+        }
+      </article>
+    } @empty {
+      @if (!loading() && !error()) {
+        <p class="card">No hay indicadores. Puedes crearlos en el catálogo.</p>
+      }
+    }
+  </div>
+  @if (result(); as data) {
+    <nav class="pagination" aria-label="Paginación de gráficos">
+      <span
+        >{{ data.totalCount }} indicadores · Página {{ data.page }} de
+        {{ data.totalPages || 1 }}</span
+      ><button type="button" [disabled]="loading() || data.page <= 1" (click)="load(data.page - 1)">
+        Anterior</button
+      ><button
+        type="button"
+        [disabled]="loading() || data.page >= data.totalPages"
+        (click)="load(data.page + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
 </section>
