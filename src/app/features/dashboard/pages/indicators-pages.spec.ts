@@ -9,6 +9,8 @@ import { IndicatorsService } from '../services/indicators.service';
 import { IndicatorCatalog } from './indicator-catalog/indicator-catalog';
 import { MonthlyRecords } from './monthly-records/monthly-records';
 import { Dashboard } from './dashboard/dashboard';
+import { Subject } from 'rxjs';
+import { LocationSelect } from '../components/location-select';
 import { IndicatorPicker } from '../components/indicator-picker';
 const indicator: Indicator = {
   id: 7,
@@ -19,6 +21,10 @@ const indicator: Indicator = {
   rowVersion: 'AQIDBA==',
 };
 const record: MonthlyRecord = {
+  cityId: 1,
+  cityName: 'Bogotá',
+  nodeId: 2,
+  nodeName: 'Node A',
   id: 9,
   indicatorId: 7,
   indicatorName: indicator.name,
@@ -38,10 +44,22 @@ const page = <T>(rows: T[]): Page<T> => ({
 });
 function setup<T>(type: Type<T>, manage = true) {
   const api = {
+    locations: vi.fn(() => of(page([{ id: 1, name: 'Bogotá', cityId: null as number | null }]))),
     list: vi.fn(() => of(page([indicator]))),
     records: vi.fn(() => of(page([record]))),
     charts: vi.fn(() =>
-      of(page([{ indicator: { ...indicator, isActive: false }, records: [record] }])),
+      of(
+        page([
+          {
+            indicator: { ...indicator, isActive: false },
+            records: [record],
+            cityId: 1,
+            cityName: 'Bogotá',
+            nodeId: 2,
+            nodeName: 'Node A',
+          },
+        ]),
+      ),
     ),
     saveIndicator: vi.fn(() => of(indicator)),
     saveRecord: vi.fn(() => of(record)),
@@ -122,10 +140,14 @@ describe('Indicator catalog', () => {
 describe('Monthly records', () => {
   it('sends decimal values as invariant strings and keeps the selected year visible', () => {
     const { component, api } = setup(MonthlyRecords);
+    component.chooseCity({ id: 1, name: 'Bogotá', cityId: null as number | null });
+    component.chooseNode({ id: 2, name: 'Node A', cityId: 1 });
     component.choose(indicator);
-    component.form.setValue({ year: 2025, month: 11, value: '1972082,00' });
+    component.form.patchValue({ year: 2025, month: 11, value: '1972082,00' });
     component.save();
     expect(api.saveRecord).toHaveBeenCalledWith(null, {
+      cityId: 1,
+      nodeId: 2,
       indicatorId: 7,
       year: 2025,
       month: 11,
@@ -167,6 +189,20 @@ describe('Monthly records', () => {
     component.save();
     expect(api.saveRecord).toHaveBeenCalledTimes(2);
   });
+  it('requires a city and node and clears the old node when the city changes', () => {
+    const { component, api } = setup(MonthlyRecords);
+    component.choose(indicator);
+    component.form.controls.value.setValue('100');
+    component.save();
+    expect(api.saveRecord).not.toHaveBeenCalled();
+    component.chooseCity({ id: 1, name: 'Bogotá', cityId: null as number | null });
+    component.chooseNode({ id: 2, name: 'Node A', cityId: 1 });
+    component.chooseCity({ id: 4, name: 'Cali', cityId: null });
+    expect(component.node()).toBeNull();
+    expect(component.form.controls.nodeId.value).toBeNull();
+    component.save();
+    expect(api.saveRecord).not.toHaveBeenCalled();
+  });
   it('deletes a monthly value and reloads without changing its definition', () => {
     const { component, api } = setup(MonthlyRecords);
     component.askDelete(record);
@@ -191,6 +227,8 @@ describe('Indicator dashboard', () => {
     component.filters.setValue({ year: 2025, month: 11 });
     component.search();
     expect(api.charts).toHaveBeenLastCalledWith({
+      cityId: null,
+      nodeId: null,
       year: 2025,
       month: 11,
       indicatorId: 7,
@@ -201,6 +239,33 @@ describe('Indicator dashboard', () => {
     expect(component.series()[0].path).toMatch(/^M/);
   });
 });
+describe('Location choices', () => {
+  it('does not query nodes without a city and cancels stale queries when city changes', () => {
+    const { component, fixture, api } = setup(LocationSelect);
+    fixture.componentRef.setInput('kind', 'nodes');
+    fixture.detectChanges();
+    api.locations.mockClear();
+    const old = new Subject<Page<{ id: number; name: string; cityId: number | null }>>();
+    api.locations.mockReturnValueOnce(old);
+    fixture.componentRef.setInput('parentCityId', 1);
+    fixture.detectChanges();
+    expect(old.observed).toBe(true);
+    expect(api.locations).toHaveBeenLastCalledWith('nodes', {
+      page: 1,
+      pageSize: 20,
+      cityId: 1,
+      search: '',
+      includeInactive: false,
+    });
+    fixture.componentRef.setInput('parentCityId', 2);
+    fixture.detectChanges();
+    expect(old.observed).toBe(false);
+    fixture.componentRef.setInput('parentCityId', null);
+    fixture.detectChanges();
+    expect(component.result()).toBeNull();
+  });
+});
+
 describe('Indicator picker', () => {
   it('queries active choices with bounded paging and keeps the applied search while paging', () => {
     const { component, api } = setup(IndicatorPicker);

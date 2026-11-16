@@ -4,6 +4,7 @@ import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../auth/services/auth.service';
 import {
+  LocationOption,
   Indicator,
   MonthlyRecord,
   Page,
@@ -17,11 +18,12 @@ import {
 } from '../../models/indicators';
 import { IndicatorsService } from '../../services/indicators.service';
 import { IndicatorsNav } from '../../components/indicators-nav';
+import { LocationSelect } from '../../components/location-select';
 import { IndicatorPicker } from '../../components/indicator-picker';
 import { DeleteConfirm } from '../../components/delete-confirm';
 @Component({
   selector: 'app-monthly-records',
-  imports: [ReactiveFormsModule, IndicatorsNav, IndicatorPicker, DeleteConfirm],
+  imports: [ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker, DeleteConfirm],
   templateUrl: './monthly-records.html',
   styleUrl: '../../indicators-shared.scss',
 })
@@ -41,9 +43,15 @@ export class MonthlyRecords {
   readonly months = months;
   readonly formatValue = formatValue;
   readonly typeLabel = typeLabel;
+  readonly city = signal<LocationOption | null>(null);
+  readonly node = signal<LocationOption | null>(null);
+  readonly filterCity = signal<LocationOption | null>(null);
+  readonly filterNode = signal<LocationOption | null>(null);
   readonly selected = signal<Indicator | null>(null);
   readonly editing = signal<MonthlyRecord | null>(null);
   readonly form = inject(FormBuilder).nonNullable.group({
+    cityId: [null as number | null, Validators.required],
+    nodeId: [null as number | null, Validators.required],
     year: [
       currentYear(),
       [Validators.required, Validators.min(1), Validators.max(9999), Validators.pattern(/^\d+$/)],
@@ -61,6 +69,8 @@ export class MonthlyRecords {
     ],
   });
   readonly filters = inject(FormBuilder).group({
+    cityId: [null as number | null],
+    nodeId: [null as number | null],
     year: [
       currentYear(),
       [Validators.required, Validators.min(1), Validators.max(9999), Validators.pattern(/^\d+$/)],
@@ -76,8 +86,16 @@ export class MonthlyRecords {
   readonly saving = signal(false);
   private readonly confirm = viewChild.required(DeleteConfirm);
   private deleteTarget: MonthlyRecord | null = null;
-  private applied = { year: currentYear(), month: null as number | null, search: '' };
+  private applied = {
+    cityId: null as number | null,
+    nodeId: null as number | null,
+    year: currentYear(),
+    month: null as number | null,
+    search: '',
+  };
   private readonly requests = new Subject<{
+    cityId: number | null;
+    nodeId: number | null;
     page: number;
     year: number;
     month: number | null;
@@ -101,6 +119,27 @@ export class MonthlyRecords {
       });
     this.load();
   }
+  chooseCity(row: LocationOption | null) {
+    if (this.city()?.id !== row?.id) {
+      this.node.set(null);
+      this.form.controls.nodeId.setValue(null);
+    }
+    this.city.set(row);
+    this.form.controls.cityId.setValue(row?.id ?? null);
+  }
+  chooseNode(row: LocationOption | null) {
+    this.node.set(row);
+    this.form.controls.nodeId.setValue(row?.id ?? null);
+  }
+  chooseFilterCity(row: LocationOption | null) {
+    this.filterCity.set(row);
+    this.filterNode.set(null);
+    this.filters.patchValue({ cityId: row?.id ?? null, nodeId: null });
+  }
+  chooseFilterNode(row: LocationOption | null) {
+    this.filterNode.set(row);
+    this.filters.controls.nodeId.setValue(row?.id ?? null);
+  }
   choose(row: Indicator | null) {
     this.selected.set(row);
     this.form.controls.value.updateValueAndValidity();
@@ -114,15 +153,19 @@ export class MonthlyRecords {
     this.filters.markAllAsTouched();
     if (this.filters.invalid) return;
     const value = this.filters.getRawValue();
-    this.applied = { year: value.year!, month: value.month, search: value.search ?? '' };
+    this.applied = { ...value, year: value.year!, search: value.search ?? '' };
     this.load();
   }
   clearFilters() {
+    this.filterCity.set(null);
+    this.filterNode.set(null);
     this.filters.reset({ year: currentYear(), month: null, search: '' });
     this.search();
   }
   reset() {
     this.editing.set(null);
+    this.city.set(null);
+    this.node.set(null);
     this.choose(null);
     this.form.reset({ year: currentYear(), month: currentMonth(), value: '' });
     this.saveError.set('');
@@ -138,6 +181,8 @@ export class MonthlyRecords {
       hasRecords: true,
       rowVersion: '',
     });
+    this.chooseCity({ id: row.cityId, name: row.cityName, cityId: null });
+    this.chooseNode({ id: row.nodeId, name: row.nodeName, cityId: row.cityId });
     this.form.patchValue({ year: row.year, month: row.month, value: row.value });
     this.saveError.set('');
     this.success.set('');
@@ -154,6 +199,8 @@ export class MonthlyRecords {
     this.api
       .saveRecord(row?.id ?? null, {
         ...value,
+        cityId: value.cityId!,
+        nodeId: value.nodeId!,
         indicatorId: this.selected()!.id,
         value: value.value.replace(',', '.'),
         rowVersion: row?.rowVersion,

@@ -1,7 +1,8 @@
 <section class="indicator-page">
   <h1>Registros mensuales</h1>
   <p class="muted">
-    Un valor por indicador, mes y año. La unidad corresponde al indicador seleccionado.
+    Un valor por indicador, mes, año, ciudad y nodo. La unidad corresponde al indicador
+    seleccionado.
   </p>
   <app-indicators-nav />
   @if (canManage()) {
@@ -25,7 +26,21 @@
             </select></label
           >
         </div>
-        <div class="actions"></div>
+        <div class="form-grid actions">
+          <app-location-select
+            kind="cities"
+            [selected]="city()"
+            [disabled]="saving()"
+            (selectedChange)="chooseCity($event)"
+          />
+          <app-location-select
+            kind="nodes"
+            [parentCityId]="city()?.id ?? null"
+            [selected]="node()"
+            [disabled]="saving()"
+            (selectedChange)="chooseNode($event)"
+          />
+        </div>
         <app-indicator-picker
           [selected]="selected()"
           [disabled]="saving()"
@@ -55,7 +70,8 @@
         >
         @if (form.invalid && form.touched) {
           <p class="error" role="alert">
-            Revisa año, mes y valor. Para Número entero escribe un valor sin fracciones.
+            Revisa año, mes, ciudad, nodo y valor. Para Número entero escribe un valor sin
+            fracciones.
           </p>
         }
         <div class="actions">
@@ -92,6 +108,22 @@
             placeholder="Nombre del indicador"
         /></label>
       </div>
+      <div class="form-grid actions">
+        <app-location-select
+          kind="cities"
+          [includeInactive]="true"
+          [allowAll]="true"
+          [selected]="filterCity()"
+          (selectedChange)="chooseFilterCity($event)"
+        /><app-location-select
+          kind="nodes"
+          [includeInactive]="true"
+          [allowAll]="true"
+          [parentCityId]="filterCity()?.id ?? null"
+          [selected]="filterNode()"
+          (selectedChange)="chooseFilterNode($event)"
+        />
+      </div>
       <div class="actions">
         <button type="submit">Buscar</button
         ><button type="button" (click)="clearFilters()">Limpiar filtros</button>
@@ -114,6 +146,8 @@
             <tr>
               <th>Año</th>
               <th>Mes</th>
+              <th>Ciudad</th>
+              <th>Nodo</th>
               <th>Indicador</th>
               <th>Valor</th>
               @if (canManage()) {
@@ -126,6 +160,8 @@
               <tr>
                 <td>{{ row.year }}</td>
                 <td>{{ months[row.month - 1] }}</td>
+                <td>{{ row.cityName }}</td>
+                <td>{{ row.nodeName }}</td>
                 <td>
                   {{ row.indicatorName }}
                   @if (!row.indicatorIsActive) {
@@ -158,7 +194,7 @@
               </tr>
             } @empty {
               <tr>
-                <td [attr.colspan]="canManage() ? 5 : 4">No hay registros para este período.</td>
+                <td [attr.colspan]="canManage() ? 7 : 6">No hay registros para este período.</td>
               </tr>
             }
           </tbody>

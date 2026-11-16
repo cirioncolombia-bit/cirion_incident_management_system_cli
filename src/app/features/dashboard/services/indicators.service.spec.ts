@@ -28,6 +28,8 @@ describe('Indicator API', () => {
     const { api, http } = setup();
     api
       .saveRecord(9, {
+        cityId: 1,
+        nodeId: 2,
         indicatorId: 7,
         year: 2026,
         month: 11,
