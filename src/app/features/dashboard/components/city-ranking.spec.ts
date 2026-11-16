@@ -51,9 +51,32 @@ describe('City node comparison', () => {
     expect(element.textContent).toContain('Node A');
     expect(element.textContent).toContain('Node B');
     expect(element.textContent).toContain('Indicador inactivo');
-    expect(component.bars()[0].width).toBe(100);
-    expect(component.bars()[1].width).toBeCloseTo(33.3333, 3);
+    expect(component.bars()[0].height).toBe(100);
+    expect(component.bars()[1].height).toBeCloseTo(33.3333, 3);
     expect(api.cityCharts).not.toHaveBeenCalled();
+  });
+  it('renders vertical columns with integer ticks and keeps zero and negative values accurate', () => {
+    const { component, fixture, element } = setup();
+    expect(element.querySelectorAll('.columns .bar')).toHaveLength(2);
+    expect(element.querySelector('.bar')?.getAttribute('style')).toContain('height: 100%');
+    fixture.componentRef.setInput('data', {
+      ...data,
+      minValue: '-5',
+      maxValue: '5',
+      nodes: [
+        { nodeId: 1, nodeName: 'Positive', value: '5' },
+        { nodeId: 2, nodeName: 'Zero', value: '0' },
+        { nodeId: 3, nodeName: 'Negative', value: '-5' },
+      ],
+    });
+    fixture.detectChanges();
+    expect(component.bars()[1].height).toBe(0);
+    expect(component.bars()[2].bottom).toBe(0);
+    expect(component.bars()[2].negative).toBe(true);
+    expect(component.scale().ticks.every((tick) => Number.isInteger(Number(tick.value)))).toBe(
+      true,
+    );
+    expect(element.querySelector('.chart-scroll')?.getAttribute('tabindex')).toBe('0');
   });
   it('paginates nodes only within this indicator/city/month without truncating the city ranking', () => {
     const { api, component } = setup();

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CityRank, formatValue, months, requestError } from '../models/indicators';
+import { CityRank, formatValue, months, requestError, typeLabel } from '../models/indicators';
 import { IndicatorsService } from '../services/indicators.service';
 @Component({
   selector: 'app-city-ranking',
@@ -24,32 +24,95 @@ import { IndicatorsService } from '../services/indicators.service';
       <p role="alert" class="error">{{ error() }}</p>
       <button type="button" (click)="load(chart().nodePage)">Reintentar</button>
     }
-    <ol
+    <p class="axis-title">{{ typeLabel(chart().indicator.measurementType) }}</p>
+    <div
+      class="chart-scroll"
       tabindex="0"
-      class="bars"
-      [attr.start]="(chart().nodePage - 1) * chart().nodePageSize + 1"
-      [attr.aria-label]="'Nodos de ' + chart().cityName"
+      role="region"
+      [attr.aria-label]="'Gráfico de barras verticales de nodos de ' + chart().cityName"
     >
-      @for (node of bars(); track node.nodeId) {
-        <li>
-          <div class="bar-label">
-            <span [title]="node.nodeName">{{ node.nodeName }}</span
-            ><strong>{{ formatValue(node.value, chart().indicator.measurementType) }}</strong>
+      <div class="vertical-chart" [style.min-width.px]="chartWidth()">
+        <div class="y-axis" aria-hidden="true">
+          @for (tick of scale().ticks; track tick.value) {
+            <span [style.bottom.%]="tick.position">{{
+              formatValue(tick.value, chart().indicator.measurementType)
+            }}</span>
+          }
+        </div>
+        <div class="plot">
+          <div class="grid-lines" aria-hidden="true">
+            @for (tick of scale().ticks; track tick.value) {
+              <span [style.bottom.%]="tick.position"></span>
+            }
+            <span class="zero-line" [style.bottom.%]="scale().zero"></span>
           </div>
-          <div class="bar-track" aria-hidden="true">
-            <span class="zero" [style.left.%]="node.zero"></span
-            ><span
-              class="bar"
-              [class.negative]="node.negative"
-              [style.left.%]="node.left"
-              [style.width.%]="node.width"
-            ></span>
-          </div>
-        </li>
-      } @empty {
-        <li>No hay nodos en esta página.</li>
-      }
-    </ol>
+          <ol
+            class="columns"
+            [style.grid-template-columns]="
+              'repeat(' + Math.max(1, chart().nodes.length) + ', minmax(0, 1fr))'
+            "
+            [attr.start]="(chart().nodePage - 1) * chart().nodePageSize + 1"
+            [attr.aria-label]="'Nodos de ' + chart().cityName"
+          >
+            @for (node of bars(); track node.nodeId) {
+              <li>
+                <div class="column">
+                  <strong
+                    class="value"
+                    [class.negative]="node.negative"
+                    [style.bottom.%]="node.negative ? node.bottom : node.bottom + node.height"
+                    >{{ formatValue(node.value, chart().indicator.measurementType) }}</strong
+                  >
+                  <span
+                    class="bar"
+                    aria-hidden="true"
+                    [class.negative]="node.negative"
+                    [style.bottom.%]="node.bottom"
+                    [style.height.%]="node.height"
+                    [title]="
+                      node.nodeName +
+                      ': ' +
+                      formatValue(node.value, chart().indicator.measurementType)
+                    "
+                  ></span>
+                </div>
+                <span class="node-name" [title]="node.nodeName">{{ node.nodeName }}</span>
+              </li>
+            } @empty {
+              <li>No hay nodos en esta página.</li>
+            }
+          </ol>
+          <p class="x-axis-title">Nodos</p>
+        </div>
+      </div>
+    </div>
+    <small class="scroll-hint">Desplaza el gráfico horizontalmente para ver todos los nodos.</small>
+    <details>
+      <summary>Ver valores</summary>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="'Valores de nodos de ' + chart().cityName"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Nodo</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (node of chart().nodes; track node.nodeId) {
+              <tr>
+                <td>{{ node.nodeName }}</td>
+                <td>{{ formatValue(node.value, chart().indicator.measurementType) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
     <nav class="pagination" aria-label="Paginación de nodos">
       <span>Página {{ chart().nodePage }} de {{ chart().totalNodePages || 1 }}</span
       ><button
@@ -76,8 +139,7 @@ import { IndicatorsService } from '../services/indicators.service';
     .ranking {
       margin-bottom: 0;
     }
-    header,
-    .bar-label {
+    header {
       display: flex;
       justify-content: space-between;
       gap: 0.75rem;
@@ -93,54 +155,126 @@ import { IndicatorsService } from '../services/indicators.service';
     small {
       display: block;
     }
-    .bars {
-      padding-left: 1.5rem;
-      margin: 1.25rem 0;
-      max-height: 28rem;
-      overflow: auto;
-    }
-    .bars li {
-      padding: 0.5rem 0.2rem 0.75rem;
-    }
-    .bar-label span {
-      overflow-wrap: anywhere;
-    }
-    .bar-label strong {
-      white-space: nowrap;
-      font-size: 0.9rem;
-    }
-    .bar-track {
-      position: relative;
-      height: 1rem;
-      background: #eef3f9;
-      border-radius: 0.25rem;
-      margin-top: 0.5rem;
-      overflow: hidden;
-    }
-    .bar {
-      position: absolute;
-      height: 100%;
-      background: #1268bc;
-      border-radius: 0.25rem;
-    }
-    .bar.negative {
-      background: #a52332;
-    }
-    .zero {
-      position: absolute;
-      width: 1px;
-      height: 100%;
-      background: #71849b;
-      z-index: 1;
-    }
     .badge {
       font-size: 0.75rem;
     }
-    @media (max-width: 480px) {
-      .bar-label {
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
+    .axis-title {
+      margin: 1rem 0 0;
+      color: #58718e;
+      font-size: 0.8rem;
+    }
+    .chart-scroll {
+      overflow: auto;
+      max-width: 100%;
+      padding: 2rem 0 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .vertical-chart {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 0;
+      padding-top: 0.5rem;
+    }
+    .y-axis {
+      height: 18rem;
+      position: relative;
+      font-size: 0.75rem;
+      color: #58718e;
+    }
+    .y-axis span {
+      position: absolute;
+      right: 0.75rem;
+      transform: translateY(50%);
+      white-space: nowrap;
+    }
+    .plot {
+      position: relative;
+      min-width: 0;
+    }
+    .grid-lines {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 18rem;
+      pointer-events: none;
+    }
+    .grid-lines span {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-bottom: 1px solid #e1e9f3;
+    }
+    .grid-lines .zero-line {
+      border-color: #71849b;
+    }
+    .columns {
+      position: relative;
+      display: grid;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 0.75rem;
+    }
+    .columns li {
+      min-width: 0;
+      text-align: center;
+    }
+    .column {
+      height: 18rem;
+      position: relative;
+      margin: 0 0.75rem;
+    }
+    .bar {
+      position: absolute;
+      width: 70%;
+      max-width: 4.5rem;
+      background: #1268bc;
+      border-radius: 0.3rem 0.3rem 0 0;
+      transform: translateX(-50%);
+      left: 50%;
+    }
+    .bar.negative {
+      background: #a52332;
+      border-radius: 0 0 0.3rem 0.3rem;
+    }
+    .value {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -0.35rem);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      z-index: 1;
+    }
+    .value.negative {
+      transform: translate(-50%, calc(100% + 0.35rem));
+    }
+    .node-name {
+      display: block;
+      margin-top: 2rem;
+      min-height: 3rem;
+      overflow-wrap: anywhere;
+      font-size: 0.8rem;
+      padding: 0 0.2rem;
+    }
+    .x-axis-title {
+      text-align: center;
+      color: #58718e;
+      font-size: 0.8rem;
+      margin-top: 1rem;
+    }
+    .scroll-hint {
+      color: #58718e;
+      font-size: 0.75rem;
+      margin: 0.5rem 0 1rem;
+    }
+    summary {
+      cursor: pointer;
+      padding: 0.75rem 0;
+      color: #003f7d;
+    }
+    .table-scroll table {
+      min-width: 20rem;
     }
   `,
 })
@@ -155,19 +289,53 @@ export class CityRanking {
   readonly loading = signal(false);
   readonly error = signal('');
   private readonly requests = new Subject<number | null>();
+  readonly Math = Math;
+  readonly typeLabel = typeLabel;
+  readonly chartWidth = computed(() => {
+    const data = this.chart();
+    const labelWidth = Math.max(
+      112,
+      ...data.nodes.map(
+        (node) => formatValue(node.value, data.indicator.measurementType).length * 7 + 24,
+      ),
+    );
+    return Math.max(420, data.nodes.length * labelWidth + 90);
+  });
+  axisLabel(value: string): string {
+    return Math.abs(Number(value)) >= 1000
+      ? new Intl.NumberFormat('es-CO', { notation: 'compact', maximumFractionDigits: 1 }).format(
+          Number(value),
+        )
+      : formatValue(value, this.chart().indicator.measurementType);
+  }
+  readonly scale = computed(() => {
+    const data = this.chart();
+    const rawMin = Math.min(0, Number(data.minValue));
+    const rawMax = Math.max(0, Number(data.maxValue));
+    const rawStep = (rawMax - rawMin) / 4 || 1;
+    const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+    const nice = [1, 2, 5, 10].find((factor) => factor * magnitude >= rawStep) ?? 10;
+    const step = Math.max(data.indicator.measurementType === 3 ? 1 : 0.01, nice * magnitude);
+    const min = Math.floor(rawMin / step) * step;
+    const max = Math.max(min + step, Math.ceil(rawMax / step) * step);
+    const range = max - min;
+    const count = Math.round(range / step);
+    const ticks = Array.from({ length: count + 1 }, (_, i) => ({
+      value: (min + i * step).toFixed(2),
+      position: (i / count) * 100,
+    }));
+    return { min, max, range, zero: (-min / range) * 100, ticks };
+  });
   readonly bars = computed(() => {
-    const data = this.chart(),
-      min = Math.min(0, Number(data.minValue)),
-      max = Math.max(0, Number(data.maxValue)),
-      range = max - min || 1;
-    return data.nodes.map((n) => ({
-      ...n,
-      negative: Number(n.value) < 0,
-      zero: (-min / range) * 100,
-      left: ((Math.min(0, Number(n.value)) - min) / range) * 100,
-      width: (Math.abs(Number(n.value)) / range) * 100,
+    const scale = this.scale();
+    return this.chart().nodes.map((node) => ({
+      ...node,
+      negative: Number(node.value) < 0,
+      bottom: ((Math.min(0, Number(node.value)) - scale.min) / scale.range) * 100,
+      height: (Math.abs(Number(node.value)) / scale.range) * 100,
     }));
   });
+
   constructor() {
     this.requests
       .pipe(

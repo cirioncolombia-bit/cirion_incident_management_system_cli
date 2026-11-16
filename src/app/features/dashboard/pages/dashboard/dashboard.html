@@ -68,16 +68,22 @@
     <button type="button" (click)="load()">Reintentar</button>
   }
   @if (appliedView() === 'city') {
-    <p class="notice">
-      Selecciona «Zonas calientes» para comparar sus valores registrados. Cada ciudad tiene su
-      propio gráfico, ordenado de mayor a menor para el mes y año seleccionados.
-    </p>
+    @if (!loading() && !error() && rankingResult(); as data) {
+      <p role="status">
+        {{ data.totalCount }} gráficos por ciudad · {{ months[appliedMonth() - 1] }}
+        {{ appliedYear() }}
+      </p>
+    }
     <div class="charts-grid">
       @for (city of rankingResult()?.rows ?? []; track city.indicator.id + '-' + city.cityId) {
         <app-city-ranking [data]="city" [filteredNodeId]="appliedNode()" />
       } @empty {
         @if (!loading() && !error()) {
-          <p class="card">No hay valores registrados para los filtros seleccionados.</p>
+          <p class="card">
+            No hay registros mensuales activos para {{ months[appliedMonth() - 1] }}
+            {{ appliedYear() }} con los filtros aplicados. Revisa el período, indicador, ciudad y
+            nodo. <a routerLink="/dashboard/records">Revisar registros mensuales</a>
+          </p>
         }
       }
     </div>
