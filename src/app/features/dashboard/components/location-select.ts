@@ -8,25 +8,27 @@ import { IndicatorsService } from '../services/indicators.service';
   selector: 'app-location-select',
   imports: [ReactiveFormsModule],
   template: ` <div class="picker">
-    <label
-      >{{ kind() === 'cities' ? 'Buscar ciudad' : 'Buscar nodo' }}
-      <span class="search"
-        ><input
-          type="search"
-          [attr.aria-label]="kind() === 'cities' ? 'Buscar ciudad' : 'Buscar nodo'"
-          [formControl]="search"
-          maxlength="200"
-          (keydown.enter)="$event.preventDefault(); load(1)"
-          placeholder="Nombre de la ubicación"
-        /><button
-          type="button"
-          (click)="load(1)"
-          [disabled]="disabled() || (kind() === 'nodes' && !parentCityId())"
+    @if (showSearch()) {
+      <label
+        >{{ kind() === 'cities' ? 'Buscar ciudad' : 'Buscar nodo' }}
+        <span class="search"
+          ><input
+            type="search"
+            [attr.aria-label]="kind() === 'cities' ? 'Buscar ciudad' : 'Buscar nodo'"
+            [formControl]="search"
+            maxlength="200"
+            (keydown.enter)="$event.preventDefault(); load(1)"
+            placeholder="Nombre de la ubicación"
+          /><button
+            type="button"
+            (click)="load(1)"
+            [disabled]="disabled() || (kind() === 'nodes' && !parentCityId())"
+          >
+            Buscar
+          </button></span
         >
-          Buscar
-        </button></span
-      >
-    </label>
+      </label>
+    }
     <label
       >{{ kind() === 'cities' ? 'Ciudad' : 'Nodo' }}
       <select
@@ -91,6 +93,10 @@ import { IndicatorsService } from '../services/indicators.service';
     }
   </div>`,
   styles: `
+    :host {
+      display: block;
+      min-width: 0;
+    }
     .picker {
       display: grid;
       gap: 0.75rem;
@@ -112,6 +118,7 @@ import { IndicatorsService } from '../services/indicators.service';
       color: #12365b;
     }
     select {
+      height: var(--dashboard-filter-height, auto);
       width: 100%;
     }
     .search,
@@ -147,6 +154,7 @@ export class LocationSelect {
   private readonly api = inject(IndicatorsService);
   readonly kind = input<'cities' | 'nodes'>('cities');
   readonly parentCityId = input<number | null>(null);
+  readonly showSearch = input(true);
   readonly includeInactive = input(false);
   readonly allowAll = input(false);
   readonly disabled = input(false);

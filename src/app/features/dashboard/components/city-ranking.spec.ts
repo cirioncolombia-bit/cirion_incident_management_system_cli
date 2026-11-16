@@ -94,6 +94,48 @@ describe('City node comparison', () => {
     });
     expect(component.chart().nodes[0].nodeName).toBe('Node C');
   });
+  it('keeps the global leader and position colors when moving to another node page', () => {
+    const { component, fixture, element } = setup();
+    expect(component.leader()?.nodeName).toBe('Node A');
+    expect(component.bars()[0].rank).toBe(1);
+    expect(element.querySelectorAll('.bar.rank-first')).toHaveLength(1);
+    component.load(2);
+    fixture.detectChanges();
+    expect(component.leader()?.nodeName).toBe('Node A');
+    expect(component.leader()?.value).toBe('30');
+    expect(component.bars()[0].rank).toBe(21);
+    expect(element.querySelector('.leader-name')?.textContent).toContain('Node A');
+    expect(element.querySelectorAll('.bar.rank-first')).toHaveLength(0);
+  });
+  it('shows accessible node details with focus or touch, dismisses with Escape and resets for a new period', () => {
+    const { component, fixture, element } = setup();
+    const button = element.querySelector<HTMLButtonElement>('.column-target')!;
+    button.dispatchEvent(new FocusEvent('focus'));
+    fixture.detectChanges();
+    const tooltip = element.querySelector('[role=tooltip]')!;
+    expect(tooltip.textContent).toContain('Node A');
+    expect(tooltip.textContent).toContain('Bogotá · Noviembre 2026');
+    expect(button.getAttribute('aria-describedby')).toBe(tooltip.id);
+    button.click();
+    component.hidePreview();
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(component.tooltipNode()?.nodeId).toBe(2);
+    button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(element.querySelector('[role=tooltip]')).toBeNull();
+    button.click();
+    fixture.detectChanges();
+    document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(component.tooltipNode()).toBeNull();
+    button.click();
+    fixture.detectChanges();
+    fixture.componentRef.setInput('data', { ...data, month: 12 });
+    fixture.detectChanges();
+    expect(component.tooltipNode()).toBeNull();
+    expect(component.pinnedNodeId()).toBeNull();
+  });
   it('cancels an obsolete node page when the main filters change', () => {
     const { api, component, fixture } = setup();
     const pending = new Subject<Page<CityRank>>();
