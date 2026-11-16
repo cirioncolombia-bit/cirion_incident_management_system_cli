@@ -1,0 +1,148 @@
+<section class="indicator-page">
+  <h1>Catálogo de indicadores</h1>
+  <p class="muted">Define los nombres y el tipo de medición de tus indicadores.</p>
+  <app-indicators-nav />
+  @if (canManage()) {
+    <form class="card" [formGroup]="form" (ngSubmit)="save()">
+      <h2>{{ editing() ? 'Editar indicador' : 'Nuevo indicador' }}</h2>
+      <fieldset [disabled]="saving()">
+        <div class="form-grid">
+          <label
+            >Nombre del indicador<input formControlName="name" maxlength="200" required
+          /></label>
+          <label
+            >Tipo de medición<select
+              aria-label="Tipo de medición"
+              formControlName="measurementType"
+            >
+              @for (type of types; track type.id) {
+                <option [ngValue]="type.id">{{ type.label }}</option>
+              }
+            </select></label
+          >
+        </div>
+        @if (editing()?.hasRecords) {
+          <p class="notice">
+            El tipo de medición no puede cambiar porque el indicador tiene registros. Crea un nuevo
+            indicador para usar otra medición.
+          </p>
+        }
+        @if (form.invalid && form.touched) {
+          <p class="error" role="alert">
+            Escribe un nombre de 1 a 200 caracteres y selecciona un tipo de medición.
+          </p>
+        }
+        <div class="actions">
+          <button class="primary" type="submit">
+            {{ saving() ? 'Guardando…' : 'Guardar indicador' }}</button
+          ><button type="button" (click)="reset()">{{ editing() ? 'Cancelar' : 'Limpiar' }}</button>
+        </div>
+      </fieldset>
+    </form>
+  }
+  @if (saveError()) {
+    <p class="error" role="alert">{{ saveError() }}</p>
+  }
+  @if (success()) {
+    <p class="success" role="status">{{ success() }}</p>
+  }
+  <section class="card">
+    <h2>Indicadores registrados</h2>
+    <form [formGroup]="filters" (ngSubmit)="search()">
+      <div class="form-grid">
+        <label>Nombre<input type="search" formControlName="search" maxlength="200" /></label
+        ><label
+          >Mostrar<select aria-label="Mostrar" formControlName="includeInactive">
+            <option [ngValue]="true">Activos e inactivos</option>
+            <option [ngValue]="false">Solo activos</option>
+          </select></label
+        >
+      </div>
+      <div class="actions"><button type="submit">Buscar</button></div>
+    </form>
+    @if (loading()) {
+      <p role="status">Cargando indicadores…</p>
+    }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+      <button type="button" (click)="load()">Reintentar</button>
+    }
+    @if (result(); as data) {
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Catálogo de indicadores">
+        <table>
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Indicador</th>
+              <th>Medición</th>
+              <th>Estado</th>
+              @if (canManage()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of data.rows; track row.id) {
+              <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ typeLabel(row.measurementType) }}</td>
+                <td>
+                  <span class="badge">{{ row.isActive ? 'Activo' : 'Inactivo' }}</span>
+                </td>
+                @if (canManage()) {
+                  <td>
+                    <div class="actions compact">
+                      <button
+                        type="button"
+                        [disabled]="!row.isActive || saving()"
+                        (click)="edit(row)"
+                        [attr.aria-label]="'Editar ' + row.name"
+                      >
+                        Editar</button
+                      ><button
+                        class="danger"
+                        type="button"
+                        [disabled]="!row.isActive || saving()"
+                        (click)="askDelete(row)"
+                        [attr.aria-label]="'Eliminar ' + row.name"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="canManage() ? 5 : 4">No hay indicadores para esta búsqueda.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <nav class="pagination" aria-label="Paginación del catálogo">
+        <span
+          >{{ data.totalCount }} indicadores · Página {{ data.page }} de
+          {{ data.totalPages || 1 }}</span
+        ><button
+          type="button"
+          [disabled]="loading() || data.page <= 1"
+          (click)="load(data.page - 1)"
+        >
+          Anterior</button
+        ><button
+          type="button"
+          [disabled]="loading() || data.page >= data.totalPages"
+          (click)="load(data.page + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  </section>
+  <app-delete-confirm
+    message="El indicador dejará de estar disponible para ingresar valores. Sus registros históricos seguirán visibles en los gráficos."
+    (confirmed)="remove()"
+  />
+</section>

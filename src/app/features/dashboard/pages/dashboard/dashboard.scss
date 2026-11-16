@@ -1,112 +1,50 @@
-@use '../../../../../styles/abstracts/mixins' as mixins;
-
-.dashboard-summary {
+.charts-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--cims-space-4);
-
-  margin-bottom: var(--cims-space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  gap: 1.25rem;
 }
-
-.dashboard-card {
+.chart-card {
+  margin-bottom: 0;
+}
+.chart-heading {
   display: flex;
-  flex-direction: column;
-  gap: var(--cims-space-3);
-
-  padding: var(--cims-space-6);
-
-  background: var(--cims-color-surface);
-
-  border: 1px solid var(--cims-color-border);
-  border-radius: 0.875rem;
+  gap: 0.75rem;
+  align-items: start;
+  justify-content: space-between;
 }
-
-.dashboard-card__top {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--cims-space-3);
+.chart-heading h2 {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
 }
-
-.dashboard-card__icon {
-  flex: 0 0 auto;
-
-  color: var(--cims-color-text-secondary);
-
-  font-weight: var(--cims-font-weight-semibold);
+svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
 }
-
-.dashboard-card__value {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.axis {
+  stroke: #b6cbe1;
+  stroke-width: 1;
 }
-
-.dashboard-card__value strong {
-  color: var(--cims-color-primary-dark);
-
-  font-size: var(--cims-font-size-3xl);
-  line-height: 1;
+.series-line {
+  stroke: #1268bc;
+  fill: none;
+  stroke-width: 3;
 }
-
-.dashboard-card__value span {
-  color: var(--cims-color-text-secondary);
+.series-point {
+  fill: #003f7d;
+  stroke: white;
+  stroke-width: 2;
 }
-
-.dashboard-card__trend {
-  margin: 0;
-
-  color: var(--cims-color-text-primary);
-
-  font-size: var(--cims-font-size-sm);
+svg text {
+  font-size: 11px;
+  fill: #4e6781;
 }
-
-.dashboard-card__trend span {
-  color: var(--cims-color-text-secondary);
+summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+  color: #003f7d;
 }
-
-.dashboard-card__trend--danger {
-  color: var(--cims-color-error);
-}
-
-.dashboard-card__trend--success {
-  color: var(--cims-color-success);
-}
-
-.dashboard-placeholder {
-  padding: var(--cims-space-8);
-
-  background: var(--cims-color-surface);
-
-  border: 1px solid var(--cims-color-border);
-  border-radius: 0.875rem;
-}
-
-.dashboard-placeholder h2 {
-  margin-bottom: var(--cims-space-2);
-
-  color: var(--cims-color-text-primary);
-}
-
-.dashboard-placeholder p {
-  color: var(--cims-color-text-secondary);
-}
-
-@include mixins.md {
-  .dashboard-summary {
-    grid-template-columns: repeat(
-      2,
-      minmax(0, 1fr)
-    );
-  }
-}
-
-@include mixins.lg {
-  .dashboard-summary {
-    grid-template-columns: repeat(
-      4,
-      minmax(0, 1fr)
-    );
-  }
+.chart-card table {
+  min-width: 18rem;
 }

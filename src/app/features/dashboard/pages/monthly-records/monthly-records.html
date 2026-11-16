@@ -1,0 +1,191 @@
+<section class="indicator-page">
+  <h1>Registros mensuales</h1>
+  <p class="muted">
+    Un valor por indicador, mes y año. La unidad corresponde al indicador seleccionado.
+  </p>
+  <app-indicators-nav />
+  @if (canManage()) {
+    <form class="card" [formGroup]="form" (ngSubmit)="save()">
+      <h2>{{ editing() ? 'Editar registro mensual' : 'Nuevo registro mensual' }}</h2>
+      <fieldset [disabled]="saving()">
+        <div class="form-grid">
+          <label
+            >Año<input
+              type="number"
+              formControlName="year"
+              min="1"
+              max="9999"
+              step="1"
+              required /></label
+          ><label
+            >Mes<select aria-label="Mes" formControlName="month">
+              @for (month of months; track month; let i = $index) {
+                <option [ngValue]="i + 1">{{ month }}</option>
+              }
+            </select></label
+          >
+        </div>
+        <div class="actions"></div>
+        <app-indicator-picker
+          [selected]="selected()"
+          [disabled]="saving()"
+          (selectedChange)="choose($event)"
+        />
+        @if (selected(); as indicator) {
+          <p class="notice">Medición: {{ typeLabel(indicator.measurementType) }}.</p>
+          @if (!indicator.isActive) {
+            <p class="error" role="alert">
+              Este indicador está inactivo. Selecciona uno activo para guardar.
+            </p>
+          }
+        }
+        <label
+          >Valor {{ selected() ? '(' + typeLabel(selected()!.measurementType) + ')' : ''
+          }}<input
+            type="text"
+            inputmode="decimal"
+            formControlName="value"
+            maxlength="20"
+            required
+            placeholder="Ejemplo: 1972082,00"
+          /><small
+            >Sin separadores de miles. Se admite punto o coma decimal, con hasta dos decimales;
+            Número entero no admite fracciones.</small
+          ></label
+        >
+        @if (form.invalid && form.touched) {
+          <p class="error" role="alert">
+            Revisa año, mes y valor. Para Número entero escribe un valor sin fracciones.
+          </p>
+        }
+        <div class="actions">
+          <button type="submit" class="primary" [disabled]="!selected()?.isActive">
+            {{ saving() ? 'Guardando…' : 'Guardar registro' }}</button
+          ><button type="button" (click)="reset()">{{ editing() ? 'Cancelar' : 'Limpiar' }}</button>
+        </div>
+      </fieldset>
+    </form>
+  }
+  @if (saveError()) {
+    <p class="error" role="alert">{{ saveError() }}</p>
+  }
+  @if (success()) {
+    <p class="success" role="status">{{ success() }}</p>
+  }
+  <section class="card">
+    <h2>Valores registrados</h2>
+    <form [formGroup]="filters" (ngSubmit)="search()">
+      <div class="form-grid">
+        <label>Año<input type="number" formControlName="year" min="1" max="9999" required /></label
+        ><label
+          >Mes<select aria-label="Mes" formControlName="month">
+            <option [ngValue]="null">Todos los meses</option>
+            @for (month of months; track month; let i = $index) {
+              <option [ngValue]="i + 1">{{ month }}</option>
+            }
+          </select></label
+        ><label
+          >Indicador<input
+            type="search"
+            formControlName="search"
+            maxlength="200"
+            placeholder="Nombre del indicador"
+        /></label>
+      </div>
+      <div class="actions">
+        <button type="submit">Buscar</button
+        ><button type="button" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    </form>
+    @if (filters.invalid && filters.touched) {
+      <p class="error" role="alert">Ingresa un año válido (1–9999).</p>
+    }
+    @if (loading()) {
+      <p role="status">Cargando registros…</p>
+    }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+      <button type="button" (click)="load()">Reintentar</button>
+    }
+    @if (result(); as data) {
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Registros mensuales">
+        <table>
+          <thead>
+            <tr>
+              <th>Año</th>
+              <th>Mes</th>
+              <th>Indicador</th>
+              <th>Valor</th>
+              @if (canManage()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of data.rows; track row.id) {
+              <tr>
+                <td>{{ row.year }}</td>
+                <td>{{ months[row.month - 1] }}</td>
+                <td>
+                  {{ row.indicatorName }}
+                  @if (!row.indicatorIsActive) {
+                    <span class="badge">Inactivo</span>
+                  }
+                </td>
+                <td>{{ formatValue(row.value, row.measurementType) }}</td>
+                @if (canManage()) {
+                  <td>
+                    <div class="actions compact">
+                      <button
+                        type="button"
+                        [disabled]="saving()"
+                        (click)="edit(row)"
+                        [attr.aria-label]="'Editar registro de ' + row.indicatorName"
+                      >
+                        Editar</button
+                      ><button
+                        type="button"
+                        class="danger"
+                        [disabled]="saving()"
+                        (click)="askDelete(row)"
+                        [attr.aria-label]="'Eliminar registro de ' + row.indicatorName"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="canManage() ? 5 : 4">No hay registros para este período.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <nav class="pagination" aria-label="Paginación de registros">
+        <span
+          >{{ data.totalCount }} registros · Página {{ data.page }} de
+          {{ data.totalPages || 1 }}</span
+        ><button
+          type="button"
+          [disabled]="loading() || data.page <= 1"
+          (click)="load(data.page - 1)"
+        >
+          Anterior</button
+        ><button
+          type="button"
+          [disabled]="loading() || data.page >= data.totalPages"
+          (click)="load(data.page + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  </section>
+  <app-delete-confirm
+    message="El registro dejará de aparecer en las consultas y los gráficos. El indicador conservará su tipo de medición."
+    (confirmed)="remove()"
+  />
+</section>

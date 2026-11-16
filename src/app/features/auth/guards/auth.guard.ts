@@ -10,7 +10,7 @@ export const authGuard: CanActivateChildFn = (route) => {
     const permission = route.data['permission'] as string | undefined;
     if (!permission) return true;
     return auth.loadCurrentUser().pipe(
-      map(user => user.permissions.includes(permission) ? true : router.createUrlTree(['/profile'])),
+      map(user => user.permissions.includes(permission) && !(route.data['internalOnly'] && user.isExternal) ? true : router.createUrlTree(['/profile'])),
       catchError(() => of(router.createUrlTree(['/login']))),
     );
   }
