@@ -8,19 +8,21 @@ import { IndicatorsService } from '../services/indicators.service';
   selector: 'app-indicator-picker',
   imports: [ReactiveFormsModule],
   template: ` <div class="picker">
-    <label
-      >Buscar indicador
-      <span class="search"
-        ><input
-          type="search"
-          aria-label="Buscar indicador"
-          [formControl]="search"
-          maxlength="200"
-          (keydown.enter)="$event.preventDefault(); load(1)"
-          placeholder="Nombre del indicador"
-        /><button type="button" (click)="load(1)" [disabled]="disabled()">Buscar</button></span
-      >
-    </label>
+    @if (showSearch()) {
+      <label
+        >Buscar indicador
+        <span class="search"
+          ><input
+            type="search"
+            aria-label="Buscar indicador"
+            [formControl]="search"
+            maxlength="200"
+            (keydown.enter)="$event.preventDefault(); load(1)"
+            placeholder="Nombre del indicador"
+          /><button type="button" (click)="load(1)" [disabled]="disabled()">Buscar</button></span
+        >
+      </label>
+    }
     <label
       >Indicador
       <select
@@ -70,6 +72,10 @@ import { IndicatorsService } from '../services/indicators.service';
     }
   </div>`,
   styles: `
+    :host {
+      display: block;
+      min-width: 0;
+    }
     .picker {
       display: grid;
       gap: 0.75rem;
@@ -91,6 +97,7 @@ import { IndicatorsService } from '../services/indicators.service';
       color: #12365b;
     }
     select {
+      height: var(--dashboard-filter-height, auto);
       width: 100%;
     }
     .search,
@@ -124,6 +131,7 @@ import { IndicatorsService } from '../services/indicators.service';
 })
 export class IndicatorPicker {
   private readonly api = inject(IndicatorsService);
+  readonly showSearch = input(true);
   readonly includeInactive = input(false);
   readonly allowAll = input(false);
   readonly disabled = input(false);

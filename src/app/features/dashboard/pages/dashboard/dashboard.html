@@ -5,9 +5,17 @@
     indicadores activos e inactivos.
   </p>
   <app-indicators-nav />
-  <form class="card" [formGroup]="filters" (ngSubmit)="search()">
+  <form class="card dashboard-filters" [formGroup]="filters" (ngSubmit)="search()">
     <h2>Filtrar gráficos</h2>
-    <div class="form-grid">
+    <div class="dashboard-filter-grid">
+      <app-indicator-picker
+        [showSearch]="false"
+        [selected]="selected()"
+        [includeInactive]="true"
+        [allowAll]="true"
+        (selectedChange)="selected.set($event)"
+      />
+
       <label
         >Vista<select
           aria-label="Vista del gráfico"
@@ -29,15 +37,15 @@
           }
         </select></label
       >
-    </div>
-    <div class="form-grid actions">
       <app-location-select
+        [showSearch]="false"
         kind="cities"
         [includeInactive]="true"
         [allowAll]="true"
         [selected]="city()"
         (selectedChange)="chooseCity($event)"
       /><app-location-select
+        [showSearch]="false"
         kind="nodes"
         [includeInactive]="true"
         [allowAll]="true"
@@ -46,12 +54,6 @@
         (selectedChange)="node.set($event)"
       />
     </div>
-    <app-indicator-picker
-      [selected]="selected()"
-      [includeInactive]="true"
-      [allowAll]="true"
-      (selectedChange)="selected.set($event)"
-    />
     @if (filters.invalid && filters.touched) {
       <p class="error" role="alert">Ingresa un año válido (1–9999).</p>
     }

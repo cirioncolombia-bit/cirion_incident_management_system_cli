@@ -48,3 +48,30 @@ summary {
 .chart-card table {
   min-width: 18rem;
 }
+
+.dashboard-filters {
+  --dashboard-filter-height: 2.75rem;
+}
+.dashboard-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.dashboard-filter-grid > * {
+  min-width: 0;
+}
+.dashboard-filter-grid select,
+.dashboard-filter-grid input {
+  height: var(--dashboard-filter-height);
+}
+@media (max-width: 900px) {
+  .dashboard-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .dashboard-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
