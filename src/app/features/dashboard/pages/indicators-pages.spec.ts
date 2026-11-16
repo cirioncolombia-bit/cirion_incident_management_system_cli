@@ -244,6 +244,25 @@ describe('Indicator dashboard', () => {
     expect(component.series()[0].records[0].value).toBe('1972082.25');
     expect(element.textContent).not.toContain('Open incidents');
   });
+  it('distinguishes an empty period from a failed request without the permanent hot-zone instruction', () => {
+    const { component, api, fixture, element } = setup(Dashboard);
+    api.cityCharts.mockReturnValueOnce(of(page([])));
+    component.filters.patchValue({ year: 2025, month: 10 });
+    component.search();
+    fixture.detectChanges();
+    expect(element.textContent).toContain('No hay registros mensuales activos para Octubre 2025');
+    expect(element.textContent).not.toContain('Selecciona «Zonas calientes»');
+    component.filters.controls.month.setValue(11);
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Octubre 2025');
+    api.cityCharts.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 500, error: { message: 'Server error' } })),
+    );
+    component.search();
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Server error');
+    expect(element.textContent).not.toContain('No hay registros mensuales activos');
+  });
   it('filters by year, month and indicator and never invents zero values for missing months', () => {
     const { component, api } = setup(Dashboard);
     component.selected.set(indicator);

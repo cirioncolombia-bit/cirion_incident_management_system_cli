@@ -1,4 +1,5 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,7 +25,14 @@ import { CityRanking } from '../../components/city-ranking';
 import { IndicatorPicker } from '../../components/indicator-picker';
 @Component({
   selector: 'app-dashboard',
-  imports: [CityRanking, ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker],
+  imports: [
+    RouterLink,
+    CityRanking,
+    ReactiveFormsModule,
+    IndicatorsNav,
+    LocationSelect,
+    IndicatorPicker,
+  ],
   templateUrl: './dashboard.html',
   styleUrls: ['../../indicators-shared.scss', './dashboard.scss'],
 })
@@ -63,6 +71,7 @@ export class Dashboard {
     nodeId: null as number | null,
   };
   readonly appliedYear = signal(currentYear());
+  readonly appliedMonth = signal(currentMonth());
   private readonly requests = new Subject<{
     view: 'city' | 'timeline';
     cityId: number | null;
@@ -113,24 +122,20 @@ export class Dashboard {
       .pipe(
         switchMap(({ view, ...query }) =>
           (view === 'city'
-            ? this.api
-                .cityCharts({ ...query, pageSize: 6 })
-                .pipe(
-                  map((data) => ({
-                    city: data as Page<CityRank> | null,
-                    timeline: null as Page<ChartSeries> | null,
-                    error: '',
-                  })),
-                )
-            : this.api
-                .charts({ ...query, pageSize: 6 })
-                .pipe(
-                  map((data) => ({
-                    city: null as Page<CityRank> | null,
-                    timeline: data as Page<ChartSeries> | null,
-                    error: '',
-                  })),
-                )
+            ? this.api.cityCharts({ ...query, pageSize: 6 }).pipe(
+                map((data) => ({
+                  city: data as Page<CityRank> | null,
+                  timeline: null as Page<ChartSeries> | null,
+                  error: '',
+                })),
+              )
+            : this.api.charts({ ...query, pageSize: 6 }).pipe(
+                map((data) => ({
+                  city: null as Page<CityRank> | null,
+                  timeline: data as Page<ChartSeries> | null,
+                  error: '',
+                })),
+              )
           ).pipe(
             catchError((error) => of({ city: null, timeline: null, error: requestError(error) })),
           ),
@@ -151,6 +156,7 @@ export class Dashboard {
     this.appliedView.set(this.applied.view);
     this.appliedNode.set(this.applied.nodeId);
     this.appliedYear.set(this.applied.year);
+    this.appliedMonth.set(this.applied.month ?? currentMonth());
     this.requests.next({ ...this.applied, page });
   }
   search() {
