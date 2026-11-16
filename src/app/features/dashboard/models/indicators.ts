@@ -80,6 +80,8 @@ export interface ChartSeries {
   records: MonthlyRecord[];
 }
 export interface Query {
+  nodePage?: number;
+  nodePageSize?: number;
   cityId?: number | null;
   nodeId?: number | null;
   page?: number;
@@ -120,4 +122,24 @@ export function requestError(error: unknown): string {
   if (e.status === 404)
     return 'El recurso no está disponible. Actualiza la página y verifica que el backend incluya el módulo de indicadores.';
   return e.error?.message || 'No fue posible completar la operación. Intenta nuevamente.';
+}
+
+export interface CityNodeRank {
+  nodeId: number;
+  nodeName: string;
+  value: string;
+}
+export interface CityRank {
+  indicator: Pick<Indicator, 'id' | 'name' | 'measurementType' | 'isActive'>;
+  cityId: number;
+  cityName: string;
+  year: number;
+  month: number;
+  nodes: CityNodeRank[];
+  nodePage: number;
+  nodePageSize: number;
+  nodeCount: number;
+  totalNodePages: number;
+  minValue: string;
+  maxValue: string;
 }

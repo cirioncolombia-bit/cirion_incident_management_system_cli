@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import {
   LocationOption,
   ChartSeries,
+  CityRank,
   Indicator,
   MeasurementType,
   MonthlyRecord,
@@ -31,6 +32,9 @@ export class IndicatorsService {
   }
   records(query: Query) {
     return this.get<Page<MonthlyRecord>>('/records', query);
+  }
+  cityCharts(query: Query) {
+    return this.get<Page<CityRank>>('/city-charts', query);
   }
   charts(query: Query) {
     return this.get<Page<ChartSeries>>('/charts', query);
