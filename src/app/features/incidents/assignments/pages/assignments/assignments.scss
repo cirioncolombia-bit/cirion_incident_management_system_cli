@@ -515,3 +515,50 @@ fieldset > label,
     display: block;
   }
 }
+
+.assignment-filters h2 {
+  margin-top: 0;
+}
+.assignment-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.assignment-filter-grid > label {
+  align-self: start;
+}
+.assignment-filter-grid input,
+.assignment-filter-grid select {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0.5rem 0.65rem;
+  font-weight: 400;
+}
+.assignment-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.filter-retry {
+  font-size: 0.75rem;
+  padding: 0.25rem;
+}
+@media (min-width: 600px) {
+  .assignment-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@include mixins.lg {
+  .assignment-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .assignment-filter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

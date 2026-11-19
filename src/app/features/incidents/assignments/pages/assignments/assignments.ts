@@ -8,11 +8,20 @@ import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import {
   Assignment,
   AssignmentWrite,
+  AssignmentListFilters,
   AssignmentsService,
   DeliveryLookup,
   Option,
   PortOption,
 } from '../../services/assignments.service';
+type LocationFilter = 'cityId' | 'nodeId' | 'gcoId' | 'fiberTrayId' | 'ftPlexPortId' | 'statusId';
+interface FilterChoice {
+  rows: Option[];
+  page: number;
+  more: boolean;
+  loading: boolean;
+  error: boolean;
+}
 @Component({
   selector: 'app-assignments',
   imports: [ReactiveFormsModule, DatePipe],
@@ -67,7 +76,125 @@ export class Assignments {
   private routeVersion = 0;
   private lookupVersion = 0;
   private portsVersion = 0;
-  readonly filters = this.fb.nonNullable.group({ search: ['', Validators.maxLength(200)] });
+  readonly filterFields = [
+    { key: 'search', label: 'Search', type: 'search', max: 200 },
+    { key: 'id', label: 'Assignment Id', type: 'number' },
+    { key: 'deliveryId', label: 'Delivery Id', type: 'number' },
+    { key: 'workOrderId', label: 'WorkOrder / DKO', type: 'text', max: 200 },
+    { key: 'clientId', label: 'Client Id', type: 'number' },
+    { key: 'clientName', label: 'Client name', type: 'text', max: 200 },
+    { key: 'equipmentName', label: 'Equipment', type: 'text', max: 100 },
+    { key: 'createdFrom', label: 'Created from', type: 'date' },
+    { key: 'createdTo', label: 'Created to', type: 'date' },
+    { key: 'updatedFrom', label: 'Updated from', type: 'date' },
+    { key: 'updatedTo', label: 'Updated to', type: 'date' },
+  ] as const;
+  readonly locationFilters: { key: LocationFilter; label: string; resource: string }[] = [
+    { key: 'cityId', label: 'City', resource: 'Cities' },
+    { key: 'nodeId', label: 'Node', resource: 'Nodes' },
+    { key: 'gcoId', label: 'GCO', resource: 'Gcos' },
+    { key: 'fiberTrayId', label: 'FiberTray', resource: 'FiberTrays' },
+    { key: 'ftPlexPortId', label: 'Port', resource: 'Ports' },
+    { key: 'statusId', label: 'Port Status', resource: 'PortStatuses' },
+  ];
+  readonly filterChoices = signal<Partial<Record<LocationFilter, FilterChoice>>>({});
+  readonly filterValidation = signal('');
+  private readonly choiceVersions: Partial<Record<LocationFilter, number>> = {};
+  private readonly previousChoices: Partial<Record<LocationFilter, string>> = {};
+  private filterChoicesLoaded = false;
+  private appliedFilters: AssignmentListFilters = {};
+  private positiveId() {
+    return ['', [Validators.pattern(/^[1-9]\d*$/), Validators.max(2147483647)]];
+  }
+  readonly filters = this.fb.nonNullable.group({
+    search: ['', Validators.maxLength(200)],
+    id: this.positiveId(),
+    deliveryId: this.positiveId(),
+    clientId: this.positiveId(),
+    workOrderId: ['', Validators.maxLength(200)],
+    clientName: ['', Validators.maxLength(200)],
+    equipmentName: ['', Validators.maxLength(100)],
+    cityId: [''],
+    nodeId: [''],
+    gcoId: [''],
+    fiberTrayId: [''],
+    ftPlexPortId: [''],
+    statusId: [''],
+    createdFrom: [''],
+    createdTo: [''],
+    updatedFrom: [''],
+    updatedTo: [''],
+  });
+  refreshFilterChoices() {
+    for (const field of this.locationFilters) this.loadFilterChoices(field.key);
+  }
+  loadFilterChoices(key: LocationFilter, append = false) {
+    const old = this.filterChoices()[key];
+    if (append && (!old?.more || old.loading)) return;
+    const page = append ? old!.page + 1 : 1;
+    const version = (this.choiceVersions[key] ?? 0) + 1;
+    this.choiceVersions[key] = version;
+    this.filterChoices.update((all) => ({
+      ...all,
+      [key]: { rows: append ? old!.rows : [], page, more: false, loading: true, error: false },
+    }));
+    const parents: AssignmentListFilters = {};
+    const index = this.locationFilters.findIndex((f) => f.key === key);
+    for (const field of this.locationFilters.slice(0, index))
+      parents[field.key] = this.filters.controls[field.key].value;
+    this.api
+      .filterOptions(this.locationFilters[index].resource, parents, page)
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: (rows) => {
+          if (this.choiceVersions[key] !== version) return;
+          this.filterChoices.update((all) => ({
+            ...all,
+            [key]: {
+              rows: append ? [...old!.rows, ...rows] : rows,
+              page,
+              more: rows.length === 100,
+              loading: false,
+              error: false,
+            },
+          }));
+        },
+        error: () => {
+          if (this.choiceVersions[key] !== version) return;
+          this.filterChoices.update((all) => ({
+            ...all,
+            [key]: {
+              rows: append ? old!.rows : [],
+              page: append ? old!.page : 0,
+              more: !!old?.more,
+              loading: false,
+              error: true,
+            },
+          }));
+        },
+      });
+  }
+  locationFilterChanged(key: LocationFilter) {
+    if (this.filters.controls[key].value === '__more__') {
+      this.filters.controls[key].setValue(this.previousChoices[key] ?? '', { emitEvent: false });
+      this.loadFilterChoices(key, true);
+      return;
+    }
+    this.previousChoices[key] = this.filters.controls[key].value;
+    const index = this.locationFilters.findIndex((f) => f.key === key);
+    for (const field of this.locationFilters.slice(index + 1)) {
+      this.filters.controls[field.key].setValue('');
+      this.previousChoices[field.key] = '';
+      this.loadFilterChoices(field.key);
+    }
+  }
+  clearFilters() {
+    this.filters.reset();
+    this.filterValidation.set('');
+    for (const field of this.locationFilters) this.previousChoices[field.key] = '';
+    this.refreshFilterChoices();
+    this.search();
+  }
   readonly form = this.fb.nonNullable.group({
     deliveryId: ['', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]],
     gcoId: ['', Validators.required],
@@ -184,10 +311,14 @@ export class Assignments {
     } else if (this.form.controls.deliveryId.valid) this.lookup();
   }
   loadList() {
+    if (!this.filterChoicesLoaded) {
+      this.filterChoicesLoaded = true;
+      this.refreshFilterChoices();
+    }
     const v = this.routeVersion;
     this.loading.set(true);
     this.api
-      .list(this.page(), this.filters.controls.search.value.trim())
+      .list(this.page(), this.appliedFilters.search ?? '', this.appliedFilters)
       .pipe(
         takeUntilDestroyed(this.destroy),
         finalize(() => {
@@ -211,12 +342,27 @@ export class Assignments {
       });
   }
   search() {
-    if (this.filters.invalid || this.loading()) return;
+    if (this.loading()) return;
+    const filters = this.filters.getRawValue();
+    if (
+      this.filters.invalid ||
+      (filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo) ||
+      (filters.updatedFrom && filters.updatedTo && filters.updatedFrom > filters.updatedTo)
+    ) {
+      this.filterValidation.set(
+        'Enter positive IDs and valid date ranges (start must not be after end).',
+      );
+      this.filters.markAllAsTouched();
+      return;
+    }
+    this.filterValidation.set('');
+    this.appliedFilters = { ...filters };
     this.page.set(1);
     this.error.set('');
     this.loadList();
   }
   paginate(n: number) {
+    if (this.loading() || this.page() + n < 1 || this.page() + n > this.totalPages()) return;
     this.page.update((p) => p + n);
     this.loadList();
   }

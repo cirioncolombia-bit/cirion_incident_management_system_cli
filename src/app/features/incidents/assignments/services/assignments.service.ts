@@ -2,6 +2,25 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+export interface AssignmentListFilters {
+  search?: string;
+  id?: string | number;
+  deliveryId?: string | number;
+  workOrderId?: string;
+  clientId?: string | number;
+  clientName?: string;
+  cityId?: string | number;
+  nodeId?: string | number;
+  gcoId?: string | number;
+  fiberTrayId?: string | number;
+  ftPlexPortId?: string | number;
+  statusId?: string | number;
+  equipmentName?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  updatedFrom?: string;
+  updatedTo?: string;
+}
 export interface Option {
   id: number;
   name: string;
@@ -69,9 +88,24 @@ export class AssignmentsService {
       .get<{ data: { permissions: string[] } }>(`${environment.apiUrl}/api/Auth/me`)
       .pipe(map((r) => r.data));
   }
-  list(page: number, search: string) {
+  private params(filters: AssignmentListFilters) {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== null && value !== undefined && String(value).trim())
+        params = params.set(key[0].toUpperCase() + key.slice(1), String(value).trim());
+    }
+    return params;
+  }
+  filterOptions(resource: string, filters: AssignmentListFilters, page = 1) {
+    return this.http
+      .get<{ data: Option[] }>(`${this.base}/filter-options/${resource}`, {
+        params: this.params(filters).set('Page', page).set('PageSize', 100),
+      })
+      .pipe(map((r) => r.data));
+  }
+  list(page: number, search: string, filters: AssignmentListFilters = {}) {
     return this.http.get<Page<Assignment>>(this.base, {
-      params: new HttpParams().set('Page', page).set('PageSize', 12).set('Search', search),
+      params: this.params(filters).set('Page', page).set('PageSize', 12).set('Search', search),
     });
   }
   detail(id: number) {

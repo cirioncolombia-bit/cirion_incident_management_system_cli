@@ -1,0 +1,58 @@
+// One brand hover policy, including component-local styles and links used as buttons.
+// Keep disabled controls and touch-only devices in their normal state.
+@media (hover: hover) {
+  :is(
+      button,
+      input[type='button'],
+      input[type='submit'],
+      input[type='reset'],
+      a[role='button'],
+      div[role='button'],
+      span[role='button'],
+      .cims-button,
+      .app-sidebar__link,
+      .app-sidebar__account-action,
+      .app-header__user-menu-item,
+      .indicator-nav a,
+      .delivery-page__create,
+      .delivery-card__view,
+      .delivery-card__link,
+      .delivery-table__icon-action,
+      .delivery-new__back,
+      .delivery-new__cancel,
+      .delivery-edit__back,
+      .delivery-edit-empty__action,
+      .delivery-detail__back,
+      .delivery-detail__edit,
+      .delivery-detail__secondary-action,
+      .delivery-detail-empty__action
+    ):hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--cims-color-accent) !important;
+    border-color: var(--cims-color-accent) !important;
+    color: #fff !important;
+
+    :where(span, strong, small, svg) {
+      color: inherit !important;
+    }
+  }
+
+  // Chart controls highlight the data mark instead of covering the plotting area.
+  button.column-target:hover:not(:disabled):not([aria-disabled='true']) {
+    background: transparent !important;
+    .bar {
+      background: var(--cims-color-accent) !important;
+    }
+  }
+
+  .timeline-point[role='button']:hover:not([aria-disabled='true']) {
+    .point-ring {
+      fill: var(--cims-color-accent) !important;
+      stroke: var(--cims-color-accent) !important;
+      opacity: 1;
+    }
+    .point-dot {
+      fill: #fff !important;
+      stroke: var(--cims-color-accent) !important;
+    }
+  }
+}

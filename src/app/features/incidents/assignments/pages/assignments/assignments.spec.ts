@@ -42,6 +42,7 @@ describe('Assignments workflow', () => {
           ],
         }),
       ),
+      filterOptions: vi.fn(() => of([])),
       list: vi.fn(() => of({ rows: [], totalCount: 0, totalPages: 0, page: 1 })),
       equipment: vi.fn(() =>
         of({ rows: [{ id: 12, name: 'Equipment A' }], page: 1, totalPages: 1, totalCount: 1 }),
@@ -138,6 +139,95 @@ describe('Assignments workflow', () => {
       [],
       expect.objectContaining({ queryParams: { id: 7 } }),
     );
+  });
+  it('filters GCO by city without requiring a node and clears dependent selections', () => {
+    const { component, api } = setup();
+    component.filters.patchValue({
+      cityId: '1',
+      nodeId: '2',
+      gcoId: '3',
+      fiberTrayId: '4',
+      ftPlexPortId: '5',
+      statusId: '6',
+    });
+    component.locationFilterChanged('cityId');
+    expect(component.filters.controls.nodeId.value).toBe('');
+    expect(component.filters.controls.gcoId.value).toBe('');
+    expect(component.filters.controls.statusId.value).toBe('');
+    expect(api.filterOptions).toHaveBeenCalledWith('Gcos', { cityId: '1', nodeId: '' }, 1);
+    component.filters.controls.nodeId.setValue('2');
+    component.locationFilterChanged('nodeId');
+    expect(api.filterOptions).toHaveBeenCalledWith(
+      'FiberTrays',
+      { cityId: '1', nodeId: '2', gcoId: '' },
+      1,
+    );
+  });
+  it('ignores stale option responses after changing the city again', () => {
+    const { component, api } = setup();
+    const old = new Subject<any[]>(),
+      current = new Subject<any[]>();
+    api.filterOptions.mockImplementation(((resource: string, filters: any) =>
+      resource === 'Nodes' ? (filters.cityId === '1' ? old : current) : of([])) as any);
+    component.filters.controls.cityId.setValue('1');
+    component.locationFilterChanged('cityId');
+    component.filters.controls.cityId.setValue('2');
+    component.locationFilterChanged('cityId');
+    current.next([{ id: 22, name: 'Cali node' }]);
+    old.next([{ id: 11, name: 'Bogotá node' }]);
+    expect(component.filterChoices().nodeId?.rows).toEqual([{ id: 22, name: 'Cali node' }]);
+  });
+  it('keeps applied filters during pagination and clears all fields on reset', () => {
+    const { component, api } = setup();
+    api.list.mockReturnValue(of({ rows: [], page: 1, totalCount: 14, totalPages: 2 }));
+    component.filters.patchValue({ cityId: '1', workOrderId: 'DKO-42', createdFrom: '2026-11-01' });
+    component.search();
+    component.filters.controls.workOrderId.setValue('unapplied');
+    component.paginate(1);
+    expect(api.list).toHaveBeenLastCalledWith(
+      2,
+      '',
+      expect.objectContaining({ cityId: '1', workOrderId: 'DKO-42', createdFrom: '2026-11-01' }),
+    );
+    component.clearFilters();
+    expect(component.page()).toBe(1);
+    expect(Object.values(component.filters.getRawValue()).every((v) => v === '')).toBe(true);
+    expect(api.list).toHaveBeenLastCalledWith(
+      1,
+      '',
+      expect.objectContaining({ cityId: '', workOrderId: '', createdFrom: '' }),
+    );
+  });
+  it('loads additional dropdown pages without changing the selected city', () => {
+    const { component, api } = setup();
+    api.filterOptions.mockImplementation(((resource: string, _: any, page: number) =>
+      of(
+        resource === 'Cities'
+          ? page === 1
+            ? Array.from({ length: 100 }, (_, i) => ({ id: i + 1, name: 'City ' + i }))
+            : [{ id: 101, name: 'City 101' }]
+          : [],
+      )) as any);
+    component.loadFilterChoices('cityId');
+    component.filters.controls.cityId.setValue('1');
+    component.locationFilterChanged('cityId');
+    component.filters.controls.cityId.setValue('__more__');
+    component.locationFilterChanged('cityId');
+    expect(component.filters.controls.cityId.value).toBe('1');
+    expect(component.filterChoices().cityId?.rows.length).toBe(101);
+    expect(component.filterChoices().cityId?.more).toBe(false);
+  });
+  it('rejects invalid IDs and reversed dates without requesting results', () => {
+    const { component, api } = setup();
+    api.list.mockClear();
+    component.filters.patchValue({ createdFrom: '2026-11-20', createdTo: '2026-11-01' });
+    component.search();
+    expect(api.list).not.toHaveBeenCalled();
+    expect(component.filterValidation()).toBeTruthy();
+    component.filters.reset();
+    component.filters.controls.id.setValue('0');
+    component.search();
+    expect(api.list).not.toHaveBeenCalled();
   });
   it('recognizes catalog colors with numbers, accents and different casing', () => {
     const { component } = setup();

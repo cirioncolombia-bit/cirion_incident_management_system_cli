@@ -49,14 +49,62 @@
       <p class="panel" role="status">Loading information…</p>
     }
     @if (mode() === 'list') {
-      <form class="filters panel" [formGroup]="filters" (ngSubmit)="search()">
-        <label
-          >Search<input
-            type="search"
-            formControlName="search"
-            maxlength="200"
-            placeholder="Workorder / DKO, client, node or GCO" /></label
-        ><button type="submit" [disabled]="loading()">Search</button>
+      <form
+        class="assignment-filters panel"
+        aria-label="Assignment filters"
+        [formGroup]="filters"
+        (ngSubmit)="search()"
+      >
+        <h2>Filter assignments</h2>
+        <div class="assignment-filter-grid">
+          @for (field of locationFilters; track field.key) {
+            <label
+              >{{ field.label }}
+              <select
+                [formControlName]="field.key"
+                [attr.aria-label]="field.label"
+                (change)="locationFilterChanged(field.key)"
+                [attr.aria-busy]="filterChoices()[field.key]?.loading"
+              >
+                <option value="">Any {{ field.label }}</option>
+                @for (option of filterChoices()[field.key]?.rows || []; track option.id) {
+                  <option [value]="option.id">{{ option.name }}</option>
+                }
+                @if (filterChoices()[field.key]?.loading) {
+                  <option disabled>Loading options…</option>
+                }
+                @if (filterChoices()[field.key]?.more) {
+                  <option value="__more__">Load more options…</option>
+                }
+              </select>
+              @if (filterChoices()[field.key]?.error) {
+                <button type="button" class="filter-retry" (click)="loadFilterChoices(field.key)">
+                  Could not load. Retry
+                </button>
+              }
+            </label>
+          }
+          @for (field of filterFields; track field.key) {
+            <label
+              >{{ field.label
+              }}<input
+                [type]="field.type"
+                [formControlName]="field.key"
+                [attr.min]="field.type === 'number' ? 1 : null"
+                [attr.max]="field.type === 'number' ? 2147483647 : null"
+                [attr.maxlength]="'max' in field ? field.max : null"
+            /></label>
+          }
+        </div>
+        @if (filterValidation()) {
+          <p class="alert error" role="alert">{{ filterValidation() }}</p>
+        }
+        <div class="assignment-filter-actions">
+          <button type="submit" class="primary" [disabled]="loading()">Search</button>
+          <button type="button" (click)="clearFilters()" [disabled]="loading()">
+            Clear filters
+          </button>
+        </div>
       </form>
       @if (!loading() && !error()) {
         <p class="count">{{ total() }} assignments</p>
@@ -217,9 +265,11 @@
         </div>
         @if (totalPages() > 0) {
           <nav class="pagination" aria-label="Assignment pagination">
-            <button (click)="paginate(-1)" [disabled]="page() <= 1">Previous</button
+            <button (click)="paginate(-1)" [disabled]="loading() || page() <= 1">Previous</button
             ><span>{{ page() }} / {{ totalPages() }}</span
-            ><button (click)="paginate(1)" [disabled]="page() >= totalPages()">Next</button>
+            ><button (click)="paginate(1)" [disabled]="loading() || page() >= totalPages()">
+              Next
+            </button>
           </nav>
         }
       }
