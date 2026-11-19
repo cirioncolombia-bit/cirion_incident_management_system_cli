@@ -26,7 +26,7 @@
       .delivery-detail__edit,
       .delivery-detail__secondary-action,
       .delivery-detail-empty__action
-    ):hover:not(:disabled):not([aria-disabled='true']) {
+    ):hover:not(:disabled):not([aria-disabled='true']):not(.app-header__user) {
     background: var(--cims-color-accent) !important;
     border-color: var(--cims-color-accent) !important;
     color: #fff !important;

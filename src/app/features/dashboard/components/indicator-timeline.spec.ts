@@ -99,4 +99,53 @@ describe('Monthly indicator evolution', () => {
     expect(component.active()).toBeNull();
     expect(component.pinned()).toBeNull();
   });
+  it('expands the same monthly series without duplicate charts or altered values and restores focus', async () => {
+    const { fixture, component } = setup();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.showModal = vi.fn();
+    dialog.close = vi.fn();
+    const before = component.geometry();
+    const originalOverflow = document.body.style.overflow;
+    component.openZoom();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(dialog.showModal).toHaveBeenCalledOnce();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(dialog.getAttribute('aria-label')).toContain(
+      'Zonas calientes · Bogotá · AMERICAS · 2024',
+    );
+    expect(fixture.nativeElement.querySelector('.timeline-slot .timeline-card')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.timeline-card')).toHaveLength(1);
+    expect(dialog.querySelectorAll('.timeline-point')).toHaveLength(5);
+    expect(component.geometry()).toBe(before);
+    expect(dialog.textContent).toContain('7');
+    component.closeZoom();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(dialog.close).toHaveBeenCalledOnce();
+    expect(document.body.style.overflow).toBe(originalOverflow);
+    expect(fixture.nativeElement.querySelector('.timeline-slot .timeline-card')).not.toBeNull();
+    expect(document.activeElement?.getAttribute('aria-label')).toContain(
+      'Ampliar gráfico de Zonas calientes',
+    );
+  });
+  it('allows expanding empty charts and restores scrolling on Escape and destruction', () => {
+    const { fixture, component } = setup({ ...data, records: [] });
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.showModal = vi.fn();
+    dialog.close = vi.fn();
+    const originalOverflow = document.body.style.overflow;
+    component.openZoom();
+    fixture.detectChanges();
+    expect(component.expanded()).toBe(true);
+    const cancel = new Event('cancel', { cancelable: true });
+    dialog.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(component.expanded()).toBe(false);
+    expect(document.body.style.overflow).toBe(originalOverflow);
+    component.openZoom();
+    fixture.detectChanges();
+    fixture.destroy();
+    expect(document.body.style.overflow).toBe(originalOverflow);
+  });
 });

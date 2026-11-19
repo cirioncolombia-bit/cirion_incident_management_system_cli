@@ -1,4 +1,17 @@
-import { Component, ElementRef, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  ViewChild,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChartSeries,
   MonthlyRecord,
@@ -16,6 +29,7 @@ interface TimelinePoint {
 }
 @Component({
   selector: 'app-indicator-timeline',
+  imports: [NgTemplateOutlet],
   templateUrl: './indicator-timeline.html',
   styleUrls: ['../indicators-shared.scss', './indicator-timeline.scss'],
   host: {
@@ -26,8 +40,57 @@ interface TimelinePoint {
   },
 })
 export class IndicatorTimeline {
+  @ViewChild('zoomDialog', { static: true }) private zoomDialog!: ElementRef<HTMLDialogElement>;
+  readonly expanded = signal(false);
+  inlineHeight = 0;
+  private readonly injector = inject(Injector);
+  private previousBodyOverflow = '';
+  openZoom() {
+    if (this.expanded()) return;
+    this.inlineHeight =
+      this.hostElement.nativeElement.querySelector('.timeline-card')?.getBoundingClientRect()
+        .height ?? 0;
+    this.dismissTooltip();
+    this.previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    this.expanded.set(true);
+    this.zoomDialog.nativeElement.showModal();
+    afterNextRender(
+      () => {
+        const dialog = this.zoomDialog.nativeElement;
+        dialog.scrollTop = 0;
+        dialog.scrollLeft = 0;
+        dialog.querySelector<HTMLButtonElement>('.chart-zoom')?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
+  }
+  closeZoom(event?: Event) {
+    event?.preventDefault();
+    this.zoomDialog.nativeElement.close();
+    this.finishZoom();
+  }
+  finishZoom() {
+    if (!this.expanded()) return;
+    this.expanded.set(false);
+    this.dismissTooltip();
+    document.body.style.overflow = this.previousBodyOverflow;
+    afterNextRender(
+      () =>
+        this.hostElement.nativeElement
+          .querySelector<HTMLButtonElement>('.timeline-slot .chart-zoom')
+          ?.focus({ preventScroll: true }),
+      { injector: this.injector },
+    );
+  }
+
   readonly data = input.required<ChartSeries>();
   readonly year = input.required<number>();
+  readonly zoomLabel = computed(() =>
+    [this.data().indicator.name, this.data().cityName, this.data().nodeName, this.year()]
+      .filter(Boolean)
+      .join(' · '),
+  );
   readonly formatValue = formatValue;
   readonly months = months;
   readonly typeLabel = typeLabel;
@@ -103,6 +166,9 @@ export class IndicatorTimeline {
     return { points, line, areas, ticks, zero: y(0) };
   });
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      if (this.expanded()) document.body.style.overflow = this.previousBodyOverflow;
+    });
     effect(() => {
       this.data();
       this.year();

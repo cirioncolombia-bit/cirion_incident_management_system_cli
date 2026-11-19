@@ -98,11 +98,20 @@
   justify-content: center;
 
   padding: var(--cims-space-8) var(--cims-space-6);
+  background: linear-gradient(145deg, #f6f8fb, #edf3fa);
 }
 
 .login__container {
   width: 100%;
-  max-width: 28rem;
+  max-width: 32rem;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  background: var(--cims-color-surface);
+  border: 1px solid #dce5ef;
+  border-radius: 1.25rem;
+  box-shadow:
+    0 20px 56px -18px rgb(0 40 85 / 24%),
+    0 4px 12px rgb(0 40 85 / 7%);
 }
 
 .login__header {
@@ -192,6 +201,8 @@
 
 .login__options {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--cims-space-3);
   align-items: center;
   justify-content: space-between;
   gap: var(--cims-space-4);
@@ -260,7 +271,14 @@
   }
 }
 
-.login__notice { padding: 1rem; margin-bottom: 1rem; border-radius: .65rem; color: #186444; background: #e4f5ed; overflow-wrap: anywhere; }
+.login__notice {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.65rem;
+  color: #186444;
+  background: #e4f5ed;
+  overflow-wrap: anywhere;
+}
 
 .login__form .login__forgot {
   min-height: 2.75rem;
@@ -288,8 +306,12 @@
   color: var(--cims-color-text-primary);
   background: #fff;
 
-  &::backdrop { background: rgb(0 25 50 / 45%); }
-  p { margin: 1rem 0; }
+  &::backdrop {
+    background: rgb(0 25 50 / 45%);
+  }
+  p {
+    margin: 1rem 0;
+  }
   button {
     width: 100%;
     min-height: 2.75rem;

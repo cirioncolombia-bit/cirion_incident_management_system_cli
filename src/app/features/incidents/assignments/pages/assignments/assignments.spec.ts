@@ -86,6 +86,26 @@ describe('Assignments workflow', () => {
     component.trayChanged();
     component.selectPort(port);
   }
+  it('does not fetch assignments on entry, refresh, clear or returning to the list until Search', () => {
+    const { component, api, fixture, params } = setup();
+    expect(api.list).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.assignment-table')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('click Search to load assignments');
+    component.reload();
+    component.clearFilters();
+    expect(api.list).not.toHaveBeenCalled();
+    component.search();
+    fixture.detectChanges();
+    expect(api.list).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.textContent).toContain('No assignments to display.');
+    params.next(convertToParamMap({}));
+    fixture.detectChanges();
+    expect(api.list).toHaveBeenCalledTimes(1);
+    expect(component.hasSearched()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.assignment-table')).toBeNull();
+    component.search();
+    expect(api.list).toHaveBeenCalledTimes(2);
+  });
   function listRow() {
     return {
       id: 7,
@@ -105,6 +125,7 @@ describe('Assignments workflow', () => {
   }
   it('renders desktop columns and navigates from the same eye and pencil actions as Delivery', () => {
     const { component, fixture, router } = setup();
+    component.hasSearched.set(true);
     component.rows.set([listRow()]);
     fixture.detectChanges();
     const table: HTMLTableElement = fixture.nativeElement.querySelector('.assignment-table');
@@ -139,6 +160,7 @@ describe('Assignments workflow', () => {
   });
   it('keeps mobile card details and permits readonly users to view but not edit', () => {
     const { component, fixture, router } = setup(['assignments.read']);
+    component.hasSearched.set(true);
     component.rows.set([{ ...listRow(), workOrderId: null, clientName: null }]);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[title="Edit assignment"]')).toBeNull();
@@ -154,6 +176,7 @@ describe('Assignments workflow', () => {
   });
   it('shows WorkOrder even without a Delivery link and keeps mobile identifiers separate', () => {
     const { component, fixture } = setup();
+    component.hasSearched.set(true);
     component.rows.set([{ ...listRow(), deliveryId: null }]);
     fixture.detectChanges();
     const card: HTMLElement = fixture.nativeElement.querySelector('.assignment-card');
@@ -219,11 +242,9 @@ describe('Assignments workflow', () => {
     component.clearFilters();
     expect(component.page()).toBe(1);
     expect(Object.values(component.filters.getRawValue()).every((v) => v === '')).toBe(true);
-    expect(api.list).toHaveBeenLastCalledWith(
-      1,
-      '',
-      expect.objectContaining({ cityId: '', workOrderId: '', createdFrom: '' }),
-    );
+    expect(api.list).toHaveBeenCalledTimes(2);
+    expect(component.hasSearched()).toBe(false);
+    expect(component.rows()).toEqual([]);
   });
   it('loads additional dropdown pages without changing the selected city', () => {
     const { component, api } = setup();

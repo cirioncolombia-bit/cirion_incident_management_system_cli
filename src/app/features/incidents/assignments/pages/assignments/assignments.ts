@@ -51,6 +51,7 @@ export class Assignments {
   readonly mode = signal<'list' | 'form' | 'detail'>('list');
   readonly id = signal<number | null>(null);
   readonly rows = signal<Assignment[]>([]);
+  readonly hasSearched = signal(false);
   readonly detail = signal<Assignment | null>(null);
   readonly delivery = signal<DeliveryLookup | null>(null);
   readonly statuses = signal<(Option & { requiresEquipment?: boolean })[]>([]);
@@ -193,7 +194,16 @@ export class Assignments {
     this.filterValidation.set('');
     for (const field of this.locationFilters) this.previousChoices[field.key] = '';
     this.refreshFilterChoices();
-    this.search();
+    this.resetListState();
+  }
+  private resetListState() {
+    this.hasSearched.set(false);
+    this.rows.set([]);
+    this.page.set(1);
+    this.total.set(0);
+    this.totalPages.set(0);
+    this.appliedFilters = {};
+    this.error.set('');
   }
   readonly form = this.fb.nonNullable.group({
     deliveryId: ['', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]],
@@ -248,6 +258,7 @@ export class Assignments {
       this.mode.set(
         p.has('new') ? 'form' : id !== null ? (p.has('edit') ? 'form' : 'detail') : 'list',
       );
+      if (this.mode() === 'list') this.resetListState();
       if (this.canRead()) this.reload();
     });
     this.loadAccess();
@@ -303,14 +314,20 @@ export class Assignments {
     this.error.set('');
     if (this.statuses().length === 0) this.loadOptions();
     if (id !== null) this.loadDetail(id);
-    else if (this.mode() === 'list') this.loadList();
-    else if (this.delivery() && this.form.controls.gcoId.value) {
+    else if (this.mode() === 'list') {
+      if (!this.filterChoicesLoaded) {
+        this.filterChoicesLoaded = true;
+        this.refreshFilterChoices();
+      }
+      if (this.hasSearched()) this.loadList();
+    } else if (this.delivery() && this.form.controls.gcoId.value) {
       this.selectedPort.set(null);
       this.form.patchValue({ statusId: '', equipmentName: '' });
       this.loadPorts();
     } else if (this.form.controls.deliveryId.valid) this.lookup();
   }
   loadList() {
+    if (!this.canRead() || !this.hasSearched() || this.mode() !== 'list') return;
     if (!this.filterChoicesLoaded) {
       this.filterChoicesLoaded = true;
       this.refreshFilterChoices();
@@ -342,7 +359,7 @@ export class Assignments {
       });
   }
   search() {
-    if (this.loading()) return;
+    if (this.loading() || !this.canRead() || this.mode() !== 'list') return;
     const filters = this.filters.getRawValue();
     if (
       this.filters.invalid ||
@@ -356,13 +373,20 @@ export class Assignments {
       return;
     }
     this.filterValidation.set('');
+    this.hasSearched.set(true);
     this.appliedFilters = { ...filters };
     this.page.set(1);
     this.error.set('');
     this.loadList();
   }
   paginate(n: number) {
-    if (this.loading() || this.page() + n < 1 || this.page() + n > this.totalPages()) return;
+    if (
+      !this.hasSearched() ||
+      this.loading() ||
+      this.page() + n < 1 ||
+      this.page() + n > this.totalPages()
+    )
+      return;
     this.page.update((p) => p + n);
     this.loadList();
   }
