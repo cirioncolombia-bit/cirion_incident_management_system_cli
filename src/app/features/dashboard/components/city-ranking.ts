@@ -312,6 +312,7 @@ import { IndicatorsService } from '../services/indicators.service';
       min-width: 0;
     }
     .chart-zoom {
+      margin-inline-start: auto;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -338,11 +339,13 @@ import { IndicatorsService } from '../services/indicators.service';
       overscroll-behavior: contain;
     }
     .chart-fullscreen header {
-      position: sticky;
-      top: 0;
-      z-index: 3;
-      background: #fff;
+      position: static;
       padding-block: 0.5rem;
+    }
+    .chart-fullscreen .chart-zoom {
+      background: var(--cims-color-accent);
+      border-color: var(--cims-color-accent);
+      color: #fff;
     }
     .chart-fullscreen::backdrop {
       background: #00285599;
@@ -714,7 +717,12 @@ export class CityRanking {
     this.expanded.set(true);
     this.zoomDialog.nativeElement.showModal();
     afterNextRender(
-      () => this.zoomDialog.nativeElement.querySelector<HTMLButtonElement>('.chart-zoom')?.focus(),
+      () => {
+        const dialog = this.zoomDialog.nativeElement;
+        dialog.scrollTop = 0;
+        dialog.scrollLeft = 0;
+        dialog.querySelector<HTMLButtonElement>('.chart-zoom')?.focus({ preventScroll: true });
+      },
       { injector: this.injector },
     );
   }
