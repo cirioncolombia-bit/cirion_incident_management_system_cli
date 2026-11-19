@@ -1,4 +1,8 @@
-<section class="assignments" aria-labelledby="page-title">
+<section
+  class="assignments"
+  [class.assignments--list]="mode() === 'list'"
+  aria-labelledby="page-title"
+>
   <header class="page-header">
     <div>
       <p class="eyebrow">Network and services</p>
