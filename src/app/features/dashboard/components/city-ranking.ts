@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   Component,
   DestroyRef,
@@ -7,6 +8,9 @@ import {
   input,
   signal,
   ElementRef,
+  ViewChild,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,207 +26,269 @@ import {
 import { IndicatorsService } from '../services/indicators.service';
 @Component({
   selector: 'app-city-ranking',
+  imports: [NgTemplateOutlet],
   host: {
     '(document:pointerdown)': 'outsidePointer($event)',
     '(window:scroll)': 'repositionTooltip()',
     '(window:resize)': 'dismissTooltip()',
     '(keydown.escape)': 'dismissTooltip()',
   },
-  template: ` <article
-    class="card ranking"
-    [attr.aria-label]="chart().indicator.name + ' — ' + chart().cityName"
-  >
-    <header>
-      <span class="city-marker" aria-hidden="true">▥</span>
-      <h2>{{ chart().cityName }}</h2>
-      @if (!chart().indicator.isActive) {
-        <span class="badge">Indicador inactivo</span>
-      }
-    </header>
-    <p>{{ chart().indicator.name }} · {{ rankingPeriod(chart()) }}</p>
-    <small
-      >{{
-        chart().isAnnual
-          ? chart().aggregation === 'average'
-            ? 'Promedio de meses registrados'
-            : 'Suma de meses registrados'
-          : 'Valores registrados'
-      }}
-      · Mayor a menor · {{ chart().nodeCount }} nodos</small
-    >
-    <div class="city-highlights">
-      @if (leader(); as node) {
-        <div class="leader-summary">
-          <span class="metric-label">Nodo líder · selección actual</span
-          ><strong class="leader-name">{{ node.nodeName }}</strong
-          ><span class="leader-value">{{
-            formatValue(node.value, chart().indicator.measurementType)
-          }}</span>
-        </div>
-      }
-      <div class="node-summary">
-        <span class="metric-label">Nodos con registro</span><strong>{{ chart().nodeCount }}</strong>
-      </div>
-    </div>
-    <div class="rank-legend" aria-label="Colores por posición">
-      <span class="legend-item first">1.º</span><span class="legend-item second">2.º</span
-      ><span class="legend-item third">3.º</span><span class="legend-item other">Otros</span>
-    </div>
-    @if (loading()) {
-      <p role="status">Cargando nodos…</p>
-    }
-    @if (error()) {
-      <p role="alert" class="error">{{ error() }}</p>
-      <button type="button" (click)="load(chart().nodePage)">Reintentar</button>
-    }
-    <p class="axis-title">{{ typeLabel(chart().indicator.measurementType) }}</p>
-    <div
-      class="chart-scroll"
-      (scroll)="dismissTooltip()"
-      tabindex="0"
-      role="region"
-      [attr.aria-label]="'Gráfico de barras verticales de nodos de ' + chart().cityName"
-    >
-      <div class="vertical-chart" [style.min-width.px]="chartWidth()">
-        <div class="y-axis" aria-hidden="true">
-          @for (tick of scale().ticks; track tick.value) {
-            <span [style.bottom.%]="tick.position">{{
-              formatValue(tick.value, chart().indicator.measurementType)
-            }}</span>
-          }
-        </div>
-        <div class="plot">
-          <div class="grid-lines" aria-hidden="true">
-            @for (tick of scale().ticks; track tick.value) {
-              <span [style.bottom.%]="tick.position"></span>
+  template: ` <ng-template #chartContent
+      ><article
+        class="card ranking"
+        [attr.aria-label]="chart().indicator.name + ' — ' + chart().cityName"
+      >
+        <header>
+          <div class="city-title">
+            <span class="city-marker" aria-hidden="true">▥</span>
+            <h2>{{ chart().cityName }}</h2>
+            @if (!chart().indicator.isActive) {
+              <span class="badge">Indicador inactivo</span>
             }
-            <span class="zero-line" [style.bottom.%]="scale().zero"></span>
           </div>
-          <ol
-            class="columns"
-            [style.grid-template-columns]="
-              'repeat(' + Math.max(1, chart().nodes.length) + ', minmax(0, 1fr))'
+          <button
+            type="button"
+            class="chart-zoom"
+            [attr.aria-label]="
+              (expanded() ? 'Cerrar gráfico ampliado de ' : 'Ampliar gráfico de ') +
+              chart().cityName
             "
-            [attr.start]="(chart().nodePage - 1) * chart().nodePageSize + 1"
-            [attr.aria-label]="'Nodos de ' + chart().cityName"
+            [attr.aria-haspopup]="expanded() ? null : 'dialog'"
+            [title]="expanded() ? 'Cerrar' : 'Ampliar gráfico'"
+            (click)="expanded() ? closeZoom() : openZoom()"
           >
-            @for (node of bars(); track node.nodeId) {
-              <li>
-                <div class="column">
-                  <strong
-                    class="value"
-                    [class.negative]="node.negative"
-                    [style.bottom.%]="node.negative ? node.bottom : node.bottom + node.height"
-                    >{{ formatValue(node.value, chart().indicator.measurementType) }}</strong
-                  >
-                  <button
-                    type="button"
-                    class="column-target"
-                    [disabled]="loading()"
-                    [class.is-selected]="tooltipNode()?.nodeId === node.nodeId"
-                    [attr.aria-label]="nodeLabel(node)"
-                    [attr.aria-describedby]="
-                      tooltipNode()?.nodeId === node.nodeId ? tooltipId() : null
-                    "
-                    [attr.aria-pressed]="pinnedNodeId() === node.nodeId"
-                    (pointerenter)="previewNode(node, $event)"
-                    (pointerleave)="hidePreview()"
-                    (focus)="previewNode(node, $event)"
-                    (blur)="hidePreview()"
-                    (click)="toggleNode(node, $event)"
-                  >
-                    <span
-                      class="bar"
-                      aria-hidden="true"
-                      [class.negative]="node.negative"
-                      [class.rank-first]="node.rank === 1"
-                      [class.rank-second]="node.rank === 2"
-                      [class.rank-third]="node.rank === 3"
-                      [style.--bar-delay]="(node.index % 8) * 30 + 'ms'"
-                      [style.bottom.%]="node.bottom"
-                      [style.height.%]="node.height"
-                    ></span>
-                  </button>
-                </div>
-                <span class="node-name" [title]="node.nodeName"
-                  ><span
-                    class="node-rank"
-                    [class.rank-first]="node.rank === 1"
-                    [class.rank-second]="node.rank === 2"
-                    [class.rank-third]="node.rank === 3"
-                    >#{{ node.rank }}</span
-                  >{{ node.nodeName }}</span
-                >
-              </li>
-            } @empty {
-              <li>No hay nodos en esta página.</li>
-            }
-          </ol>
-          <p class="x-axis-title">Nodos</p>
+            <svg
+              aria-hidden="true"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              @if (expanded()) {
+                <path d="m6 6 12 12M18 6 6 18" />
+              } @else {
+                <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M3 3l6 6m12-6-6 6M3 21l6-6m12 6-6-6" />
+              }
+            </svg>
+          </button>
+        </header>
+        <p>{{ chart().indicator.name }} · {{ rankingPeriod(chart()) }}</p>
+        <small
+          >{{
+            chart().isAnnual
+              ? chart().aggregation === 'average'
+                ? 'Promedio de meses registrados'
+                : 'Suma de meses registrados'
+              : 'Valores registrados'
+          }}
+          · Mayor a menor · {{ chart().nodeCount }} nodos</small
+        >
+        <div class="city-highlights">
+          @if (leader(); as node) {
+            <div class="leader-summary">
+              <span class="metric-label">Nodo líder · selección actual</span
+              ><strong class="leader-name">{{ node.nodeName }}</strong
+              ><span class="leader-value">{{
+                formatValue(node.value, chart().indicator.measurementType)
+              }}</span>
+            </div>
+          }
+          <div class="node-summary">
+            <span class="metric-label">Nodos con registro</span
+            ><strong>{{ chart().nodeCount }}</strong>
+          </div>
         </div>
-      </div>
-    </div>
-    <small class="scroll-hint">Desplaza el gráfico horizontalmente para ver todos los nodos.</small>
-    <details>
-      <summary>Ver valores</summary>
-      <div
-        class="table-scroll"
-        tabindex="0"
-        role="region"
-        [attr.aria-label]="'Valores de nodos de ' + chart().cityName"
-      >
-        <table>
-          <thead>
-            <tr>
-              <th>Nodo</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (node of chart().nodes; track node.nodeId) {
-              <tr>
-                <td>{{ node.nodeName }}</td>
-                <td>{{ formatValue(node.value, chart().indicator.measurementType) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </details>
-    @if (tooltipNode(); as node) {
-      <div
-        role="tooltip"
-        class="node-tooltip"
-        [id]="tooltipId()"
-        [style.left.px]="tooltipPosition().x"
-        [style.top.px]="tooltipPosition().y"
-      >
-        <small>Posición {{ node.rank }}</small
-        ><strong>{{ node.nodeName }}</strong
-        ><span>{{ chart().cityName }} · {{ rankingPeriod(chart()) }}</span
-        ><b>{{ formatValue(node.value, chart().indicator.measurementType) }}</b>
-        @if (chart().isAnnual) {
-          <small>{{ node.monthsRecorded ?? 1 }} meses con registro</small>
+        <div class="rank-legend" aria-label="Colores por posición">
+          <span class="legend-item first">1.º</span><span class="legend-item second">2.º</span
+          ><span class="legend-item third">3.º</span><span class="legend-item other">Otros</span>
+        </div>
+        @if (loading()) {
+          <p role="status">Cargando nodos…</p>
         }
-      </div>
-    }
-    <nav class="pagination" aria-label="Paginación de nodos">
-      <span>Página {{ chart().nodePage }} de {{ chart().totalNodePages || 1 }}</span
-      ><button
-        type="button"
-        [disabled]="loading() || chart().nodePage <= 1"
-        (click)="load(chart().nodePage - 1)"
-      >
-        Anterior</button
-      ><button
-        type="button"
-        [disabled]="loading() || chart().nodePage >= chart().totalNodePages"
-        (click)="load(chart().nodePage + 1)"
-      >
-        Siguiente
-      </button>
-    </nav>
-  </article>`,
+        @if (error()) {
+          <p role="alert" class="error">{{ error() }}</p>
+          <button type="button" (click)="load(chart().nodePage)">Reintentar</button>
+        }
+        <p class="axis-title">{{ typeLabel(chart().indicator.measurementType) }}</p>
+        <div
+          class="chart-scroll"
+          (scroll)="dismissTooltip()"
+          tabindex="0"
+          role="region"
+          [attr.aria-label]="'Gráfico de barras verticales de nodos de ' + chart().cityName"
+        >
+          <div class="vertical-chart" [style.min-width.px]="chartWidth()">
+            <div class="y-axis" aria-hidden="true">
+              @for (tick of scale().ticks; track tick.value) {
+                <span [style.bottom.%]="tick.position">{{
+                  formatValue(tick.value, chart().indicator.measurementType)
+                }}</span>
+              }
+            </div>
+            <div class="plot">
+              <div class="grid-lines" aria-hidden="true">
+                @for (tick of scale().ticks; track tick.value) {
+                  <span [style.bottom.%]="tick.position"></span>
+                }
+                <span class="zero-line" [style.bottom.%]="scale().zero"></span>
+              </div>
+              <ol
+                class="columns"
+                [style.grid-template-columns]="
+                  'repeat(' + Math.max(1, chart().nodes.length) + ', minmax(0, 1fr))'
+                "
+                [attr.start]="(chart().nodePage - 1) * chart().nodePageSize + 1"
+                [attr.aria-label]="'Nodos de ' + chart().cityName"
+              >
+                @for (node of bars(); track node.nodeId) {
+                  <li>
+                    <div class="column">
+                      <strong
+                        class="value"
+                        [class.negative]="node.negative"
+                        [style.bottom.%]="node.negative ? node.bottom : node.bottom + node.height"
+                        >{{ formatValue(node.value, chart().indicator.measurementType) }}</strong
+                      >
+                      <button
+                        type="button"
+                        class="column-target"
+                        [disabled]="loading()"
+                        [class.is-selected]="tooltipNode()?.nodeId === node.nodeId"
+                        [attr.aria-label]="nodeLabel(node)"
+                        [attr.aria-describedby]="
+                          tooltipNode()?.nodeId === node.nodeId ? tooltipId() : null
+                        "
+                        [attr.aria-pressed]="pinnedNodeId() === node.nodeId"
+                        (pointerenter)="previewNode(node, $event)"
+                        (pointerleave)="hidePreview()"
+                        (focus)="previewNode(node, $event)"
+                        (blur)="hidePreview()"
+                        (click)="toggleNode(node, $event)"
+                      >
+                        <span
+                          class="bar"
+                          aria-hidden="true"
+                          [class.negative]="node.negative"
+                          [class.rank-first]="node.rank === 1"
+                          [class.rank-second]="node.rank === 2"
+                          [class.rank-third]="node.rank === 3"
+                          [style.--bar-delay]="(node.index % 8) * 30 + 'ms'"
+                          [style.bottom.%]="node.bottom"
+                          [style.height.%]="node.height"
+                        ></span>
+                      </button>
+                    </div>
+                    <span class="node-name" [title]="node.nodeName"
+                      ><span
+                        class="node-rank"
+                        [class.rank-first]="node.rank === 1"
+                        [class.rank-second]="node.rank === 2"
+                        [class.rank-third]="node.rank === 3"
+                        >#{{ node.rank }}</span
+                      >{{ node.nodeName }}</span
+                    >
+                  </li>
+                } @empty {
+                  <li>No hay nodos en esta página.</li>
+                }
+              </ol>
+              <p class="x-axis-title">Nodos</p>
+            </div>
+          </div>
+        </div>
+        <small class="scroll-hint"
+          >Desplaza el gráfico horizontalmente para ver todos los nodos.</small
+        >
+        <details>
+          <summary>Ver valores</summary>
+          <div
+            class="table-scroll"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="'Valores de nodos de ' + chart().cityName"
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th>Nodo</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (node of chart().nodes; track node.nodeId) {
+                  <tr>
+                    <td>{{ node.nodeName }}</td>
+                    <td>{{ formatValue(node.value, chart().indicator.measurementType) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </details>
+        @if (tooltipNode(); as node) {
+          <div
+            role="tooltip"
+            class="node-tooltip"
+            [id]="tooltipId()"
+            [style.left.px]="tooltipPosition().x"
+            [style.top.px]="tooltipPosition().y"
+          >
+            <small>Posición {{ node.rank }}</small
+            ><strong>{{ node.nodeName }}</strong
+            ><span>{{ chart().cityName }} · {{ rankingPeriod(chart()) }}</span
+            ><b>{{ formatValue(node.value, chart().indicator.measurementType) }}</b>
+            @if (chart().isAnnual) {
+              <small>{{ node.monthsRecorded ?? 1 }} meses con registro</small>
+            }
+          </div>
+        }
+        <nav class="pagination" aria-label="Paginación de nodos">
+          <span>Página {{ chart().nodePage }} de {{ chart().totalNodePages || 1 }}</span
+          ><button
+            type="button"
+            [disabled]="loading() || chart().nodePage <= 1"
+            (click)="load(chart().nodePage - 1)"
+          >
+            Anterior</button
+          ><button
+            type="button"
+            [disabled]="loading() || chart().nodePage >= chart().totalNodePages"
+            (click)="load(chart().nodePage + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      </article></ng-template
+    >
+    <div class="ranking-slot" [style.min-height.px]="expanded() ? inlineHeight : null">
+      @if (!expanded()) {
+        <ng-container [ngTemplateOutlet]="chartContent" />
+      }
+    </div>
+    <dialog
+      #zoomDialog
+      class="chart-fullscreen"
+      aria-modal="true"
+      [attr.aria-label]="
+        'Gráfico ampliado de ' +
+        chart().cityName +
+        ': ' +
+        chart().indicator.name +
+        ' · ' +
+        rankingPeriod(chart())
+      "
+      (cancel)="closeZoom($event)"
+      (close)="finishZoom()"
+      (scroll)="dismissTooltip()"
+    >
+      @if (expanded()) {
+        <ng-container [ngTemplateOutlet]="chartContent" />
+      }
+    </dialog>`,
   styleUrls: ['../indicators-shared.scss'],
   styles: `
     :host {
@@ -236,7 +302,55 @@ import { IndicatorsService } from '../services/indicators.service';
       display: flex;
       justify-content: space-between;
       gap: 0.75rem;
-      align-items: baseline;
+      align-items: center;
+    }
+    .city-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    .chart-zoom {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+    }
+    .chart-fullscreen {
+      position: fixed;
+      inset: 0;
+      width: 100dvw;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      box-sizing: border-box;
+      margin: 0;
+      padding: clamp(0.75rem, 2vw, 2rem);
+      border: 0;
+      border-radius: 0;
+      overflow: auto;
+      background: #f6f8fb;
+      color: #12365b;
+      overscroll-behavior: contain;
+    }
+    .chart-fullscreen header {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #fff;
+      padding-block: 0.5rem;
+    }
+    .chart-fullscreen::backdrop {
+      background: #00285599;
+    }
+    .chart-fullscreen .ranking {
+      --ranking-plot-height: max(18rem, calc(100dvh - 24rem));
+      min-height: 100%;
+      box-sizing: border-box;
     }
     header h2 {
       margin: 0;
@@ -269,7 +383,7 @@ import { IndicatorsService } from '../services/indicators.service';
       padding-top: 0.5rem;
     }
     .y-axis {
-      height: 18rem;
+      height: var(--ranking-plot-height, 18rem);
       position: relative;
       font-size: 0.75rem;
       color: #58718e;
@@ -289,7 +403,7 @@ import { IndicatorsService } from '../services/indicators.service';
       left: 0;
       right: 0;
       top: 0;
-      height: 18rem;
+      height: var(--ranking-plot-height, 18rem);
       pointer-events: none;
     }
     .grid-lines span {
@@ -314,7 +428,7 @@ import { IndicatorsService } from '../services/indicators.service';
       text-align: center;
     }
     .column {
-      height: 18rem;
+      height: var(--ranking-plot-height, 18rem);
       position: relative;
       margin: 0 0.75rem;
     }
@@ -585,6 +699,43 @@ import { IndicatorsService } from '../services/indicators.service';
   `,
 })
 export class CityRanking {
+  @ViewChild('zoomDialog', { static: true }) private zoomDialog!: ElementRef<HTMLDialogElement>;
+  readonly expanded = signal(false);
+  inlineHeight = 0;
+  private readonly injector = inject(Injector);
+  private previousBodyOverflow = '';
+  openZoom() {
+    if (this.expanded()) return;
+    this.inlineHeight =
+      this.hostElement.nativeElement.querySelector('.ranking')?.getBoundingClientRect().height ?? 0;
+    this.dismissTooltip();
+    this.previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    this.expanded.set(true);
+    this.zoomDialog.nativeElement.showModal();
+    afterNextRender(
+      () => this.zoomDialog.nativeElement.querySelector<HTMLButtonElement>('.chart-zoom')?.focus(),
+      { injector: this.injector },
+    );
+  }
+  closeZoom(event?: Event) {
+    event?.preventDefault();
+    this.zoomDialog.nativeElement.close();
+    this.finishZoom();
+  }
+  finishZoom() {
+    if (!this.expanded()) return;
+    this.expanded.set(false);
+    this.dismissTooltip();
+    document.body.style.overflow = this.previousBodyOverflow;
+    afterNextRender(
+      () =>
+        this.hostElement.nativeElement
+          .querySelector<HTMLButtonElement>('.ranking-slot .chart-zoom')
+          ?.focus({ preventScroll: true }),
+      { injector: this.injector },
+    );
+  }
   readonly data = input.required<CityRank>();
   readonly filteredNodeId = input<number | null>(null);
   private readonly api = inject(IndicatorsService);
@@ -721,6 +872,9 @@ export class CityRanking {
   });
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      if (this.expanded()) document.body.style.overflow = this.previousBodyOverflow;
+    });
     this.requests
       .pipe(
         switchMap((page) =>

@@ -446,6 +446,9 @@ fieldset > label,
   outline-offset: 2px;
 }
 .assignment-table {
+  --assignment-actions-width: 7rem;
+  --assignment-delivery-width: 8rem;
+  --assignment-workorder-width: 13rem;
   width: max-content;
   min-width: 100%;
   border-collapse: separate;
@@ -474,19 +477,44 @@ fieldset > label,
 .assignment-table tbody tr:hover > * {
   background: #f8fbff;
 }
-.assignment-table .assignment-table__actions {
+.assignment-table
+  :is(.assignment-table__actions, .assignment-table__delivery, .assignment-table__workorder) {
   position: sticky;
-  left: 0;
-  min-width: 6.5rem;
-  width: 6.5rem;
   box-sizing: border-box;
   background: white;
   z-index: 1;
-  box-shadow: 1px 0 #e5edf6;
 }
-.assignment-table thead .assignment-table__actions {
+.assignment-table .assignment-table__actions {
+  left: 0;
+  width: var(--assignment-actions-width);
+  min-width: var(--assignment-actions-width);
+  max-width: var(--assignment-actions-width);
+  padding-inline: 0.5rem;
+}
+.assignment-table .assignment-table__delivery {
+  left: var(--assignment-actions-width);
+  width: var(--assignment-delivery-width);
+  min-width: var(--assignment-delivery-width);
+  max-width: var(--assignment-delivery-width);
+}
+.assignment-table .assignment-table__workorder {
+  left: calc(var(--assignment-actions-width) + var(--assignment-delivery-width));
+  width: var(--assignment-workorder-width);
+  min-width: var(--assignment-workorder-width);
+  max-width: var(--assignment-workorder-width);
+  box-shadow: 2px 0 0 #dce5ef;
+}
+.assignment-table
+  thead
+  :is(.assignment-table__actions, .assignment-table__delivery, .assignment-table__workorder) {
   background: #f4f7fb;
   z-index: 2;
+}
+.assignment-table
+  tbody
+  tr:hover
+  :is(.assignment-table__actions, .assignment-table__delivery, .assignment-table__workorder) {
+  background: #f8fbff;
 }
 .assignment-table .assignment-table__id {
   min-width: 4rem;
