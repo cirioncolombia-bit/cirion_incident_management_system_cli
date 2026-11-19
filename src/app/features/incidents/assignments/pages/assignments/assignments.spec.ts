@@ -90,7 +90,7 @@ describe('Assignments workflow', () => {
     return {
       id: 7,
       deliveryId: 128,
-      workOrderId: 'DKO-42',
+      workOrderId: 'DOCU-42',
       clientName: 'Cliente',
       cityName: 'Bogotá',
       nodeName: 'SUBA',
@@ -108,7 +108,19 @@ describe('Assignments workflow', () => {
     component.rows.set([listRow()]);
     fixture.detectChanges();
     const table: HTMLTableElement = fixture.nativeElement.querySelector('.assignment-table');
-    expect(table.querySelectorAll('thead th')).toHaveLength(13);
+    expect(table.querySelectorAll('thead th')).toHaveLength(14);
+    expect(
+      Array.from(table.querySelectorAll('thead th'))
+        .slice(0, 4)
+        .map((e) => e.textContent?.trim()),
+    ).toEqual(['Actions', 'Delivery Id', 'WorkOrder / DKO', 'Id']);
+    expect(table.querySelector('.assignment-table__delivery')?.textContent).toBe('Delivery Id');
+    expect(table.querySelector('tbody .assignment-table__delivery')?.textContent?.trim()).toBe(
+      '128',
+    );
+    expect(table.querySelector('tbody .assignment-table__workorder')?.textContent?.trim()).toBe(
+      'DOCU-42',
+    );
     expect(table.textContent).toContain('Bogotá');
     expect(table.textContent).toContain('No equipment');
     expect(table.textContent).toContain('No updates');
@@ -131,14 +143,29 @@ describe('Assignments workflow', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[title="Edit assignment"]')).toBeNull();
     const card: HTMLElement = fixture.nativeElement.querySelector('.assignment-card');
-    expect(card.textContent).toContain('No linked Delivery');
+    expect(card.textContent).toContain('No WorkOrder / DKO');
     expect(card.textContent).toContain('No client information');
-    expect(card.querySelectorAll('dl > div')).toHaveLength(6);
+    expect(card.querySelectorAll('dl > div')).toHaveLength(7);
     card.querySelector<HTMLButtonElement>('button')!.click();
     expect(router.navigate).toHaveBeenLastCalledWith(
       [],
       expect.objectContaining({ queryParams: { id: 7 } }),
     );
+  });
+  it('shows WorkOrder even without a Delivery link and keeps mobile identifiers separate', () => {
+    const { component, fixture } = setup();
+    component.rows.set([{ ...listRow(), deliveryId: null }]);
+    fixture.detectChanges();
+    const card: HTMLElement = fixture.nativeElement.querySelector('.assignment-card');
+    expect(card.querySelector('header')?.textContent).toContain('DOCU-42');
+    expect(card.querySelector('dl')?.textContent).toContain('Delivery Id');
+    expect(card.querySelector('dl')?.textContent).toContain('Not linked');
+    expect(
+      fixture.nativeElement.querySelector('tbody .assignment-table__delivery').textContent.trim(),
+    ).toBe('Not linked');
+    expect(
+      fixture.nativeElement.querySelector('tbody .assignment-table__workorder').textContent.trim(),
+    ).toBe('DOCU-42');
   });
   it('filters GCO by city without requiring a node and clears dependent selections', () => {
     const { component, api } = setup();
