@@ -85,6 +85,60 @@ describe('Assignments workflow', () => {
     component.trayChanged();
     component.selectPort(port);
   }
+  function listRow() {
+    return {
+      id: 7,
+      deliveryId: 128,
+      workOrderId: 'DKO-42',
+      clientName: 'Cliente',
+      cityName: 'Bogotá',
+      nodeName: 'SUBA',
+      gcoId: 3,
+      gcoName: 'GCO 3',
+      fiberTrayName: 'FIBER TRAY 156',
+      port,
+      createAt: '2026-11-19T12:00:00Z',
+      updatedAt: null,
+      rowVersion: 'AQ==',
+    };
+  }
+  it('renders desktop columns and navigates from the same eye and pencil actions as Delivery', () => {
+    const { component, fixture, router } = setup();
+    component.rows.set([listRow()]);
+    fixture.detectChanges();
+    const table: HTMLTableElement = fixture.nativeElement.querySelector('.assignment-table');
+    expect(table.querySelectorAll('thead th')).toHaveLength(13);
+    expect(table.textContent).toContain('Bogotá');
+    expect(table.textContent).toContain('No equipment');
+    expect(table.textContent).toContain('No updates');
+    (
+      table.querySelector('[aria-label="View details for assignment 7"]') as HTMLButtonElement
+    ).click();
+    expect(router.navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { id: 7 } }),
+    );
+    (table.querySelector('[aria-label="Edit assignment 7"]') as HTMLButtonElement).click();
+    expect(router.navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { id: 7, edit: 1 } }),
+    );
+  });
+  it('keeps mobile card details and permits readonly users to view but not edit', () => {
+    const { component, fixture, router } = setup(['assignments.read']);
+    component.rows.set([{ ...listRow(), workOrderId: null, clientName: null }]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[title="Edit assignment"]')).toBeNull();
+    const card: HTMLElement = fixture.nativeElement.querySelector('.assignment-card');
+    expect(card.textContent).toContain('No linked Delivery');
+    expect(card.textContent).toContain('No client information');
+    expect(card.querySelectorAll('dl > div')).toHaveLength(6);
+    card.querySelector<HTMLButtonElement>('button')!.click();
+    expect(router.navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { id: 7 } }),
+    );
+  });
   it('recognizes catalog colors with numbers, accents and different casing', () => {
     const { component } = setup();
     expect(component.portColor('01 ROJO')).toBe('#dc2626');

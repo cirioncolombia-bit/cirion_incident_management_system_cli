@@ -60,24 +60,35 @@
       </form>
       @if (!loading() && !error()) {
         <p class="count">{{ total() }} assignments</p>
-        <div class="records">
+        <div class="assignment-cards">
           @for (a of rows(); track a.id) {
-            <article class="record">
-              <span class="reference">Assignment #{{ a.id }}</span>
-              <h2>{{ a.workOrderId || 'No linked Delivery' }}</h2>
-              <p>{{ a.clientName }}</p>
-              <dl>
+            <article class="record assignment-card">
+              <header class="assignment-card__header">
+                <div>
+                  <strong
+                    >{{ a.workOrderId || 'No linked Delivery' }}
+                    <span class="reference">#{{ a.id }}</span></strong
+                  >
+                  <p>{{ a.clientName || 'No client information' }}</p>
+                </div>
+                <span class="badge">{{ a.port.statusName || '—' }}</span>
+              </header>
+              <dl class="assignment-card__details">
+                <div>
+                  <dt>City</dt>
+                  <dd>{{ a.cityName || '—' }}</dd>
+                </div>
                 <div>
                   <dt>Node</dt>
-                  <dd>{{ a.nodeName }}</dd>
+                  <dd>{{ a.nodeName || '—' }}</dd>
                 </div>
                 <div>
                   <dt>GCO</dt>
-                  <dd>{{ a.gcoName }}</dd>
+                  <dd>{{ a.gcoName || '—' }}</dd>
                 </div>
                 <div>
                   <dt>FiberTray</dt>
-                  <dd>{{ a.fiberTrayName }}</dd>
+                  <dd>{{ a.fiberTrayName || '—' }}</dd>
                 </div>
                 <div>
                   <dt>Port</dt>
@@ -87,18 +98,122 @@
                   <dt>Equipment</dt>
                   <dd>{{ a.port.equipmentName || 'No equipment' }}</dd>
                 </div>
-                <div>
-                  <dt>Current port status</dt>
-                  <dd>
-                    <span class="badge">{{ a.port.statusName }}</span>
-                  </dd>
-                </div>
               </dl>
-              <button type="button" class="full" (click)="go({ id: a.id })">View details →</button>
+              <button
+                type="button"
+                class="assignment-card__view"
+                [attr.aria-label]="'View details for assignment ' + a.id"
+                (click)="go({ id: a.id })"
+              >
+                <span>View details</span><span aria-hidden="true">→</span>
+              </button>
             </article>
           } @empty {
-            <div class="panel empty">No assignments to display.</div>
+            <p class="panel empty">No assignments to display.</p>
           }
+        </div>
+        <div
+          class="assignment-table-wrapper"
+          role="region"
+          aria-label="Assignments table"
+          tabindex="0"
+        >
+          <table class="assignment-table">
+            <caption class="visually-hidden">
+              Assignments and their current port information
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" class="assignment-table__actions">Actions</th>
+                <th scope="col" class="assignment-table__id">Id</th>
+                <th scope="col">WorkOrder / DKO</th>
+                <th scope="col">Client</th>
+                <th scope="col">City</th>
+                <th scope="col">Node</th>
+                <th scope="col">GCO</th>
+                <th scope="col">FiberTray</th>
+                <th scope="col">Port</th>
+                <th scope="col">Equipment</th>
+                <th scope="col">Port Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of rows(); track a.id) {
+                <tr>
+                  <td class="assignment-table__actions">
+                    <div class="assignment-icon-actions">
+                      <button
+                        type="button"
+                        class="assignment-icon-action"
+                        title="View details"
+                        [attr.aria-label]="'View details for assignment ' + a.id"
+                        (click)="go({ id: a.id })"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                      @if (canWrite()) {
+                        <button
+                          type="button"
+                          class="assignment-icon-action"
+                          title="Edit assignment"
+                          [attr.aria-label]="'Edit assignment ' + a.id"
+                          (click)="go({ id: a.id, edit: 1 })"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="m16 3 5 5L8 21H3v-5L16 3Z" />
+                            <path d="m13 6 5 5" />
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                  <th scope="row" class="assignment-table__id">{{ a.id }}</th>
+                  <td>{{ a.workOrderId || 'No linked Delivery' }}</td>
+                  <td>{{ a.clientName || 'No client information' }}</td>
+                  <td>{{ a.cityName || '—' }}</td>
+                  <td>{{ a.nodeName || '—' }}</td>
+                  <td>{{ a.gcoName || '—' }}</td>
+                  <td>{{ a.fiberTrayName || '—' }}</td>
+                  <td>{{ a.port.portNumber }}</td>
+                  <td>{{ a.port.equipmentName || 'No equipment' }}</td>
+                  <td>
+                    <span class="badge">{{ a.port.statusName || '—' }}</span>
+                  </td>
+                  <td>{{ (a.createAt | date: 'medium') || '—' }}</td>
+                  <td>{{ (a.updatedAt | date: 'medium') || 'No updates' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="13" class="empty">No assignments to display.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
         @if (totalPages() > 0) {
           <nav class="pagination" aria-label="Assignment pagination">
