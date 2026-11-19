@@ -14,6 +14,53 @@ describe('Assignments API contracts', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+  it('sends every list filter to the backend before pagination', () => {
+    api
+      .list(2, 'lookup', {
+        id: '42',
+        deliveryId: '128',
+        workOrderId: ' DKO ',
+        clientId: '15',
+        clientName: 'Banco',
+        cityId: '1',
+        nodeId: '2',
+        gcoId: '3',
+        fiberTrayId: '4',
+        ftPlexPortId: '5',
+        equipmentName: 'Equipo',
+        statusId: '6',
+        createdFrom: '2026-11-01',
+        createdTo: '2026-11-19',
+        updatedFrom: '2026-11-02',
+        updatedTo: '2026-11-18',
+      })
+      .subscribe();
+    const r = http.expectOne((req) => req.url === base);
+    expect(r.request.params.get('Page')).toBe('2');
+    expect(r.request.params.get('WorkOrderId')).toBe('DKO');
+    expect(r.request.params.get('FtPlexPortId')).toBe('5');
+    expect(r.request.params.get('CreatedTo')).toBe('2026-11-19');
+    expect(r.request.params.get('Search')).toBe('lookup');
+    expect(r.request.params.keys().length).toBe(19);
+    r.flush({ rows: [] });
+  });
+  it('loads bounded historical filter choices using only selected parents', () => {
+    api.filterOptions('Gcos', { cityId: '1', nodeId: '' }, 2).subscribe();
+    const r = http.expectOne((req) => req.url === `${base}/filter-options/Gcos`);
+    expect(r.request.params.get('CityId')).toBe('1');
+    expect(r.request.params.has('NodeId')).toBe(false);
+    expect(r.request.params.get('Page')).toBe('2');
+    expect(r.request.params.get('PageSize')).toBe('100');
+    r.flush({ data: [] });
+  });
+  it('serializes numeric input values and omits empty controls', () => {
+    api.list(1, '', { id: 7, deliveryId: 128, nodeId: '' }).subscribe();
+    const r = http.expectOne((req) => req.url === base);
+    expect(r.request.params.get('Id')).toBe('7');
+    expect(r.request.params.get('DeliveryId')).toBe('128');
+    expect(r.request.params.has('NodeId')).toBe(false);
+    r.flush({ rows: [] });
+  });
   it('looks up Delivery using its ID', () => {
     api.delivery(128).subscribe();
     http.expectOne(`${base}/deliveries/128`).flush({ data: {} });
