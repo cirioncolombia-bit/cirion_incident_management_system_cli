@@ -110,7 +110,12 @@
           </button>
         </div>
       </form>
-      @if (!loading() && !error()) {
+      @if (!hasSearched() && !loading() && !error()) {
+        <p class="panel empty" role="status">
+          Choose your filters and click Search to load assignments.
+        </p>
+      }
+      @if (hasSearched() && !loading() && !error()) {
         <p class="count">{{ total() }} assignments</p>
         <div class="assignment-cards">
           @for (a of rows(); track a.id) {

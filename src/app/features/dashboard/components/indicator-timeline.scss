@@ -262,3 +262,56 @@ summary {
   stroke: #20a48c;
   stroke-width: 2;
 }
+
+.chart-zoom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin-inline-start: auto;
+}
+.chart-zoom svg {
+  flex-shrink: 0;
+}
+.chart-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: clamp(0.75rem, 2vw, 2rem);
+  border: 0;
+  border-radius: 0;
+  overflow: auto;
+  background: #f6f8fb;
+  color: #12365b;
+  overscroll-behavior: contain;
+}
+.chart-fullscreen::backdrop {
+  background: #00285599;
+}
+.chart-fullscreen .timeline-card {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.chart-fullscreen header {
+  position: static;
+}
+.chart-fullscreen .chart-zoom {
+  background: var(--cims-color-accent);
+  border-color: var(--cims-color-accent);
+  color: #fff;
+}
+.chart-fullscreen .timeline-scroll svg {
+  min-width: 800px;
+  max-height: none;
+}
+header h2 {
+  min-width: 0;
+}
