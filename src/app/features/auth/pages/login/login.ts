@@ -15,6 +15,12 @@ import { AuthService } from '../../services/auth.service';
   imports: [ReactiveFormsModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
+  host: {
+    '(window:pointerup)': 'hidePassword()',
+    '(window:pointercancel)': 'hidePassword()',
+    '(window:blur)': 'hidePassword()',
+    '(document:visibilitychange)': 'hidePassword()',
+  },
 })
 export class Login {
   private readonly formBuilder = inject(FormBuilder);
@@ -23,6 +29,7 @@ export class Login {
 
   readonly notice = typeof history.state?.notice === 'string' ? history.state.notice : '';
 
+  readonly isPasswordVisible = signal(false);
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
@@ -45,7 +52,24 @@ export class Login {
     rememberMe: [false],
   });
 
+  showPassword(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    this.isPasswordVisible.set(true);
+  }
+
+  showPasswordWithKeyboard(event: KeyboardEvent): void {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    event.preventDefault();
+    this.isPasswordVisible.set(true);
+  }
+
+  hidePassword(): void {
+    this.isPasswordVisible.set(false);
+  }
+
   onSubmit(): void {
+    this.hidePassword();
     if (this.isLoading()) return;
 
     this.errorMessage.set(null);
