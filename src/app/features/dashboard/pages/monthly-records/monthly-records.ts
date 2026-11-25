@@ -25,7 +25,7 @@ import { DeleteConfirm } from '../../components/delete-confirm';
   selector: 'app-monthly-records',
   imports: [ReactiveFormsModule, IndicatorsNav, LocationSelect, IndicatorPicker, DeleteConfirm],
   templateUrl: './monthly-records.html',
-  styleUrl: '../../indicators-shared.scss',
+  styleUrls: ['../../indicators-shared.scss', './monthly-records.scss'],
 })
 export class MonthlyRecords {
   private readonly api = inject(IndicatorsService);
