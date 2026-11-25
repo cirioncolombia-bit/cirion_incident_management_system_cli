@@ -34,7 +34,7 @@ import { NetworkService } from '../services/network.service';
           (input)="search.set($any($event.target).value)"
           (keydown.enter)="$event.preventDefault(); applySearch()"
         />
-        <button class="cims-filter-action" type="button" (click)="applySearch()" [disabled]="disabled() || busy()">
+        <button class="cims-filter-action cims-filter-action--search" type="button" (click)="applySearch()" [disabled]="disabled() || busy()">
           Search
         </button>
       </div>

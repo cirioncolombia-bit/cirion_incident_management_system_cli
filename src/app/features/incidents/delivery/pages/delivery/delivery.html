@@ -104,8 +104,8 @@
       </div>
       @if (nodesError()) { <p role="alert">{{ nodesError() }}</p> }
       <div class="delivery-filters__actions">
-        <button class="cims-filter-action delivery-filters__submit" type="submit" [disabled]="nodesLoading()">Search</button>
-        <button class="cims-filter-action delivery-filters__clear" type="button" (click)="clearFilters()">Clear filters</button>
+        <button class="cims-filter-action delivery-filters__submit cims-filter-action--search" type="submit" [disabled]="nodesLoading()">Search</button>
+        <button class="cims-filter-action delivery-filters__clear cims-filter-action--clear" type="button" (click)="clearFilters()">Clear filters</button>
       </div>
     </fieldset>
   </form>

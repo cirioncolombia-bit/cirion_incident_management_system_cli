@@ -69,8 +69,8 @@
       <p class="error" role="alert">Ingresa un año válido (1–9999).</p>
     }
     <div class="actions">
-      <button type="submit" class="cims-filter-action primary">Buscar</button
-      ><button class="cims-filter-action" type="button" (click)="clear()">Limpiar filtros</button>
+      <button type="submit" class="cims-filter-action cims-filter-action--search">Buscar</button
+      ><button class="cims-filter-action cims-filter-action--clear" type="button" (click)="clear()">Limpiar filtros</button>
     </div>
   </form>
   @if (loading()) {

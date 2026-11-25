@@ -10,7 +10,7 @@
     <div>
       <input id="client-picker-search" type="search" formControlName="search" maxlength="200" autofocus
         placeholder="Enter a name or client code" />
-      <button class="cims-filter-action primary" type="submit" [disabled]="searchForm.invalid">Search</button>
+      <button class="cims-filter-action cims-filter-action--search" type="submit" [disabled]="searchForm.invalid">Search</button>
     </div>
   </form>
   @if (searchForm.invalid && searchForm.touched) { <p role="alert">Enter 3–200 characters for a name or a positive client Id (maximum 2147483647).</p> }
