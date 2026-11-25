@@ -10,6 +10,26 @@
       <h2>{{ editing() ? 'Editar registro mensual' : 'Nuevo registro mensual' }}</h2>
       <fieldset [disabled]="saving()">
         <div class="monthly-record-fields">
+          <app-indicator-picker
+            [showSearch]="false"
+            [selected]="selected()"
+            [disabled]="saving()"
+            (selectedChange)="choose($event)"
+          />
+          <label
+            >Valor {{ selected() ? '(' + typeLabel(selected()!.measurementType) + ')' : ''
+            }}<input
+              type="text"
+              inputmode="decimal"
+              formControlName="value"
+              maxlength="20"
+              required
+              placeholder="Ejemplo: 1972082,00"
+            /><small
+              >Sin separadores de miles. Se admite punto o coma decimal, con hasta dos decimales;
+              Número entero no admite fracciones.</small
+            ></label
+          >
           <label
             >Año<input
               type="number"
@@ -40,25 +60,6 @@
             [disabled]="saving()"
             (selectedChange)="chooseNode($event)"
           />
-          <app-indicator-picker
-            [selected]="selected()"
-            [disabled]="saving()"
-            (selectedChange)="choose($event)"
-          />
-          <label
-            >Valor {{ selected() ? '(' + typeLabel(selected()!.measurementType) + ')' : ''
-            }}<input
-              type="text"
-              inputmode="decimal"
-              formControlName="value"
-              maxlength="20"
-              required
-              placeholder="Ejemplo: 1972082,00"
-            /><small
-              >Sin separadores de miles. Se admite punto o coma decimal, con hasta dos decimales;
-              Número entero no admite fracciones.</small
-            ></label
-          >
         </div>
         @if (selected(); as indicator) {
           <p class="notice">Medición: {{ typeLabel(indicator.measurementType) }}.</p>
