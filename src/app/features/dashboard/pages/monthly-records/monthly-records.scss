@@ -1,11 +1,13 @@
-.monthly-record-editor {
+.monthly-record-editor,
+.monthly-record-filter {
   --dashboard-filter-height: 2.75rem;
 
   fieldset {
     min-width: 0;
   }
 
-  .monthly-record-fields {
+  .monthly-record-fields,
+  .monthly-record-filter-fields {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: start;
@@ -24,13 +26,25 @@
 }
 
 @media (max-width: 64rem) {
-  .monthly-record-editor .monthly-record-fields {
+  .monthly-record-editor .monthly-record-fields,
+  .monthly-record-filter .monthly-record-filter-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 40rem) {
-  .monthly-record-editor .monthly-record-fields {
+  .monthly-record-editor .monthly-record-fields,
+  .monthly-record-filter .monthly-record-filter-fields {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.monthly-record-filter {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #d7e1ef;
+}
+
+.monthly-record-filter-actions {
+  justify-content: flex-end;
 }
