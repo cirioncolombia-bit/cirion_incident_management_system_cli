@@ -6,10 +6,10 @@
   </p>
   <app-indicators-nav />
   @if (canManage()) {
-    <form class="card" [formGroup]="form" (ngSubmit)="save()">
+    <form class="card monthly-record-editor" [formGroup]="form" (ngSubmit)="save()">
       <h2>{{ editing() ? 'Editar registro mensual' : 'Nuevo registro mensual' }}</h2>
       <fieldset [disabled]="saving()">
-        <div class="form-grid">
+        <div class="monthly-record-fields">
           <label
             >Año<input
               type="number"
@@ -25,8 +25,6 @@
               }
             </select></label
           >
-        </div>
-        <div class="form-grid actions">
           <app-location-select
             kind="cities"
             [showSearch]="false"
@@ -42,12 +40,26 @@
             [disabled]="saving()"
             (selectedChange)="chooseNode($event)"
           />
+          <app-indicator-picker
+            [selected]="selected()"
+            [disabled]="saving()"
+            (selectedChange)="choose($event)"
+          />
+          <label
+            >Valor {{ selected() ? '(' + typeLabel(selected()!.measurementType) + ')' : ''
+            }}<input
+              type="text"
+              inputmode="decimal"
+              formControlName="value"
+              maxlength="20"
+              required
+              placeholder="Ejemplo: 1972082,00"
+            /><small
+              >Sin separadores de miles. Se admite punto o coma decimal, con hasta dos decimales;
+              Número entero no admite fracciones.</small
+            ></label
+          >
         </div>
-        <app-indicator-picker
-          [selected]="selected()"
-          [disabled]="saving()"
-          (selectedChange)="choose($event)"
-        />
         @if (selected(); as indicator) {
           <p class="notice">Medición: {{ typeLabel(indicator.measurementType) }}.</p>
           @if (!indicator.isActive) {
@@ -56,20 +68,6 @@
             </p>
           }
         }
-        <label
-          >Valor {{ selected() ? '(' + typeLabel(selected()!.measurementType) + ')' : ''
-          }}<input
-            type="text"
-            inputmode="decimal"
-            formControlName="value"
-            maxlength="20"
-            required
-            placeholder="Ejemplo: 1972082,00"
-          /><small
-            >Sin separadores de miles. Se admite punto o coma decimal, con hasta dos decimales;
-            Número entero no admite fracciones.</small
-          ></label
-        >
         @if (form.invalid && form.touched) {
           <p class="error" role="alert">
             Revisa año, mes, ciudad, nodo y valor. Para Número entero escribe un valor sin

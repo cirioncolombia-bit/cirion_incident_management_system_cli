@@ -1,0 +1,36 @@
+.monthly-record-editor {
+  --dashboard-filter-height: 2.75rem;
+
+  fieldset {
+    min-width: 0;
+  }
+
+  .monthly-record-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    > * {
+      min-width: 0;
+    }
+
+    input,
+    select {
+      height: var(--dashboard-filter-height);
+    }
+  }
+}
+
+@media (max-width: 64rem) {
+  .monthly-record-editor .monthly-record-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .monthly-record-editor .monthly-record-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
