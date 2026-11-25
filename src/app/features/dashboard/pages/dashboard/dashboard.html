@@ -7,6 +7,9 @@
   <app-indicators-nav />
   <form class="card dashboard-filters" [formGroup]="filters" (ngSubmit)="search()">
     <h2>Filtrar gráficos</h2>
+    @if (yearsError()) {
+      <p role="alert">{{ yearsError() }} <button type="button" (click)="loadYears()">Reintentar</button></p>
+    }
     <div class="dashboard-filter-grid">
       <app-indicator-picker
         [showSearch]="false"
@@ -22,7 +25,11 @@
           <option value="timeline">Evolución mensual</option>
         </select></label
       >
-      <label>Año<input type="number" formControlName="year" min="1" max="9999" required /></label
+      <label>Año<select aria-label="Año" formControlName="year" required>
+          @for (year of years(); track year) {
+            <option [ngValue]="year">{{ year }}</option>
+          }
+        </select></label
       ><label
         >Mes<select aria-label="Mes" formControlName="month">
           @if (filters.controls.view.value === 'timeline') {
@@ -62,8 +69,8 @@
       <p class="error" role="alert">Ingresa un año válido (1–9999).</p>
     }
     <div class="actions">
-      <button type="submit" class="primary">Buscar</button
-      ><button type="button" (click)="clear()">Limpiar filtros</button>
+      <button type="submit" class="cims-filter-action primary">Buscar</button
+      ><button class="cims-filter-action" type="button" (click)="clear()">Limpiar filtros</button>
     </div>
   </form>
   @if (loading()) {

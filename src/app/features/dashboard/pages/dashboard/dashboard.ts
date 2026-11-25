@@ -38,6 +38,8 @@ export class Dashboard {
   private readonly api = inject(IndicatorsService);
   private readonly destroy = inject(DestroyRef);
   readonly months = months;
+  readonly years = signal<number[]>([currentYear()]);
+  readonly yearsError = signal('');
   readonly city = signal<LocationOption | null>(null);
   readonly node = signal<LocationOption | null>(null);
   readonly selected = signal<Indicator | null>(null);
@@ -122,7 +124,15 @@ export class Dashboard {
         this.error.set(error);
         this.loading.set(false);
       });
+    this.loadYears();
     this.load();
+  }
+  loadYears() {
+    this.yearsError.set('');
+    this.api.years().pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next: (years) => this.years.set([...new Set([currentYear(), ...years])].sort((a, b) => b - a)),
+      error: () => this.yearsError.set('No fue posible cargar los años disponibles.'),
+    });
   }
   load(page = 1) {
     this.loading.set(true);

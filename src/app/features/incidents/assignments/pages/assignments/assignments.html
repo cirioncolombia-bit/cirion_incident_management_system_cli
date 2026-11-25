@@ -104,8 +104,8 @@
           <p class="alert error" role="alert">{{ filterValidation() }}</p>
         }
         <div class="assignment-filter-actions">
-          <button type="submit" class="primary" [disabled]="loading()">Search</button>
-          <button type="button" (click)="clearFilters()" [disabled]="loading()">
+          <button type="submit" class="cims-filter-action primary" [disabled]="loading()">Search</button>
+          <button class="cims-filter-action" type="button" (click)="clearFilters()" [disabled]="loading()">
             Clear filters
           </button>
         </div>
@@ -478,7 +478,7 @@
                             (keydown.enter)="$event.preventDefault(); searchPorts()"
                             maxlength="200"
                             placeholder="Port, equipment or FiberTray" /></label
-                        ><button type="button" (click)="searchPorts()" [disabled]="portsBusy()">
+                        ><button class="cims-filter-action" type="button" (click)="searchPorts()" [disabled]="portsBusy()">
                           Search
                         </button>
                       </div>

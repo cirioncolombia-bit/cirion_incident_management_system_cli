@@ -56,3 +56,21 @@
     }
   }
 }
+
+// Keep search and clear controls consistent across component-specific styles.
+:root body button.cims-filter-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 9rem;
+  width: 9rem;
+  min-width: 9rem;
+  max-width: 9rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  max-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}

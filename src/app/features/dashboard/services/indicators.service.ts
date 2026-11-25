@@ -24,6 +24,9 @@ export class IndicatorsService {
         params = params.set(key, String(value));
     return this.http.get<{ data: T }>(this.url + path, { params }).pipe(map((x) => x.data));
   }
+  years() {
+    return this.get<number[]>('/years', {});
+  }
   locations(kind: 'cities' | 'nodes', query: Query) {
     return this.get<Page<LocationOption>>('/locations/' + kind, query);
   }

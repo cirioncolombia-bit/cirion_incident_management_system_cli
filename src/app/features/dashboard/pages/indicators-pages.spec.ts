@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth/services/auth.service';
-import { Indicator, MonthlyRecord, Page } from '../models/indicators';
+import { Indicator, MonthlyRecord, Page, currentYear } from '../models/indicators';
 import { IndicatorsService } from '../services/indicators.service';
 import { IndicatorCatalog } from './indicator-catalog/indicator-catalog';
 import { MonthlyRecords } from './monthly-records/monthly-records';
@@ -44,6 +44,7 @@ const page = <T>(rows: T[]): Page<T> => ({
 });
 function setup<T>(type: Type<T>, manage = true) {
   const api = {
+    years: vi.fn(() => of([2024, 2022])),
     locations: vi.fn(() => of(page([{ id: 1, name: 'Bogotá', cityId: null as number | null }]))),
     list: vi.fn(() => of(page([indicator]))),
     records: vi.fn(() => of(page([record]))),
@@ -232,6 +233,34 @@ describe('Monthly records', () => {
   });
 });
 describe('Indicator dashboard', () => {
+  it('selects recorded years as numbers and resets to the current year', () => {
+    const { component, fixture, element, api } = setup(Dashboard);
+    const select = element.querySelector<HTMLSelectElement>('select[formcontrolname="year"]')!;
+    expect(select).not.toBeNull();
+    expect(element.querySelector('input[formcontrolname="year"]')).toBeNull();
+    expect(Array.from(select.options, x => Number(x.textContent))).toEqual(
+      [...new Set([currentYear(), 2024, 2022])].sort((a, b) => b - a),
+    );
+    select.selectedIndex = Array.from(select.options).findIndex(x => x.textContent?.trim() === '2022');
+    select.dispatchEvent(new Event('change'));
+    component.search();
+    expect(api.cityCharts).toHaveBeenLastCalledWith(expect.objectContaining({ year: 2022 }));
+    component.clear();
+    fixture.detectChanges();
+    expect(component.filters.controls.year.value).toBe(currentYear());
+    expect(Number(select.selectedOptions[0].textContent)).toBe(currentYear());
+  });
+  it('allows retrying a failed year lookup while retaining the current year', () => {
+    const { component, api, fixture, element } = setup(Dashboard);
+    api.years.mockReturnValueOnce(throwError(() => new Error('Network error')));
+    component.loadYears();
+    fixture.detectChanges();
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain('No fue posible cargar los años');
+    expect(component.years()).toContain(currentYear());
+    component.loadYears();
+    fixture.detectChanges();
+    expect(element.querySelector('[role="alert"]')).toBeNull();
+  });
   it('shows real records for inactive indicators and links to both CRUD pages', () => {
     const { component, fixture, element } = setup(Dashboard);
     component.filters.controls.view.setValue('timeline');
