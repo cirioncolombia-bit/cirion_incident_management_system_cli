@@ -91,8 +91,8 @@
   }
   <section class="card">
     <h2>Valores registrados</h2>
-    <form [formGroup]="filters" (ngSubmit)="search()">
-      <div class="form-grid">
+    <form class="monthly-record-filter" [formGroup]="filters" (ngSubmit)="search()">
+      <div class="monthly-record-filter-fields">
         <label>Año<input type="number" formControlName="year" min="1" max="9999" required /></label
         ><label
           >Mes<select aria-label="Mes" formControlName="month">
@@ -108,8 +108,6 @@
             maxlength="200"
             placeholder="Nombre del indicador"
         /></label>
-      </div>
-      <div class="form-grid actions">
         <app-location-select
           kind="cities"
           [showSearch]="false"
@@ -127,8 +125,8 @@
           (selectedChange)="chooseFilterNode($event)"
         />
       </div>
-      <div class="actions">
-        <button class="cims-filter-action" type="submit">Buscar</button
+      <div class="actions monthly-record-filter-actions">
+        <button class="cims-filter-action primary" type="submit">Buscar</button
         ><button class="cims-filter-action" type="button" (click)="clearFilters()">Limpiar filtros</button>
       </div>
     </form>
