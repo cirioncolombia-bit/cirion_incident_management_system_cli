@@ -29,12 +29,14 @@
         <div class="form-grid actions">
           <app-location-select
             kind="cities"
+            [showSearch]="false"
             [selected]="city()"
             [disabled]="saving()"
             (selectedChange)="chooseCity($event)"
           />
           <app-location-select
             kind="nodes"
+            [showSearch]="false"
             [parentCityId]="city()?.id ?? null"
             [selected]="node()"
             [disabled]="saving()"
@@ -111,12 +113,14 @@
       <div class="form-grid actions">
         <app-location-select
           kind="cities"
+          [showSearch]="false"
           [includeInactive]="true"
           [allowAll]="true"
           [selected]="filterCity()"
           (selectedChange)="chooseFilterCity($event)"
         /><app-location-select
           kind="nodes"
+          [showSearch]="false"
           [includeInactive]="true"
           [allowAll]="true"
           [parentCityId]="filterCity()?.id ?? null"
