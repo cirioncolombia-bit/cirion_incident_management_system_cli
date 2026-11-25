@@ -19,7 +19,7 @@ import { IndicatorsService } from '../services/indicators.service';
             maxlength="200"
             (keydown.enter)="$event.preventDefault(); load(1)"
             placeholder="Nombre de la ubicación"
-          /><button class="cims-filter-action"
+          /><button class="cims-filter-action cims-filter-action--search"
             type="button"
             (click)="load(1)"
             [disabled]="disabled() || (kind() === 'nodes' && !parentCityId())"

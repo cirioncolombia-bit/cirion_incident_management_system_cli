@@ -94,7 +94,7 @@
             ><input type="checkbox" formControlName="includeInactive" />Include inactive</label
           >
         }
-        <button class="cims-filter-action" type="submit" [disabled]="loading()">Search</button>
+        <button class="cims-filter-action cims-filter-action--search" type="submit" [disabled]="loading()">Search</button>
       </form>
       @if (loading()) {
         <p role="status">Loading records…</p>
